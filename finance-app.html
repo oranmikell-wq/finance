@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול כספים חכם</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --income-color: #48bb78;
+            --expense-color: #f56565;
+            --border-radius: 20px;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 15px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .balance-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .balance-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .balance-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .balance-amount {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .balance-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .breakdown-item {
+            padding: 15px;
+            border-radius: 12px;
+            background: #f7fafc;
+        }
+
+        .breakdown-item.income {
+            border-right: 4px solid var(--income-color);
+        }
+
+        .breakdown-item.expense {
+            border-right: 4px solid var(--expense-color);
+        }
+
+        .breakdown-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .breakdown-amount {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .breakdown-amount.income {
+            color: var(--income-color);
+        }
+
+        .breakdown-amount.expense {
+            color: var(--expense-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Heebo', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .type-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .type-toggle button {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Heebo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .type-toggle button.active.income {
+            background: var(--income-color);
+            color: white;
+            border-color: var(--income-color);
+        }
+
+        .type-toggle button.active.expense {
+            background: var(--expense-color);
+            color: white;
+            border-color: var(--expense-color);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .transactions {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-right: 4px solid #e2e8f0;
+            transition: all 0.3s ease;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .transaction-item:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .transaction-item.income {
+            border-right-color: var(--income-color);
+        }
+
+        .transaction-item.expense {
+            border-right-color: var(--expense-color);
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-description {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .transaction-category {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .transaction-amount {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .transaction-amount.income {
+            color: var(--income-color);
+        }
+
+        .transaction-amount.expense {
+            color: var(--expense-color);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #cbd5e0;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: color 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            color: var(--expense-color);
+        }
+
+        .budget-progress {
+            margin-top: 20px;
+        }
+
+        .budget-bar {
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .budget-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
+            transition: width 0.5s ease, background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .budget-fill.warning {
+            background: linear-gradient(90deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .budget-fill.danger {
+            background: linear-gradient(90deg, #f56565 0%, #e53e3e 100%);
+        }
+
+        .budget-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .category-chart {
+            margin-top: 20px;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .category-bar-container {
+            flex: 1;
+            margin: 0 15px;
+        }
+
+        .category-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .category-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .category-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            min-width: 80px;
+        }
+
+        .category-amount {
+            font-weight: 600;
+            min-width: 80px;
+            text-align: left;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 ניהול כספים חכם</h1>
+            <p>עקוב אחרי ההוצאות וההכנסות שלך בקלות</p>
+        </div>
+
+        <div class="balance-card">
+            <div class="balance-label">היתרה הכוללת שלך</div>
+            <div class="balance-amount" id="totalBalance">₪0</div>
+            <div class="balance-breakdown">
+                <div class="breakdown-item income">
+                    <div class="breakdown-label">סה"כ הכנסות</div>
+                    <div class="breakdown-amount income" id="totalIncome">₪0</div>
+                </div>
+                <div class="breakdown-item expense">
+                    <div class="breakdown-label">סה"כ הוצאות</div>
+                    <div class="breakdown-amount expense" id="totalExpense">₪0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>➕ הוסף עסקה</h2>
+                <div class="type-toggle">
+                    <button type="button" class="active income" id="incomeBtn">הכנסה</button>
+                    <button type="button" id="expenseBtn">הוצאה</button>
+                </div>
+                <form id="transactionForm">
+                    <div class="form-group">
+                        <label>תיאור</label>
+                        <input type="text" id="description" required placeholder="לדוגמה: משכורת, קניות...">
+                    </div>
+                    <div class="form-group">
+                        <label>סכום (₪)</label>
+                        <input type="number" id="amount" required placeholder="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>קטגוריה</label>
+                        <select id="category" required>
+                            <option value="">בחר קטגוריה</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">הוסף עסקה</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📊 תקציב חודשי</h2>
+                <div class="form-group">
+                    <label>הגדר תקציב חודשי (₪)</label>
+                    <input type="number" id="monthlyBudget" placeholder="0" step="100">
+                </div>
+                <div class="budget-progress">
+                    <div class="budget-bar">
+                        <div class="budget-fill" id="budgetFill" style="width: 0%">0%</div>
+                    </div>
+                    <div class="budget-info">
+                        <span>נותרו: <strong id="remainingBudget">₪0</strong></span>
+                        <span>הוצאו: <strong id="spentBudget">₪0</strong></span>
+                    </div>
+                </div>
+
+                <div class="category-chart">
+                    <h3 style="margin-bottom: 15px; font-size: 1.1rem;">פירוט לפי קטגוריות</h3>
+                    <div id="categoryChart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📝 היסטוריית עסקאות</h2>
+            <div class="transactions" id="transactionsList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>עדיין אין עסקאות. התחל להוסיף!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const incomeCategories = ['משכורת', 'פרילנס', 'מתנה', 'השקעה', 'אחר'];
+        const expenseCategories = ['אוכל ומסעדות', 'קניות', 'תחבורה', 'בילויים', 'בריאות', 'חשבונות', 'דיור', 'אחר'];
+        
+        let transactions = [];
+        let currentType = 'income';
+        let budget = 0;
+
+        const incomeBtn = document.getElementById('incomeBtn');
+        const expenseBtn = document.getElementById('expenseBtn');
+        const categorySelect = document.getElementById('category');
+        const transactionForm = document.getElementById('transactionForm');
+        const monthlyBudgetInput = document.getElementById('monthlyBudget');
+
+        // Load data from storage
+        async function loadData() {
+            try {
+                const transData = await window.storage.get('transactions');
+                if (transData) {
+                    transactions = JSON.parse(transData.value);
+                }
+            } catch (e) {
+                transactions = [];
+            }
+
+            try {
+                const budgetData = await window.storage.get('budget');
+                if (budgetData) {
+                    budget = parseFloat(budgetData.value);
+                    monthlyBudgetInput.value = budget;
+                }
+            } catch (e) {
+                budget = 0;
+            }
+
+            updateUI();
+        }
+
+        // Save data to storage
+        async function saveData() {
+            try {
+                await window.storage.set('transactions', JSON.stringify(transactions));
+                await window.storage.set('budget', budget.toString());
+            } catch (e) {
+                console.error('Failed to save data:', e);
+            }
+        }
+
+        // Update categories based on type
+        function updateCategories() {
+            const categories = currentType === 'income' ? incomeCategories : expenseCategories;
+            categorySelect.innerHTML = '<option value="">בחר קטגוריה</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+        }
+
+        // Toggle transaction type
+        incomeBtn.addEventListener('click', () => {
+            currentType = 'income';
+            incomeBtn.classList.add('active', 'income');
+            expenseBtn.classList.remove('active', 'expense');
+            updateCategories();
+        });
+
+        expenseBtn.addEventListener('click', () => {
+            currentType = 'expense';
+            expenseBtn.classList.add('active', 'expense');
+            incomeBtn.classList.remove('active', 'income');
+            updateCategories();
+        });
+
+        // Add transaction
+        transactionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const transaction = {
+                id: Date.now(),
+                type: currentType,
+                description: document.getElementById('description').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: document.getElementById('category').value,
+                date: new Date().toLocaleDateString('he-IL')
+            };
+
+            transactions.unshift(transaction);
+            await saveData();
+            updateUI();
+            transactionForm.reset();
+        });
+
+        // Update budget
+        monthlyBudgetInput.addEventListener('change', async () => {
+            budget = parseFloat(monthlyBudgetInput.value) || 0;
+            await saveData();
+            updateBudget();
+        });
+
+        // Delete transaction
+        window.deleteTransaction = async (id) => {
+            transactions = transactions.filter(t => t.id !== id);
+            await saveData();
+            updateUI();
+        };
+
+        // Update UI
+        function updateUI() {
+            updateBalance();
+            updateTransactionsList();
+            updateBudget();
+            updateCategoryChart();
+        }
+
+        function updateBalance() {
+            const income = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const expense = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const balance = income - expense;
+
+            document.getElementById('totalBalance').textContent = `₪${balance.toLocaleString('he-IL')}`;
+            document.getElementById('totalIncome').textContent = `₪${income.toLocaleString('he-IL')}`;
+            document.getElementById('totalExpense').textContent = `₪${expense.toLocaleString('he-IL')}`;
+        }
+
+        function updateTransactionsList() {
+            const list = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>עדיין אין עסקאות. התחל להוסיף!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = transactions.map(t => `
+                <div class="transaction-item ${t.type}">
+                    <div class="transaction-info">
+                        <div class="transaction-description">${t.description}</div>
+                        <div class="transaction-category">${t.category} • ${t.date}</div>
+                    </div>
+                    <div class="transaction-amount ${t.type}">
+                        ${t.type === 'income' ? '+' : '-'}₪${t.amount.toLocaleString('he-IL')}
+                    </div>
+                    <button class="delete-btn" onclick="deleteTransaction(${t.id})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function updateBudget() {
+            const totalExpense = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const remaining = budget - totalExpense;
+            const percentage = budget > 0 ? Math.min((totalExpense / budget) * 100, 100) : 0;
+
+            const budgetFill = document.getElementById('budgetFill');
+            budgetFill.style.width = `${percentage}%`;
+            budgetFill.textContent = `${Math.round(percentage)}%`;
+
+            // Update color based on usage
+            budgetFill.classList.remove('warning', 'danger');
+            if (percentage >= 90) {
+                budgetFill.classList.add('danger');
+            } else if (percentage >= 70) {
+                budgetFill.classList.add('warning');
+            }
+
+            document.getElementById('spentBudget').textContent = `₪${totalExpense.toLocaleString('he-IL')}`;
+            document.getElementById('remainingBudget').textContent = `₪${Math.max(0, remaining).toLocaleString('he-IL')}`;
+        }
+
+        function updateCategoryChart() {
+            const expenses = transactions.filter(t => t.type === 'expense');
+            const categoryTotals = {};
+
+            expenses.forEach(t => {
+                categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+            });
+
+            const total = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
+            const chartContainer = document.getElementById('categoryChart');
+
+            if (total === 0) {
+                chartContainer.innerHTML = '<div class="empty-state" style="padding: 20px;"><p>אין הוצאות להצגה</p></div>';
+                return;
+            }
+
+            const sortedCategories = Object.entries(categoryTotals)
+                .sort((a, b) => b[1] - a[1]);
+
+            chartContainer.innerHTML = sortedCategories.map(([category, amount]) => {
+                const percentage = (amount / total) * 100;
+                return `
+                    <div class="category-item">
+                        <div class="category-label">${category}</div>
+                        <div class="category-bar-container">
+                            <div class="category-bar">
+                                <div class="category-bar-fill" style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                        <div class="category-amount">₪${amount.toLocaleString('he-IL')}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Initialize
+        updateCategories();
+        loadData();
+    </script>
+</body>
+</html>

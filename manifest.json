@@ -1,0 +1,20 @@
+{
+  "name": "לוח בקרה פיננסי",
+  "short_name": "פורטפוליו",
+  "description": "ניהול נכסים פיננסיים - פנסיה, גמל, השקעות ועוד",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e27",
+  "theme_color": "#f4c430",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
