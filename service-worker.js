@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portfolio-v6-real-estate';
+const CACHE_NAME = 'portfolio-v14-finnhub';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -38,26 +38,45 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - NETWORK FIRST for HTML, cache first for others
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  
+  // For HTML files: always try network first (so updates are immediate)
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Save to cache
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          // Offline fallback
+          return caches.match(event.request).then(r => r || caches.match('/'));
+        })
+    );
+    return;
+  }
+
+  // For other resources: cache first, fallback to network
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
         
-        // Clone the request
         const fetchRequest = event.request.clone();
         
         return fetch(fetchRequest).then(response => {
-          // Check if valid response
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
           
-          // Clone the response
           const responseToCache = response.clone();
           
           caches.open(CACHE_NAME)
@@ -67,7 +86,6 @@ self.addEventListener('fetch', event => {
           
           return response;
         }).catch(() => {
-          // Return offline page if available
           return caches.match('/');
         });
       })
