@@ -839,6 +839,22 @@
                     <span>+₪0 (0%)</span>
                     <span>החודש</span>
                 </div>
+                <div id="totalBreakdown" style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);">
+                    <div style="text-align:center;min-width:100px;">
+                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">💰 נזילים</div>
+                        <div id="totalLiquid" style="font-size:1.1rem;font-weight:600;color:#00d9ff;">₪0</div>
+                    </div>
+                    <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
+                    <div style="text-align:center;min-width:100px;">
+                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">🏦 פנסיה וגמל</div>
+                        <div id="totalPension" style="font-size:1.1rem;font-weight:600;color:#b026ff;">₪0</div>
+                    </div>
+                    <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
+                    <div style="text-align:center;min-width:100px;">
+                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">🏠 נדל"ן</div>
+                        <div id="totalRealEstate" style="font-size:1.1rem;font-weight:600;color:#10b981;">₪0</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -2220,7 +2236,25 @@
             
             document.getElementById('totalWorth').textContent = `₪${totalILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}`;
             
-            // Calculate monthly change (example - you can make this more sophisticated)
+            // Breakdown by category
+            const pensionILS = assets
+                .filter(a => a.type === 'pension' || a.type === 'gemel' || a.type === 'fund')
+                .reduce((s, a) => s + toILS(a.value, a.currency || 'ILS'), 0);
+            const realEstateILS = assets
+                .filter(a => a.type === 'real_estate')
+                .reduce((s, a) => s + toILS(a.value, a.currency || 'ILS'), 0);
+            const liquidILS = totalILS - pensionILS - realEstateILS;
+            
+            var fmt = function(v) { return '₪' + v.toLocaleString('he-IL', {maximumFractionDigits: 0}); };
+            var el;
+            el = document.getElementById('totalLiquid'); if (el) el.textContent = fmt(liquidILS);
+            el = document.getElementById('totalPension'); if (el) el.textContent = fmt(pensionILS);
+            el = document.getElementById('totalRealEstate'); if (el) el.textContent = fmt(realEstateILS);
+            
+            var breakdownEl = document.getElementById('totalBreakdown');
+            if (breakdownEl) breakdownEl.style.display = assets.length > 0 ? 'flex' : 'none';
+            
+            // Calculate monthly change
             const monthlyChange = assets.reduce((sum, asset) => {
                 const valueInILS = toILS(asset.value, asset.currency || 'ILS');
                 const monthlyGain = (valueInILS * (asset.return / 100) / 12);
@@ -2733,6 +2767,8 @@
                 }
                 
                 // Regular asset display
+                const valueInUSD = currency === 'USD' ? asset.value : (currency === 'ILS' ? asset.value / exchangeRate : valueInILS / exchangeRate);
+                const showUSD = (asset.type === 'pension' || asset.type === 'gemel' || asset.type === 'fund') && currency === 'ILS';
                 return `
                     <div class="asset-card" onclick="openModal('edit', ${asset.id})">
                         <div class="asset-header">
@@ -2745,6 +2781,7 @@
                         <div class="asset-amount">
                             ₪${valueInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}
                             ${currency !== 'ILS' ? `<span style="font-size: 0.5em; color: var(--text-secondary); margin-right: 10px;">(${formatAmount(asset.value, currency)})</span>` : ''}
+                            ${showUSD ? `<div style="font-size: 0.6rem; color: var(--text-secondary); margin-top: 5px;">$${valueInUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
                         </div>
                         <div class="asset-details">
                             <div class="detail-row">
