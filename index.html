@@ -822,7 +822,7 @@
                 <span style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" onclick="updateExchangeRate()" title="לחץ לעדכון שערים">
                     <span id="rateUpdateIndicator" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
                     <span style="display: inline-flex; gap: 15px; flex-wrap: wrap;">
-                        <span>$1 = ₪<span id="exchangeRateDisplay">3.7</span></span>
+                        <span>$1 = ₪<span id="exchangeRateDisplay">3.7</span> <span id="ilsDailyChange" style="font-size:0.75em;"></span></span>
                         <span>₿1 = $<span id="btcRateDisplay">100,000</span></span>
                         <span>Ξ1 = $<span id="ethRateDisplay">3,500</span></span>
                     </span>
@@ -1084,9 +1084,12 @@
         let assets = [];
         let editingAssetId = null;
         let exchangeRate = 3.7; // USD to ILS exchange rate
+        let exchangeRatePrevClose = 0; // Previous close for daily change
         let btcRate = 100000; // BTC to USD
         let ethRate = 3500; // ETH to USD
         let spyPrice = 0; // SPY current price
+        let spyPrevClose = 0; // SPY previous close
+        let spyDailyChangePct = 0; // SPY daily change %
         let lastRateUpdate = null;
         let lastSpyUpdate = null;
         const FINNHUB_DEFAULT_KEY = 'd69gf19r01qjmno57nngd69gf19r01qjmno57no0';
@@ -1190,6 +1193,15 @@
                     const price = (data && data.c > 0) ? data.c : (data && data.pc > 0 ? data.pc : 0);
                     if (price > 0) {
                         console.log('[SPY] ✅ Finnhub price:', price);
+                        // Store daily change data
+                        if (data.pc > 0) {
+                            spyPrevClose = data.pc;
+                            spyDailyChangePct = data.dp || ((price - data.pc) / data.pc * 100);
+                            try {
+                                localStorage.setItem('spy-prev-close', spyPrevClose.toString());
+                                localStorage.setItem('spy-daily-change', spyDailyChangePct.toString());
+                            } catch(e) {}
+                        }
                         return applySpyPrice(price);
                     }
                 }
@@ -1491,22 +1503,62 @@
         // Fetch current exchange rates from API
         async function fetchExchangeRate() {
             try {
-                // Fetch USD to ILS
-                const usdResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                const usdData = await usdResponse.json();
-                
-                if (usdData && usdData.rates && usdData.rates.ILS) {
-                    exchangeRate = usdData.rates.ILS;
+                var prevRate = exchangeRate;
+
+                // Source 1: Frankfurter API (ECB data, more accurate, free)
+                var gotUSD = false;
+                try {
+                    var fResp = await fetch('https://api.frankfurter.dev/v1/latest?from=USD&to=ILS');
+                    if (fResp.ok) {
+                        var fData = await fResp.json();
+                        if (fData && fData.rates && fData.rates.ILS) {
+                            exchangeRate = fData.rates.ILS;
+                            gotUSD = true;
+                            console.log('[Rate] Frankfurter USD/ILS:', exchangeRate);
+                        }
+                    }
+                } catch(e) { console.warn('[Rate] Frankfurter failed:', e.message); }
+
+                // Source 2: Fallback to exchangerate-api
+                if (!gotUSD) {
+                    try {
+                        var eResp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                        var eData = await eResp.json();
+                        if (eData && eData.rates && eData.rates.ILS) {
+                            exchangeRate = eData.rates.ILS;
+                            gotUSD = true;
+                            console.log('[Rate] exchangerate-api USD/ILS:', exchangeRate);
+                        }
+                    } catch(e) { console.warn('[Rate] exchangerate-api failed:', e.message); }
                 }
 
+                // Store previous close for daily change
+                try {
+                    var savedPrev = localStorage.getItem('usdils-prev-close');
+                    var savedPrevDate = localStorage.getItem('usdils-prev-date');
+                    var today = new Date().toISOString().split('T')[0];
+                    if (savedPrevDate === today && savedPrev) {
+                        exchangeRatePrevClose = parseFloat(savedPrev);
+                    } else {
+                        // New day - save current as previous for tomorrow, use old rate as prev
+                        var oldRate = parseFloat(localStorage.getItem('exchange-rate') || '0');
+                        if (oldRate > 0 && oldRate !== exchangeRate) {
+                            exchangeRatePrevClose = oldRate;
+                        } else {
+                            exchangeRatePrevClose = exchangeRate;
+                        }
+                        localStorage.setItem('usdils-prev-close', exchangeRatePrevClose.toString());
+                        localStorage.setItem('usdils-prev-date', today);
+                    }
+                } catch(e) {}
+
                 // Fetch crypto rates (BTC and ETH in USD)
-                const cryptoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
-                const cryptoData = await cryptoResponse.json();
-                
-                if (cryptoData && cryptoData.bitcoin && cryptoData.ethereum) {
-                    btcRate = cryptoData.bitcoin.usd;
-                    ethRate = cryptoData.ethereum.usd;
-                }
+                try {
+                    var cryptoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
+                    var cryptoData = await cryptoResponse.json();
+                    if (cryptoData && cryptoData.bitcoin) btcRate = cryptoData.bitcoin.usd;
+                    if (cryptoData && cryptoData.ethereum) ethRate = cryptoData.ethereum.usd;
+                } catch(e) { console.warn('[Rate] Crypto fetch failed:', e.message); }
                 
                 lastRateUpdate = new Date().toISOString();
                 
@@ -1516,12 +1568,10 @@
                     localStorage.setItem('btc-rate', btcRate.toString());
                     localStorage.setItem('eth-rate', ethRate.toString());
                     localStorage.setItem('exchange-rate-date', lastRateUpdate);
-                } catch (e) {
-                    console.log('Could not save rate to storage');
-                }
+                } catch (e) {}
                 
                 updateRateDisplay();
-                updateRateIndicator(0); // Fresh update - green
+                updateRateIndicator(0);
                 updateUI();
                 return true;
             } catch (error) {
@@ -1531,9 +1581,17 @@
         }
 
         function updateRateDisplay() {
-            document.getElementById('exchangeRateDisplay').textContent = exchangeRate.toFixed(2);
+            document.getElementById('exchangeRateDisplay').textContent = exchangeRate.toFixed(4);
             document.getElementById('btcRateDisplay').textContent = btcRate.toLocaleString('en-US', {maximumFractionDigits: 0});
             document.getElementById('ethRateDisplay').textContent = ethRate.toLocaleString('en-US', {maximumFractionDigits: 0});
+            
+            // Show daily change next to exchange rate
+            var ilsChangeEl = document.getElementById('ilsDailyChange');
+            if (ilsChangeEl && exchangeRatePrevClose > 0) {
+                var chg = ((exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100);
+                ilsChangeEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+                ilsChangeEl.style.color = chg >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            }
         }
 
         // Toggle real estate specific fields
@@ -1891,6 +1949,14 @@
                     spyPrice = parseFloat(spyData);
                 }
                 
+                // Load daily change data
+                var spyPC = localStorage.getItem('spy-prev-close');
+                if (spyPC) spyPrevClose = parseFloat(spyPC);
+                var spyDC = localStorage.getItem('spy-daily-change');
+                if (spyDC) spyDailyChangePct = parseFloat(spyDC);
+                var usdPC = localStorage.getItem('usdils-prev-close');
+                if (usdPC) exchangeRatePrevClose = parseFloat(usdPC);
+                
                 updateRateDisplay();
             } catch (e) {
                 exchangeRate = 3.7;
@@ -1953,14 +2019,14 @@
                 // Fetch from API
                 fetchExchangeRate().then(success => {
                     if (success) {
-                        alert(`שערי המרה עודכנו בהצלחה!\n\n💵 $1 = ₪${exchangeRate.toFixed(2)}\n₿ BTC = $${btcRate.toLocaleString('en-US')}\nΞ ETH = $${ethRate.toLocaleString('en-US')}`);
+                        alert(`שערי המרה עודכנו בהצלחה!\n\n💵 $1 = ₪${exchangeRate.toFixed(4)}\n₿ BTC = $${btcRate.toLocaleString('en-US')}\nΞ ETH = $${ethRate.toLocaleString('en-US')}`);
                     } else {
                         alert('לא הצלחנו למשוך את השערים. בדוק את החיבור לאינטרנט.');
                     }
                 });
             } else {
                 // Manual input
-                const newRate = prompt('הזן שער המרה חדש דולר לשקל:', exchangeRate.toFixed(2));
+                const newRate = prompt('הזן שער המרה חדש דולר לשקל:', exchangeRate.toFixed(4));
                 if (newRate && !isNaN(newRate) && parseFloat(newRate) > 0) {
                     exchangeRate = parseFloat(newRate);
                     localStorage.setItem('exchange-rate', exchangeRate.toString());
@@ -2597,6 +2663,21 @@
                     const returnPct = avgPrice > 0 ? ((currentPrice - avgPrice) / avgPrice) * 100 : 0;
                     const returnClass = returnPct >= 0 ? 'positive' : 'negative';
                     
+                    // Daily changes
+                    const spyDayPct = spyDailyChangePct || 0;
+                    const spyDaySign = spyDayPct >= 0 ? '+' : '';
+                    const spyDayColor = spyDayPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    
+                    const ilsDayPct = exchangeRatePrevClose > 0 ? ((exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100) : 0;
+                    const ilsDaySign = ilsDayPct >= 0 ? '+' : '';
+                    const ilsDayColor = ilsDayPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    
+                    // Combined daily return in ILS = SPY change + USD/ILS change (approximately)
+                    const combinedDayPct = spyDayPct + ilsDayPct;
+                    const combinedSign = combinedDayPct >= 0 ? '+' : '';
+                    const combinedColor = combinedDayPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    const dailyChangeILS = valueILS * (combinedDayPct / 100);
+                    
                     return `
                         <div class="asset-card" onclick="openModal('edit', ${asset.id})" style="border: 2px solid var(--accent-gold);">
                             <div class="asset-header">
@@ -2626,10 +2707,25 @@
                                     <span class="detail-value" style="color: var(--accent-green);">$${currentPrice.toFixed(2)}</span>
                                 </div>
                                 <div class="detail-row" style="border-top: 2px solid var(--accent-gold); padding-top: 10px; margin-top: 10px;">
-                                    <span class="detail-label" style="font-weight: 600;">תשואה</span>
+                                    <span class="detail-label" style="font-weight: 600;">תשואה כוללת</span>
                                     <span class="detail-value ${returnClass}" style="font-weight: 700; font-size: 1.1em;">
                                         ${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(2)}%
                                     </span>
+                                </div>
+                            </div>
+                            <div style="background: rgba(244,196,48,0.08); border: 1px solid rgba(244,196,48,0.2); border-radius: 8px; padding: 12px; margin-top: 10px;">
+                                <div style="font-size: 0.75rem; font-weight: 600; color: var(--accent-gold); margin-bottom: 8px;">📊 שינוי יומי</div>
+                                <div class="detail-row" style="margin-bottom: 4px;">
+                                    <span class="detail-label" style="font-size:0.8rem;">SPY</span>
+                                    <span style="font-weight:600;color:${spyDayColor};font-size:0.85rem;">${spyDaySign}${spyDayPct.toFixed(2)}%</span>
+                                </div>
+                                <div class="detail-row" style="margin-bottom: 4px;">
+                                    <span class="detail-label" style="font-size:0.8rem;">$/₪</span>
+                                    <span style="font-weight:600;color:${ilsDayColor};font-size:0.85rem;">${ilsDaySign}${ilsDayPct.toFixed(2)}% (₪${exchangeRate.toFixed(4)})</span>
+                                </div>
+                                <div class="detail-row" style="border-top: 1px solid rgba(244,196,48,0.2); padding-top: 6px; margin-top: 6px;">
+                                    <span class="detail-label" style="font-size:0.8rem;font-weight:600;">תשואה יומית ₪</span>
+                                    <span style="font-weight:700;color:${combinedColor};font-size:0.95rem;">${combinedSign}${combinedDayPct.toFixed(2)}% (${combinedSign}₪${Math.abs(dailyChangeILS).toLocaleString('he-IL',{maximumFractionDigits:0})})</span>
                                 </div>
                             </div>
                         </div>
