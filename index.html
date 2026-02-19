@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no">
     <meta name="description" content="ניהול נכסים פיננסיים - פנסיה, גמל, השקעות ועוד">
     <meta name="theme-color" content="#0a0e27">
@@ -1437,6 +1437,8 @@
             </div>
         </div>
 
+        <div id="greetingBanner" style="display:none;text-align:center;padding:10px 20px 2px;"></div>
+
         <div class="total-worth-card">
             <div class="total-worth-content">
                 <div class="total-label">סך כל הנכסים</div>
@@ -1532,10 +1534,32 @@
         <!-- TAB 3: Personal -->
         <div class="tab-content" id="tabPersonal">
             <div class="section-title">👤 פרטים אישיים</div>
-            <div class="chart-card" style="text-align:center;padding:50px 30px;">
-                <div style="font-size:3rem;margin-bottom:16px;opacity:0.4;">🔒</div>
-                <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">בקרוב</div>
-                <div style="font-size:0.85rem;color:var(--text-secondary);">כאן תוכל לנהל פרטים אישיים, יעדים פיננסיים, והתראות</div>
+            <div class="chart-card" style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם פרטי</label>
+                        <input type="text" id="profileFirstName" placeholder="ישראל" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם משפחה</label>
+                        <input type="text" id="profileLastName" placeholder="ישראלי" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">גיל</label>
+                        <input type="text" inputmode="numeric" id="profileAge" placeholder="30" maxlength="3" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="this.value=this.value.replace(/[^0-9]/g,''); saveProfile()">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">מין</label>
+                        <select id="profileGender" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;-webkit-appearance:none;" onchange="saveProfile()">
+                            <option value="">בחר</option>
+                            <option value="male">זכר</option>
+                            <option value="female">נקבה</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="profileSavedMsg" style="text-align:center;font-size:0.75rem;color:var(--accent-green);opacity:0;transition:opacity 0.3s;">✅ נשמר</div>
             </div>
         </div>
 
@@ -1785,14 +1809,18 @@
                     <div id="fundTrackingFields" style="display:none;">
                         <div style="padding:14px;background:linear-gradient(135deg,rgba(0,217,255,0.08),rgba(16,185,129,0.08));border:1px solid rgba(0,217,255,0.15);border-radius:12px;margin-bottom:14px;">
                             <div style="font-size:0.85rem;font-weight:600;color:var(--accent-cyan);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-                                📊 מעקב אוטומטי אחר קרן נאמנות
+                                📊 מעקב קרן נאמנות (ביזפורטל)
                             </div>
                             <div class="form-group" style="margin-bottom:10px;">
-                                <label>מספר קרן (7 ספרות)</label>
+                                <label>מספר קרן</label>
                                 <div style="display:flex;gap:8px;">
                                     <input type="text" inputmode="numeric" id="fundNumber" placeholder="לדוגמה: 5136544" maxlength="7" style="flex:1;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                    <button type="button" onclick="fetchAndShowFundNAV()" style="padding:8px 14px;background:linear-gradient(135deg,var(--accent-cyan),#0097b2);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap;">🔍 חפש</button>
+                                    <button type="button" onclick="fetchAndShowFundNAV()" style="padding:8px 14px;background:linear-gradient(135deg,var(--accent-cyan),#0097b2);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap;" id="fundSearchBtn">🔍 חפש</button>
                                 </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label>כמות יחידות שברשותך</label>
+                                <input type="text" inputmode="decimal" id="fundUnits" placeholder="לדוגמה: 85.432" oninput="formatNumberInput(this); calculateFundValue()">
                             </div>
                             <div id="fundSearchResult" style="display:none;">
                                 <div style="padding:10px;background:rgba(0,0,0,0.15);border-radius:8px;margin-bottom:10px;">
@@ -1811,10 +1839,6 @@
                                             <div style="font-size:0.95rem;font-weight:700;" id="fundYearlyDisplay">-</div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom:10px;">
-                                    <label>כמות יחידות שברשותך</label>
-                                    <input type="text" inputmode="decimal" id="fundUnits" placeholder="לדוגמה: 85.432" oninput="formatNumberInput(this); calculateFundValue()">
                                 </div>
                                 <div id="fundCalcDisplay" style="padding:10px;background:rgba(0,217,255,0.08);border-radius:8px;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -2053,54 +2077,68 @@
 
         async function fetchFundNAV(fundNumber) {
             try {
-                var url = 'https://www.bizportal.co.il/mutualfunds/quote/generalview/' + fundNumber;
-                var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-                var response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                var html = await response.text();
+                var bizUrl = 'https://www.bizportal.co.il/mutualfunds/quote/generalview/' + fundNumber;
+                // Use allorigins JSON endpoint for better error handling
+                var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bizUrl);
+                var response = await fetch(proxyUrl, { signal: AbortSignal.timeout(20000) });
+                if (!response.ok) throw new Error('Proxy HTTP ' + response.status);
+                var json = await response.json();
+                if (!json.contents) throw new Error('Empty response');
+                var html = json.contents;
                 
-                // Parse fund name from title tag
-                var nameMatch = html.match(/<h1[^>]*>([^<]+)/i) || html.match(/<title>([^|<]+)/i);
-                var fundName = nameMatch ? nameMatch[1].trim() : 'קרן ' + fundNumber;
-                // Clean up name
-                fundName = fundName.replace(/\s*\|\s*ביזפורטל\s*$/, '').trim();
+                // Strip HTML tags to get clean text for parsing
+                var text = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
                 
-                // Parse NAV price - look for "מחיר פדיון" followed by a number
-                var navMatch = html.match(/מחיר פדיון[\s\S]{0,200?}?([\d,]+\.?\d*)/);
-                if (!navMatch) {
-                    // Try alternate pattern
-                    navMatch = html.match(/מחיר קנייה[\s\S]{0,200?}?([\d,]+\.?\d*)/);
+                console.log('Fund text snippet:', text.substring(0, 500));
+                
+                // Parse fund name from h1 tag in HTML
+                var nameMatch = html.match(/<h1[^>]*>\s*([^<]+)/i);
+                var fundName = nameMatch ? nameMatch[1].trim() : '';
+                if (!fundName) {
+                    // Try from title
+                    var titleMatch = html.match(/<title>([^|<]+)/i);
+                    fundName = titleMatch ? titleMatch[1].trim() : 'קרן ' + fundNumber;
                 }
-                if (!navMatch) throw new Error('NAV not found');
-                var nav = parseFloat(navMatch[1].replace(/,/g, ''));
+                fundName = fundName.replace(/\s*\|\s*ביזפורטל\s*$/i, '').trim();
                 
-                // Parse daily change percentage
+                // Parse NAV: look for "מחיר פדיון" then the next number
+                var nav = 0;
+                var navMatch = text.match(/מחיר פדיון\s+([\d,]+\.?\d*)/);
+                if (!navMatch) navMatch = text.match(/מחיר קנייה\s+([\d,]+\.?\d*)/);
+                if (navMatch) {
+                    nav = parseFloat(navMatch[1].replace(/,/g, ''));
+                }
+                if (!nav || nav <= 0) throw new Error('NAV not found in page');
+                
+                // Parse daily change: the standalone percentage after the two prices
+                // Pattern: after "מחיר קנייה" and its value, there's a standalone X.XX%
                 var dailyPct = 0;
-                var dailyMatch = html.match(/([\-−]?[\d.]+)%[\s\S]{0,80}?% החודש/);
-                if (!dailyMatch) {
-                    // Try: number followed by % that comes after the NAV
-                    var afterNav = html.substring(html.indexOf(navMatch[0]));
-                    dailyMatch = afterNav.match(/([\-−]?[\d.]+)%/);
-                }
+                var dailyMatch = text.match(/מחיר קנייה\s+[\d,]+\.?\d*\s+([\-−]?[\d.]+)%/);
                 if (dailyMatch) dailyPct = parseFloat(dailyMatch[1].replace('−', '-'));
-
-                // Parse monthly change
+                
+                // Parse monthly: "% החודש:X.XX%" or "% החודש: X.XX"
                 var monthlyPct = 0;
-                var monthlyMatch = html.match(/% החודש[:\s]*([\-−]?[\d.]+)/);
-                if (!monthlyMatch) monthlyMatch = html.match(/([\-−]?[\d.]+)%[\s\S]{0,20}?חודש/);
+                var monthlyMatch = text.match(/% החודש\s*:?\s*([\-−]?[\d.]+)/);
                 if (monthlyMatch) monthlyPct = parseFloat(monthlyMatch[1].replace('−', '-'));
-
-                // Parse yearly change
+                
+                // Parse yearly (12 months): "% 12 חודשים:X.XX%"
                 var yearlyPct = 0;
-                var yearlyMatch = html.match(/% 12 חודשים[:\s]*([\-−]?[\d.]+)/);
-                if (!yearlyMatch) yearlyMatch = html.match(/([\-−]?[\d.]+)%[\s\S]{0,20}?12 חודשים/);
+                var yearlyMatch = text.match(/% 12 חודשים\s*:?\s*([\-−]?[\d.]+)/);
                 if (yearlyMatch) yearlyPct = parseFloat(yearlyMatch[1].replace('−', '-'));
+                
+                // Parse YTD: "% השנה:X.XX"
+                var ytdPct = 0;
+                var ytdMatch = text.match(/% השנה\s*:?\s*([\-−]?[\d.]+)/);
+                if (ytdMatch) ytdPct = parseFloat(ytdMatch[1].replace('−', '-'));
+
+                console.log('Fund parsed:', fundName, 'NAV:', nav, 'Daily:', dailyPct, 'Monthly:', monthlyPct, 'Yearly:', yearlyPct);
 
                 var result = {
                     nav: nav,
                     dailyPct: dailyPct,
                     monthlyPct: monthlyPct,
                     yearlyPct: yearlyPct,
+                    ytdPct: ytdPct,
                     name: fundName,
                     date: new Date().toISOString()
                 };
@@ -2111,10 +2149,15 @@
                 return result;
             } catch (err) {
                 console.error('Fund NAV fetch error:', err);
-                // Try cache
+                // Try localStorage cache
                 try {
                     var cached = localStorage.getItem('fund-cache-' + fundNumber);
-                    if (cached) return JSON.parse(cached);
+                    if (cached) {
+                        var c = JSON.parse(cached);
+                        c._fromCache = true;
+                        fundDataCache[fundNumber] = c;
+                        return c;
+                    }
                 } catch(e){}
                 return null;
             }
@@ -2123,10 +2166,13 @@
         async function fetchAndShowFundNAV() {
             var fundNum = document.getElementById('fundNumber').value.trim();
             if (!fundNum || fundNum.length < 6) {
-                alert('נא להזין מספר קרן בן 7 ספרות');
+                alert('נא להזין מספר קרן (6-7 ספרות)');
                 return;
             }
             
+            var btn = document.getElementById('fundSearchBtn');
+            btn.textContent = '⏳';
+            btn.disabled = true;
             document.getElementById('fundLoadingIndicator').style.display = 'block';
             document.getElementById('fundSearchResult').style.display = 'none';
             document.getElementById('fundError').style.display = 'none';
@@ -2134,22 +2180,24 @@
             var data = await fetchFundNAV(fundNum);
             
             document.getElementById('fundLoadingIndicator').style.display = 'none';
+            btn.textContent = '🔍 חפש';
+            btn.disabled = false;
             
             if (data && data.nav > 0) {
-                document.getElementById('fundNameDisplay').textContent = data.name;
+                document.getElementById('fundNameDisplay').textContent = data.name + (data._fromCache ? ' (מטמון)' : '');
                 document.getElementById('fundNAVDisplay').textContent = '₪' + data.nav.toFixed(2);
                 
                 var dailyEl = document.getElementById('fundDailyDisplay');
-                dailyEl.textContent = data.dailyPct.toFixed(2) + '%';
+                dailyEl.textContent = (data.dailyPct >= 0 ? '+' : '') + data.dailyPct.toFixed(2) + '%';
                 dailyEl.style.color = data.dailyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 
                 var yearlyEl = document.getElementById('fundYearlyDisplay');
-                yearlyEl.textContent = data.yearlyPct.toFixed(2) + '%';
+                yearlyEl.textContent = (data.yearlyPct >= 0 ? '+' : '') + data.yearlyPct.toFixed(2) + '%';
                 yearlyEl.style.color = data.yearlyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 
                 document.getElementById('fundSearchResult').style.display = 'block';
                 
-                // Auto-fill name and return fields
+                // Auto-fill name field if empty
                 var nameInput = document.getElementById('assetName');
                 if (!nameInput.value) nameInput.value = data.name;
                 document.getElementById('assetReturn').value = formatNum(data.yearlyPct);
@@ -2157,13 +2205,14 @@
                 calculateFundValue();
             } else {
                 document.getElementById('fundError').style.display = 'block';
-                document.getElementById('fundError').textContent = '❌ לא נמצאו נתונים לקרן ' + fundNum + '. ודא שמספר הקרן נכון.';
+                document.getElementById('fundError').textContent = '❌ לא נמצאו נתונים לקרן ' + fundNum + '. ודא שמספר הקרן נכון (7 ספרות).';
             }
         }
 
         function calculateFundValue() {
             var fundNum = document.getElementById('fundNumber').value.trim();
-            var units = parseNum(document.getElementById('fundUnits'));
+            var unitsEl = document.getElementById('fundUnits');
+            var units = parseNum(unitsEl);
             var data = fundDataCache[fundNum];
             
             if (data && data.nav > 0 && units > 0) {
@@ -2188,7 +2237,8 @@
             for (var fundNum of Object.keys(uniqueFunds)) {
                 var data = await fetchFundNAV(fundNum);
                 if (data && data.nav > 0) {
-                    results.push('✅ ' + data.name + ': ₪' + data.nav.toFixed(2) + ' (' + data.dailyPct.toFixed(2) + '%)');
+                    var statusIcon = data._fromCache ? '⚠️' : '✅';
+                    results.push(statusIcon + ' ' + data.name + ': ₪' + data.nav.toFixed(2) + ' (' + (data.dailyPct >= 0 ? '+' : '') + data.dailyPct.toFixed(2) + '%)');
                     // Update all assets with this fund number
                     fundAssets.filter(function(a) { return a.fundNumber === fundNum; }).forEach(function(a) {
                         a.value = (a.fundUnits || 0) * data.nav;
@@ -2740,6 +2790,74 @@
         }
 
         // Add event listeners for real estate calculations
+        // ============ Profile & Greeting ============
+        function saveProfile() {
+            var profile = {
+                firstName: document.getElementById('profileFirstName').value.trim(),
+                lastName: document.getElementById('profileLastName').value.trim(),
+                age: document.getElementById('profileAge').value.trim(),
+                gender: document.getElementById('profileGender').value
+            };
+            try { localStorage.setItem('user-profile', JSON.stringify(profile)); } catch(e){}
+            // Show saved indicator
+            var msg = document.getElementById('profileSavedMsg');
+            if (msg) { msg.style.opacity = '1'; setTimeout(function(){ msg.style.opacity = '0'; }, 1500); }
+            updateGreeting();
+        }
+
+        function loadProfile() {
+            try {
+                var data = localStorage.getItem('user-profile');
+                if (data) {
+                    var profile = JSON.parse(data);
+                    document.getElementById('profileFirstName').value = profile.firstName || '';
+                    document.getElementById('profileLastName').value = profile.lastName || '';
+                    document.getElementById('profileAge').value = profile.age || '';
+                    document.getElementById('profileGender').value = profile.gender || '';
+                }
+            } catch(e){}
+            updateGreeting();
+        }
+
+        function updateGreeting() {
+            var banner = document.getElementById('greetingBanner');
+            if (!banner) return;
+            
+            var firstName = '';
+            try {
+                var data = localStorage.getItem('user-profile');
+                if (data) {
+                    var profile = JSON.parse(data);
+                    firstName = profile.firstName || '';
+                }
+            } catch(e){}
+            
+            if (!firstName) {
+                banner.style.display = 'none';
+                return;
+            }
+            
+            var hour = new Date().getHours();
+            var greeting = '';
+            var emoji = '';
+            if (hour >= 5 && hour < 12) {
+                greeting = 'בוקר טוב';
+                emoji = '☀️';
+            } else if (hour >= 12 && hour < 17) {
+                greeting = 'צהריים טובים';
+                emoji = '🌤️';
+            } else if (hour >= 17 && hour < 21) {
+                greeting = 'ערב טוב';
+                emoji = '🌅';
+            } else {
+                greeting = 'לילה טוב';
+                emoji = '🌙';
+            }
+            
+            banner.style.display = 'block';
+            banner.innerHTML = '<span style="font-size:1.15rem;font-weight:600;color:var(--text-primary);">' + emoji + ' ' + greeting + ', ' + firstName + '</span>';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('propertyValue')?.addEventListener('input', calculateEquity);
             document.getElementById('mortgage')?.addEventListener('input', calculateEquity);
@@ -3149,6 +3267,9 @@
             var fundResult = document.getElementById('fundSearchResult'); if (fundResult) fundResult.style.display = 'none';
             var fundErr = document.getElementById('fundError'); if (fundErr) fundErr.style.display = 'none';
             var fundLoad = document.getElementById('fundLoadingIndicator'); if (fundLoad) fundLoad.style.display = 'none';
+            var fundNumInput = document.getElementById('fundNumber'); if (fundNumInput) fundNumInput.value = '';
+            var fundUnitsInput = document.getElementById('fundUnits'); if (fundUnitsInput) fundUnitsInput.value = '';
+            var fundBtn = document.getElementById('fundSearchBtn'); if (fundBtn) { fundBtn.textContent = '🔍 חפש'; fundBtn.disabled = false; }
             editingAssetId = null;
         }
 
@@ -3338,6 +3459,11 @@
             if (tabName === 'Trends') {
                 renderHistoryChart();
                 updateTrendsTab();
+            }
+
+            // Update greeting when returning to dashboard
+            if (tabName === 'Dashboard') {
+                updateGreeting();
             }
 
             // Scroll to top
@@ -4212,6 +4338,7 @@
 
         // Initialize
         loadAssets();
+        loadProfile();
 
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
