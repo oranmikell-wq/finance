@@ -4340,16 +4340,35 @@
         loadAssets();
         loadProfile();
 
-        // Register Service Worker for PWA
+        // Register Service Worker for PWA — with auto-update
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
                     .then(registration => {
-                        console.log('Service Worker registered successfully:', registration.scope);
+                        console.log('SW registered:', registration.scope);
+                        // Check for updates immediately and every 60 seconds
+                        registration.update();
+                        setInterval(() => registration.update(), 60000);
+                        // Auto-activate new SW
+                        registration.addEventListener('updatefound', () => {
+                            var newWorker = registration.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'activated') {
+                                        console.log('New SW activated, reloading...');
+                                        window.location.reload();
+                                    }
+                                });
+                            }
+                        });
                     })
                     .catch(error => {
-                        console.log('Service Worker registration failed:', error);
+                        console.log('SW registration failed:', error);
                     });
+                // If there's already a waiting worker, activate it
+                navigator.serviceWorker.ready.then(reg => {
+                    if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                });
             });
         }
 
