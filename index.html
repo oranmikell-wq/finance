@@ -7,10 +7,10 @@
     <meta name="theme-color" content="#0a0e27">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="פורטפוליו">
+    <meta name="apple-mobile-web-app-title" content="פיננסייר">
     <meta name="theme-color" content="#0a0e27">
     <meta name="color-scheme" content="dark">
-    <title>לוח בקרה פיננסי - Portfolio Dashboard</title>
+    <title>פיננסייר - העוזר הפיננסי שלך</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/svg+xml" href="./logo.svg">
     <link rel="apple-touch-icon" href="./logo.svg">
@@ -1135,6 +1135,32 @@
             transform: scale(0.9);
         }
 
+        .tab-btn-add {
+            position: relative;
+            bottom: 12px;
+        }
+
+        .tab-add-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d5dd4 100%);
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: 300;
+            line-height: 1;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn-add:active .tab-add-icon {
+            transform: scale(0.9);
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+        }
+
         .insights-section {
             margin-bottom: 40px;
             animation: fadeInUp 0.8s ease-out 0.4s both;
@@ -1298,10 +1324,7 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <h1>📊 לוח הבקרה הפיננסי שלי</h1>
-                <div>
-                    <button class="action-button" onclick="openModal('add')">➕ הוסף נכס</button>
-                </div>
+                <h1>📊 פיננסייר - העוזר הפיננסי שלך</h1>
             </div>
             <div class="last-update">
                 עדכון אחרון: <span id="lastUpdate">--</span>
@@ -1349,33 +1372,15 @@
         <div class="tab-content active" id="tabDashboard">
 
         <div class="quick-actions">
-            <button class="quick-action-btn" onclick="openModal('add')">
-                <span>➕</span>
-                <span>הוסף נכס</span>
-            </button>
-            <button class="quick-action-btn" onclick="updateExchangeRate()">
+            <button class="quick-action-btn" onclick="updateAllRates()">
                 <span>🔄</span>
                 <span>עדכן שערים</span>
                 <span class="live-indicator"></span>
-            </button>
-            <button class="quick-action-btn" onclick="refreshSpy()" id="spyRefreshBtn" style="display: none; border: 2px solid var(--accent-gold);">
-                <span>📈</span>
-                <span>עדכן SPY</span>
-                <span id="spyStatus" style="font-size: 0.7rem; color: var(--accent-green);"></span>
             </button>
             <button class="quick-action-btn" onclick="showDataMenu()">
                 <span>💾</span>
                 <span>ייצוא/ייבוא</span>
             </button>
-            <button class="quick-action-btn" onclick="showInsights()">
-                <span>💡</span>
-                <span>תובנות</span>
-            </button>
-        </div>
-
-        <div class="insights-section" id="insightsSection" style="display: none;">
-            <div class="section-title">💡 תובנות והמלצות</div>
-            <div class="insights-grid" id="insightsGrid"></div>
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
@@ -1468,6 +1473,9 @@
         <button class="tab-btn" onclick="switchTab('Trends', this)">
             <span class="tab-icon">📈</span>
             <span class="tab-label">מגמות</span>
+        </button>
+        <button class="tab-btn tab-btn-add" onclick="openModal('add')">
+            <span class="tab-add-icon">+</span>
         </button>
         <button class="tab-btn" onclick="switchTab('Personal', this)">
             <span class="tab-icon">👤</span>
@@ -1968,46 +1976,21 @@
 
         // Manual SPY refresh
         async function refreshSpy() {
-            const btn = document.getElementById('spyRefreshBtn');
-            const status = document.getElementById('spyStatus');
-            if (!btn || !status) { console.error('[SPY] refreshSpy: button/status not found'); return; }
-
-            console.log('[SPY] refreshSpy clicked');
-            btn.disabled = true;
-            status.textContent = '⏳ מעדכן...';
-            status.style.color = 'var(--accent-gold)';
-            
             try {
-                const oldPrice = spyPrice;
-                const success = await fetchSpyPrice();
-                console.log('[SPY] refreshSpy result:', success, 'price:', spyPrice);
-                
+                var success = await fetchSpyPrice();
                 if (success && spyPrice > 0) {
-                    const change = oldPrice > 0 ? ((spyPrice - oldPrice) / oldPrice * 100).toFixed(2) : '';
-                    const changeStr = change ? ` (${change > 0 ? '+' : ''}${change}%)` : '';
-                    status.textContent = `✓ $${spyPrice.toFixed(2)}${changeStr}`;
-                    status.style.color = 'var(--accent-green)';
-                } else {
-                    status.textContent = '✗ נכשל - נסה ידני';
-                    status.style.color = 'var(--accent-red)';
+                    updateUI();
                 }
+                return success;
             } catch (error) {
                 console.error('[SPY] refreshSpy error:', error);
-                status.textContent = '✗ שגיאה';
-                status.style.color = 'var(--accent-red)';
+                return false;
             }
-            
-            btn.disabled = false;
-            setTimeout(function() { if (status) status.textContent = spyPrice > 0 ? ('$' + spyPrice.toFixed(2)) : ''; }, 5000);
         }
 
-        // Check if we have SPY assets and show/hide button
+        // Check if we have SPY assets
         function updateSpyButtonVisibility() {
-            const hasSpyAssets = assets.some(a => a.isSpyPension);
-            const display = hasSpyAssets ? 'flex' : 'none';
-            
-            const btn = document.getElementById('spyRefreshBtn');
-            if (btn) btn.style.display = display;
+            // No longer needed - SPY is updated via updateAllRates
         }
 
         // Check if US market is open (EST timezone)
@@ -2568,18 +2551,31 @@
             }
         }
 
-        function updateExchangeRate() {
-            const manualRate = confirm('רוצה למשוך שערי המרה עדכניים מהאינטרנט?\n(דולר, ביטקוין, איתריום)\n\nלחץ "אישור" למשיכה אוטומטית\nלחץ "ביטול" להזנה ידנית');
+        async function updateAllRates() {
+            const auto = confirm('רוצה למשוך שערי המרה עדכניים מהאינטרנט?\n(דולר, ביטקוין, איתריום + SPY)\n\nלחץ "אישור" למשיכה אוטומטית\nלחץ "ביטול" להזנה ידנית');
             
-            if (manualRate) {
-                // Fetch from API
-                fetchExchangeRate().then(success => {
-                    if (success) {
-                        alert(`שערי המרה עודכנו בהצלחה!\n\n💵 $1 = ₪${exchangeRate.toFixed(4)}\n₿ BTC = $${btcRate.toLocaleString('en-US')}\nΞ ETH = $${ethRate.toLocaleString('en-US')}`);
-                    } else {
-                        alert('לא הצלחנו למשוך את השערים. בדוק את החיבור לאינטרנט.');
-                    }
-                });
+            if (auto) {
+                var results = [];
+                // Fetch exchange rates
+                var rateSuccess = await fetchExchangeRate();
+                results.push(rateSuccess ? '✅ שערי מטבע עודכנו' : '❌ שערי מטבע - נכשל');
+                
+                // Fetch SPY if we have SPY assets
+                var hasSpyAssets = assets.some(function(a) { return a.isSpyPension; });
+                if (hasSpyAssets) {
+                    var spySuccess = await fetchSpyPrice();
+                    results.push(spySuccess ? '✅ SPY: $' + spyPrice.toFixed(2) : '❌ SPY - נכשל');
+                }
+                
+                updateUI();
+                
+                var msg = 'עדכון שערים:\n\n' + results.join('\n');
+                if (rateSuccess) {
+                    msg += '\n\n💵 $1 = ₪' + exchangeRate.toFixed(4);
+                    msg += '\n₿ BTC = $' + btcRate.toLocaleString('en-US');
+                    msg += '\nΞ ETH = $' + ethRate.toLocaleString('en-US');
+                }
+                alert(msg);
             } else {
                 // Manual input
                 const newRate = prompt('הזן שער המרה חדש דולר לשקל:', exchangeRate.toFixed(4));
@@ -2591,6 +2587,9 @@
                 }
             }
         }
+
+        // Keep old name for header click
+        function updateExchangeRate() { updateAllRates(); }
 
         function updateLastUpdate() {
             const now = new Date();

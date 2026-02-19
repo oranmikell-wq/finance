@@ -1,6 +1,6 @@
 {
-  "name": "לוח בקרה פיננסי",
-  "short_name": "פורטפוליו",
+  "name": "פיננסייר - העוזר הפיננסי שלך",
+  "short_name": "פיננסייר",
   "description": "ניהול נכסים פיננסיים - פנסיה, גמל, השקעות ועוד",
   "start_url": "https://oranmikell-wq.github.io/finance/",
   "scope": "https://oranmikell-wq.github.io/finance/",
