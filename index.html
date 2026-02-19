@@ -1161,6 +1161,100 @@
             box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
         }
 
+        /* ============ TYPE TILES ============ */
+        .type-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 6px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .type-tile:hover, .type-tile.selected {
+            background: rgba(244,196,48,0.08);
+            border-color: var(--accent-gold);
+            color: var(--text-primary);
+            transform: scale(1.03);
+        }
+
+        .type-tile.selected {
+            box-shadow: 0 0 0 2px var(--accent-gold);
+        }
+
+        .type-tile:active {
+            transform: scale(0.95);
+        }
+
+        /* ============ SETTINGS ROWS ============ */
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            text-align: right;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .settings-row:hover {
+            border-color: rgba(255,255,255,0.15);
+            background: var(--bg-hover);
+        }
+
+        .settings-row:active {
+            transform: scale(0.98);
+        }
+
+        .settings-row-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .settings-row-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .settings-row-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .settings-row-desc {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .settings-row-arrow {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            opacity: 0.4;
+            flex-shrink: 0;
+        }
+
         .insights-section {
             margin-bottom: 40px;
             animation: fadeInUp 0.8s ease-out 0.4s both;
@@ -1324,7 +1418,7 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <h1>📊 פיננסייר - העוזר הפיננסי שלך</h1>
+                <h1><img src="./logo.svg" alt="logo" style="width:36px;height:36px;vertical-align:middle;margin-left:8px;border-radius:8px;"> פיננסייר - העוזר הפיננסי שלך</h1>
             </div>
             <div class="last-update">
                 עדכון אחרון: <span id="lastUpdate">--</span>
@@ -1371,17 +1465,7 @@
         <!-- TAB 1: Dashboard -->
         <div class="tab-content active" id="tabDashboard">
 
-        <div class="quick-actions">
-            <button class="quick-action-btn" onclick="updateAllRates()">
-                <span>🔄</span>
-                <span>עדכן שערים</span>
-                <span class="live-indicator"></span>
-            </button>
-            <button class="quick-action-btn" onclick="showDataMenu()">
-                <span>💾</span>
-                <span>ייצוא/ייבוא</span>
-            </button>
-        </div>
+        <div style="height:12px;"></div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
             <div class="section-title" style="margin-bottom:0;">הנכסים שלי</div>
@@ -1452,13 +1536,54 @@
             </div>
         </div>
 
-        <!-- TAB 4: More -->
+        <!-- TAB 4: Settings -->
         <div class="tab-content" id="tabMore">
-            <div class="section-title">⚙️ עוד</div>
-            <div class="chart-card" style="text-align:center;padding:50px 30px;">
-                <div style="font-size:3rem;margin-bottom:16px;opacity:0.4;">🚀</div>
-                <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">בקרוב</div>
-                <div style="font-size:0.85rem;color:var(--text-secondary);">פיצ'רים נוספים בדרך</div>
+            <div class="section-title">⚙️ הגדרות</div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <!-- Update rates -->
+                <button onclick="updateAllRates()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">🔄</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">עדכון שערים</div>
+                        <div class="settings-row-desc">דולר, ביטקוין, איתריום ו-SPY</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+
+                <!-- Export -->
+                <button onclick="exportData()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);">📤</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">ייצוא נתונים</div>
+                        <div class="settings-row-desc">שמור גיבוי של כל הנכסים</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+
+                <!-- Import -->
+                <button onclick="importData()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);">📥</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">ייבוא נתונים</div>
+                        <div class="settings-row-desc">שחזר גיבוי מקובץ JSON</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+
+                <!-- Clear data -->
+                <button onclick="if(confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים? פעולה זו בלתי הפיכה!')){assets=[];saveAssets();updateUI();alert('✅ כל הנתונים נמחקו.');}" class="settings-row" style="border-color:rgba(239,68,68,0.15);">
+                    <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);">🗑️</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title" style="color:var(--accent-red);">מחיקת כל הנתונים</div>
+                        <div class="settings-row-desc">מחיקה מלאה של כל הנכסים וההיסטוריה</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+            </div>
+
+            <div style="text-align:center;margin-top:30px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
+                פיננסייר v1.0
             </div>
         </div>
 
@@ -1483,162 +1608,206 @@
         </button>
         <button class="tab-btn" onclick="switchTab('More', this)">
             <span class="tab-icon">⚙️</span>
-            <span class="tab-label">עוד</span>
+            <span class="tab-label">הגדרות</span>
         </button>
     </nav>
 
     <div class="modal" id="assetModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">הוסף נכס חדש</h2>
-                <button class="close-button" onclick="closeModal()">×</button>
+            <div class="modal-header" style="text-align:center;position:relative;">
+                <button class="close-button" onclick="closeModal()" style="position:absolute;left:0;top:0;">×</button>
+                <div id="modalIcon" style="font-size:2.5rem;margin-bottom:8px;">💰</div>
+                <h2 class="modal-title" id="modalTitle" style="font-size:1.3rem;">הוסף נכס חדש</h2>
+                <p id="modalSubtitle" style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;">בחר סוג נכס להתחלה</p>
             </div>
+
             <form id="assetForm">
-                <div class="form-group">
-                    <label>סוג הנכס</label>
-                    <select id="assetType" required onchange="toggleRealEstateFields()">
-                        <option value="">בחר סוג נכס</option>
-                        <option value="pension">פנסיה</option>
-                        <option value="gemel">גמל</option>
-                        <option value="fund">קרן השתלמות</option>
-                        <option value="savings">קרן כספית / חיסכון</option>
-                        <option value="trade">טרייד / מניות</option>
-                        <option value="crypto">קריפטו</option>
-                        <option value="real_estate">נדל"ן / דירה</option>
-                        <option value="other">אחר</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>שם הנכס</label>
-                    <input type="text" id="assetName" placeholder="לדוגמה: פנסיה מקיפה" required>
-                </div>
-                <div class="form-group">
-                    <label>ספק / חברה</label>
-                    <input type="text" id="assetProvider" placeholder="לדוגמה: מגדל, לאומי, ביטוח ישיר" required>
-                </div>
-                
-                <!-- Real Estate specific fields -->
-                <div id="realEstateFields" style="display: none;">
-                    <div class="form-group">
-                        <label>שווי הדירה (₪)</label>
-                        <input type="text" inputmode="decimal" id="propertyValue" placeholder="0" oninput="formatNumberInput(this); calculateEquity()">
+                <!-- Step 1: Type selector grid -->
+                <div id="typeSelector" style="margin-bottom:20px;">
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                        <button type="button" class="type-tile" data-type="pension" onclick="selectAssetType('pension')">
+                            <span style="font-size:1.5rem;">🏛️</span>
+                            <span>פנסיה</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="gemel" onclick="selectAssetType('gemel')">
+                            <span style="font-size:1.5rem;">🏦</span>
+                            <span>גמל</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="fund" onclick="selectAssetType('fund')">
+                            <span style="font-size:1.5rem;">📚</span>
+                            <span>השתלמות</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="savings" onclick="selectAssetType('savings')">
+                            <span style="font-size:1.5rem;">💵</span>
+                            <span>חיסכון</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="trade" onclick="selectAssetType('trade')">
+                            <span style="font-size:1.5rem;">📈</span>
+                            <span>מניות</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="crypto" onclick="selectAssetType('crypto')">
+                            <span style="font-size:1.5rem;">₿</span>
+                            <span>קריפטו</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="real_estate" onclick="selectAssetType('real_estate')">
+                            <span style="font-size:1.5rem;">🏠</span>
+                            <span>נדל"ן</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="other" onclick="selectAssetType('other')">
+                            <span style="font-size:1.5rem;">📋</span>
+                            <span>אחר</span>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label>משכנתא / חוב (₪)</label>
-                        <input type="text" inputmode="decimal" id="mortgage" placeholder="0" oninput="formatNumberInput(this); calculateEquity()">
-                    </div>
-                    <div style="padding: 15px; background: #f7fafc; border-radius: 10px; margin-bottom: 20px;">
-                        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px;">הון עצמי מחושב:</div>
-                        <div style="font-size: 1.3rem; font-weight: 600; color: var(--accent-gold);" id="calculatedEquity">₪0</div>
-                    </div>
                 </div>
+                <!-- Hidden select for compatibility -->
+                <select id="assetType" required style="display:none;" onchange="toggleRealEstateFields()">
+                    <option value="">בחר סוג נכס</option>
+                    <option value="pension">פנסיה</option>
+                    <option value="gemel">גמל</option>
+                    <option value="fund">קרן השתלמות</option>
+                    <option value="savings">קרן כספית / חיסכון</option>
+                    <option value="trade">טרייד / מניות</option>
+                    <option value="crypto">קריפטו</option>
+                    <option value="real_estate">נדל"ן / דירה</option>
+                    <option value="other">אחר</option>
+                </select>
 
-                <!-- SPY Pension specific fields -->
-                <div id="spyPensionCheckbox" style="display: none; margin-bottom: 20px;">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" id="isSpyPension" onchange="toggleSpyFields()" style="width: 20px; height: 20px; cursor: pointer;">
-                        <span style="font-weight: 600;">פנסיה מושקעת במדד S&P 500 (SPY)</span>
-                    </label>
-                </div>
-
-                <div id="spyFields" style="display: none;">
-                    <!-- Hidden fields for units and avg price - always present -->
-                    <input type="hidden" id="spyUnits" value="0">
-                    <input type="hidden" id="spyAvgPrice" value="0">
-                    
-                    <div style="padding: 15px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border: 2px solid var(--accent-gold); border-radius: 12px; margin-bottom: 20px;">
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--accent-gold); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                            📈 מעקב אחר SPY בזמן אמת
+                <!-- Step 2: Details (hidden until type selected) -->
+                <div id="assetDetailsSection" style="display:none;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                        <div class="form-group" style="margin:0;">
+                            <label>שם הנכס</label>
+                            <input type="text" id="assetName" placeholder="לדוגמה: פנסיה מקיפה" required>
                         </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>ספק / חברה</label>
+                            <input type="text" id="assetProvider" placeholder="לדוגמה: מגדל" required>
+                        </div>
+                    </div>
+                
+                    <!-- Real Estate specific fields -->
+                    <div id="realEstateFields" style="display: none;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div class="form-group" style="margin:0;">
+                                <label>שווי הדירה (₪)</label>
+                                <input type="text" inputmode="decimal" id="propertyValue" placeholder="0" oninput="formatNumberInput(this); calculateEquity()">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>משכנתא / חוב (₪)</label>
+                                <input type="text" inputmode="decimal" id="mortgage" placeholder="0" oninput="formatNumberInput(this); calculateEquity()">
+                            </div>
+                        </div>
+                        <div style="padding:12px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.12);border-radius:10px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+                            <span style="font-size:0.8rem;color:var(--text-secondary);">הון עצמי מחושב:</span>
+                            <span style="font-size:1.1rem;font-weight:700;color:var(--accent-gold);" id="calculatedEquity">₪0</span>
+                        </div>
+                    </div>
+
+                    <!-- SPY Pension specific fields -->
+                    <div id="spyPensionCheckbox" style="display: none; margin-bottom: 14px;">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.12);border-radius:10px;">
+                            <input type="checkbox" id="isSpyPension" onchange="toggleSpyFields()" style="width:20px;height:20px;cursor:pointer;accent-color:#f4c430;">
+                            <div>
+                                <div style="font-weight:600;font-size:0.85rem;">📈 פנסיה מושקעת ב-S&P 500</div>
+                                <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px;">מעקב אוטומטי אחרי SPY</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div id="spyFields" style="display: none;">
+                        <input type="hidden" id="spyUnits" value="0">
+                        <input type="hidden" id="spyAvgPrice" value="0">
                         
-                        <!-- Input mode selection -->
-                        <div style="margin-bottom: 20px; display: flex; gap: 15px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
-                                <input type="radio" name="spyInputMode" value="ils" checked onchange="toggleSpyInputMode()" style="cursor: pointer;">
-                                <span style="font-size: 0.9rem; font-weight: 600;">הזן סכום בשקלים</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
-                                <input type="radio" name="spyInputMode" value="units" onchange="toggleSpyInputMode()" style="cursor: pointer;">
-                                <span style="font-size: 0.9rem;">יש לי יחידות SPY</span>
-                            </label>
-                        </div>
+                        <div style="padding:14px;background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(244,196,48,0.08));border:1px solid rgba(244,196,48,0.15);border-radius:12px;margin-bottom:14px;">
+                            <div style="display:flex;gap:10px;padding:8px;background:rgba(0,0,0,0.15);border-radius:8px;margin-bottom:12px;">
+                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;font-size:0.8rem;">
+                                    <input type="radio" name="spyInputMode" value="ils" checked onchange="toggleSpyInputMode()" style="cursor:pointer;accent-color:#f4c430;">
+                                    <span style="font-weight:600;">סכום בשקלים</span>
+                                </label>
+                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;font-size:0.8rem;">
+                                    <input type="radio" name="spyInputMode" value="units" onchange="toggleSpyInputMode()" style="cursor:pointer;accent-color:#f4c430;">
+                                    <span>יחידות SPY</span>
+                                </label>
+                            </div>
 
-                        <!-- ILS input mode -->
-                        <div id="spyIlsMode">
-                            <div class="form-group">
-                                <label>סכום נוכחי בפנסיה (₪)</label>
-                                <input type="text" inputmode="decimal" id="spyAmountILS" placeholder="לדוגמה: 370,000" oninput="formatNumberInput(this); calculateFromILS()">
-                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
-                                    💡 הזן את הסכום שאתה רואה במערכת של מגדל
+                            <div id="spyIlsMode">
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>סכום נוכחי בפנסיה (₪)</label>
+                                    <input type="text" inputmode="decimal" id="spyAmountILS" placeholder="לדוגמה: 370,000" oninput="formatNumberInput(this); calculateFromILS()">
+                                </div>
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>מחיר רכישה ממוצע ($) - אופציונלי</label>
+                                    <input type="text" inputmode="decimal" id="spyAvgPriceILS" placeholder="לדוגמה: 350" oninput="formatNumberInput(this); calculateFromILS()">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>מחיר רכישה ממוצע ($) - אופציונלי</label>
-                                <input type="text" inputmode="decimal" id="spyAvgPriceILS" placeholder="לדוגמה: 350" oninput="formatNumberInput(this); calculateFromILS()">
-                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
-                                    💡 באיזה מחיר ממוצע נכנסת? (אם לא יודע - השאר ריק)
+
+                            <div id="spyUnitsMode" style="display: none;">
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>כמות יחידות SPY</label>
+                                    <input type="text" inputmode="decimal" id="spyUnitsDisplay" placeholder="0" oninput="formatNumberInput(this); calculateSpyValue()">
+                                </div>
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>מחיר רכישה ממוצע ($)</label>
+                                    <input type="text" inputmode="decimal" id="spyAvgPriceDisplay" placeholder="0" oninput="formatNumberInput(this); calculateSpyValue()">
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Units input mode -->
-                        <div id="spyUnitsMode" style="display: none;">
-                            <div class="form-group">
-                                <label>כמות יחידות SPY</label>
-                                <input type="text" inputmode="decimal" id="spyUnitsDisplay" placeholder="0" oninput="formatNumberInput(this); calculateSpyValue()">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;background:rgba(0,0,0,0.15);border-radius:8px;">
+                                <div>
+                                    <div style="font-size:0.65rem;color:var(--text-secondary);margin-bottom:3px;">SPY נוכחי:</div>
+                                    <div style="font-size:1rem;font-weight:700;color:var(--accent-green);cursor:pointer;" id="currentSpyPrice" onclick="manualSpyEntry()">$--</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:0.65rem;color:var(--text-secondary);margin-bottom:3px;">תשואה:</div>
+                                    <div style="font-size:1rem;font-weight:700;" id="spyReturn">--%</div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>מחיר רכישה ממוצע ($)</label>
-                                <input type="text" inputmode="decimal" id="spyAvgPriceDisplay" placeholder="0" oninput="formatNumberInput(this); calculateSpyValue()">
+                            <div id="spyCalculatedDisplay" style="padding:10px;background:rgba(244,196,48,0.08);border-radius:8px;margin-top:8px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;">
+                                    <div>
+                                        <div style="font-size:0.65rem;color:var(--text-secondary);">יחידות:</div>
+                                        <div style="font-size:0.95rem;font-weight:600;color:var(--accent-blue);" id="calculatedUnitsFromILS">0.000</div>
+                                    </div>
+                                    <div style="text-align:left;">
+                                        <div style="font-size:0.65rem;color:var(--text-secondary);">שווי כולל:</div>
+                                        <div style="font-size:1.2rem;font-weight:700;color:var(--accent-gold);" id="calculatedSpyValue">₪0</div>
+                                        <div style="font-size:0.65rem;color:var(--text-secondary);" id="calculatedSpyValueUSD">$0</div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- Common display section -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 15px;">
-                            <div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">מחיר SPY נוכחי:</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: var(--accent-green); cursor: pointer;" id="currentSpyPrice" onclick="manualSpyEntry()" title="לחץ להזנה ידנית">$--</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">תשואה:</div>
-                                <div style="font-size: 1.1rem; font-weight: 700;" id="spyReturn">--%</div>
-                            </div>
-                        </div>
-                        <div id="spyCalculatedDisplay" style="padding: 12px; background: rgba(244, 196, 48, 0.1); border-radius: 8px; margin-top: 12px;">
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">יחידות מחושבות:</div>
-                            <div style="font-size: 1.1rem; font-weight: 600; color: var(--accent-blue); margin-bottom: 10px;" id="calculatedUnitsFromILS">0.000</div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">שווי כולל:</div>
-                            <div style="font-size: 1.4rem; font-weight: 700; color: var(--accent-gold);" id="calculatedSpyValue">₪0</div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;" id="calculatedSpyValueUSD">$0</div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="form-group" id="currencyField">
-                    <label>מטבע</label>
-                    <select id="assetCurrency" required>
-                        <option value="ILS">שקלים (₪)</option>
-                        <option value="USD">דולרים ($)</option>
-                        <option value="BTC">ביטקוין (₿)</option>
-                        <option value="ETH">איתריום (Ξ)</option>
-                    </select>
-                </div>
-                <div class="form-group" id="valueField">
-                    <label>שווי נוכחי</label>
-                    <input type="text" inputmode="decimal" id="assetValue" placeholder="0" oninput="formatNumberInput(this)">
-                </div>
-                <div class="form-group">
-                    <label>תשואה שנתית (%)</label>
-                    <input type="text" inputmode="decimal" id="assetReturn" placeholder="0" oninput="formatNumberInput(this)">
-                </div>
-                <div class="form-group">
-                    <label>הפקדה חודשית (₪)</label>
-                    <input type="text" inputmode="decimal" id="assetMonthly" placeholder="0" oninput="formatNumberInput(this)">
-                </div>
-                <div class="button-group">
-                    <button type="button" class="secondary-button" onclick="closeModal()">ביטול</button>
-                    <button type="button" id="deleteAssetBtn" class="secondary-button" style="display:none; background:rgba(239,68,68,0.15); color:var(--accent-red,#ef4444); border-color:var(--accent-red,#ef4444);" onclick="deleteCurrentAsset()">🗑️ מחק</button>
-                    <button type="submit" class="action-button" style="flex: 1;">שמור</button>
+                    
+                    <div id="currencyField" style="margin-bottom:14px;">
+                        <div class="form-group" style="margin:0;">
+                            <label>מטבע</label>
+                            <select id="assetCurrency" required>
+                                <option value="ILS">שקלים (₪)</option>
+                                <option value="USD">דולרים ($)</option>
+                                <option value="BTC">ביטקוין (₿)</option>
+                                <option value="ETH">איתריום (Ξ)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="valueField" class="form-group">
+                        <label>שווי נוכחי</label>
+                        <input type="text" inputmode="decimal" id="assetValue" placeholder="0" oninput="formatNumberInput(this)">
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                        <div class="form-group" style="margin:0;">
+                            <label>תשואה שנתית (%)</label>
+                            <input type="text" inputmode="decimal" id="assetReturn" placeholder="0" oninput="formatNumberInput(this)">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>הפקדה חודשית (₪)</label>
+                            <input type="text" inputmode="decimal" id="assetMonthly" placeholder="0" oninput="formatNumberInput(this)">
+                        </div>
+                    </div>
+                    <div class="button-group" style="gap:8px;">
+                        <button type="button" class="secondary-button" onclick="closeModal()">ביטול</button>
+                        <button type="button" id="deleteAssetBtn" class="secondary-button" style="display:none; background:rgba(239,68,68,0.15); color:var(--accent-red,#ef4444); border-color:var(--accent-red,#ef4444);" onclick="deleteCurrentAsset()">🗑️ מחק</button>
+                        <button type="submit" class="action-button" style="flex:1;">שמור</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1850,6 +2019,7 @@
 
         // ============ SPY Setup Wizard ============
         function setupFinnhubKey() { showSpySetupWizard(); }
+        function showFinnhubSetup() { showSpySetupWizard(); }
 
         function showSpySetupWizard() {
             const existingKey = localStorage.getItem('finnhub-api-key') || '';
@@ -2596,15 +2766,64 @@
             document.getElementById('lastUpdate').textContent = now.toLocaleString('he-IL');
         }
 
+        var typeIcons = { pension:'🏛️', gemel:'🏦', fund:'📚', savings:'💵', trade:'📈', crypto:'₿', real_estate:'🏠', other:'📋' };
+
+        function selectAssetType(type) {
+            // Update hidden select
+            document.getElementById('assetType').value = type;
+            
+            // Highlight selected tile
+            document.querySelectorAll('.type-tile').forEach(function(t) {
+                t.classList.toggle('selected', t.dataset.type === type);
+            });
+
+            // Update modal header icon
+            var iconEl = document.getElementById('modalIcon');
+            if (iconEl) iconEl.textContent = typeIcons[type] || '📋';
+
+            var subtitle = document.getElementById('modalSubtitle');
+            if (subtitle) subtitle.textContent = 'מלא את הפרטים';
+
+            // Show details section
+            document.getElementById('assetDetailsSection').style.display = 'block';
+
+            // Toggle type-specific fields
+            toggleRealEstateFields();
+
+            // Scroll to details
+            setTimeout(function() {
+                var details = document.getElementById('assetDetailsSection');
+                if (details) details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
         function openModal(mode, assetId = null) {
             const modal = document.getElementById('assetModal');
             const form = document.getElementById('assetForm');
             const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+            const iconEl = document.getElementById('modalIcon');
+            const typeSelector = document.getElementById('typeSelector');
+            const detailsSection = document.getElementById('assetDetailsSection');
+
+            // Reset tiles
+            document.querySelectorAll('.type-tile').forEach(function(t) { t.classList.remove('selected'); });
 
             if (mode === 'edit' && assetId !== null) {
                 const asset = assets.find(a => a.id === assetId);
                 if (asset) {
                     title.textContent = 'ערוך נכס';
+                    if (subtitle) subtitle.textContent = '';
+                    if (iconEl) iconEl.textContent = typeIcons[asset.type] || '📋';
+                    
+                    // Hide type grid, show details
+                    if (typeSelector) typeSelector.style.display = 'none';
+                    if (detailsSection) detailsSection.style.display = 'block';
+
+                    // Highlight correct tile
+                    var tile = document.querySelector('.type-tile[data-type="' + asset.type + '"]');
+                    if (tile) tile.classList.add('selected');
+
                     document.getElementById('assetType').value = asset.type;
                     document.getElementById('assetName').value = asset.name;
                     document.getElementById('assetProvider').value = asset.provider;
@@ -2613,21 +2832,15 @@
                     document.getElementById('assetReturn').value = formatNum(asset.return || 0);
                     document.getElementById('assetMonthly').value = formatNum(asset.monthly || 0);
                     
-                    // Handle real estate fields
                     if (asset.type === 'real_estate') {
                         document.getElementById('propertyValue').value = formatNum(asset.propertyValue || 0);
                         document.getElementById('mortgage').value = formatNum(asset.mortgage || 0);
                     }
                     
-                    // Handle SPY pension fields
                     if (asset.type === 'pension' && asset.isSpyPension) {
                         document.getElementById('isSpyPension').checked = true;
-                        
-                        // Set hidden fields
                         document.getElementById('spyUnits').value = asset.spyUnits || 0;
                         document.getElementById('spyAvgPrice').value = asset.spyAvgPrice || 0;
-                        
-                        // Set input mode and load appropriate fields
                         const inputMode = asset.spyInputMode || 'units';
                         if (inputMode === 'ils') {
                             document.querySelector('input[name="spyInputMode"][value="ils"]').checked = true;
@@ -2638,22 +2851,26 @@
                             document.getElementById('spyUnitsDisplay').value = asset.spyUnits || 0;
                             document.getElementById('spyAvgPriceDisplay').value = formatNum(asset.spyAvgPrice || 0);
                         }
-                        
                         toggleSpyFields();
                     }
                     
                     toggleRealEstateFields();
                     editingAssetId = assetId;
-                    // Show delete button in edit mode
                     var delBtn = document.getElementById('deleteAssetBtn');
                     if (delBtn) delBtn.style.display = '';
                 }
             } else {
                 title.textContent = 'הוסף נכס חדש';
+                if (subtitle) subtitle.textContent = 'בחר סוג נכס להתחלה';
+                if (iconEl) iconEl.textContent = '💰';
                 form.reset();
+                
+                // Show type grid, hide details
+                if (typeSelector) typeSelector.style.display = 'block';
+                if (detailsSection) detailsSection.style.display = 'none';
+                
                 toggleRealEstateFields();
                 editingAssetId = null;
-                // Hide delete button in add mode
                 var delBtn = document.getElementById('deleteAssetBtn');
                 if (delBtn) delBtn.style.display = 'none';
             }
@@ -2667,10 +2884,16 @@
             document.getElementById('realEstateFields').style.display = 'none';
             document.getElementById('spyPensionCheckbox').style.display = 'none';
             document.getElementById('spyFields').style.display = 'none';
-            document.getElementById('currencyField').style.display = 'block';
-            document.getElementById('valueField').style.display = 'block';
+            var cf = document.getElementById('currencyField'); if (cf) cf.style.display = 'block';
+            var vf = document.getElementById('valueField'); if (vf) vf.style.display = 'block';
             var delBtn = document.getElementById('deleteAssetBtn');
             if (delBtn) delBtn.style.display = 'none';
+            // Reset type selection
+            document.querySelectorAll('.type-tile').forEach(function(t) { t.classList.remove('selected'); });
+            var ts = document.getElementById('typeSelector'); if (ts) ts.style.display = 'block';
+            var ds = document.getElementById('assetDetailsSection'); if (ds) ds.style.display = 'none';
+            var iconEl = document.getElementById('modalIcon'); if (iconEl) iconEl.textContent = '💰';
+            var sub = document.getElementById('modalSubtitle'); if (sub) sub.textContent = 'בחר סוג נכס להתחלה';
             editingAssetId = null;
         }
 
