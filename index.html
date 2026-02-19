@@ -1870,9 +1870,27 @@
                             </select>
                         </div>
                     </div>
-                    <div id="valueField" class="form-group">
-                        <label>שווי נוכחי</label>
-                        <input type="text" inputmode="decimal" id="assetValue" placeholder="0" oninput="formatNumberInput(this)">
+                    <div id="valueField">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                            <div class="form-group" style="margin:0;">
+                                <label>עלות בסיס (השקעה מקורית)</label>
+                                <input type="text" inputmode="decimal" id="assetCostBasis" placeholder="0" oninput="formatNumberInput(this); calcReturnFromBasis()">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>שווי נוכחי</label>
+                                <input type="text" inputmode="decimal" id="assetValue" placeholder="0" oninput="formatNumberInput(this); calcReturnFromBasis()">
+                            </div>
+                        </div>
+                        <div id="basisReturnDisplay" style="display:none;padding:8px 12px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.12);border-radius:8px;margin-bottom:14px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="font-size:0.75rem;color:var(--text-secondary);">רווח/הפסד:</span>
+                                <span style="font-size:0.85rem;font-weight:600;" id="basisProfitAmount">₪0</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                                <span style="font-size:0.75rem;color:var(--text-secondary);">תשואה:</span>
+                                <span style="font-size:0.85rem;font-weight:700;" id="basisReturnPct">0%</span>
+                            </div>
+                        </div>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
                         <div class="form-group" style="margin:0;">
@@ -2787,6 +2805,31 @@
         }
 
         // Calculate equity for real estate
+        function calcReturnFromBasis() {
+            var basis = parseNum(document.getElementById('assetCostBasis'));
+            var current = parseNum(document.getElementById('assetValue'));
+            var display = document.getElementById('basisReturnDisplay');
+            
+            if (basis > 0 && current > 0) {
+                var profit = current - basis;
+                var pct = (profit / basis) * 100;
+                var isPositive = profit >= 0;
+                var color = isPositive ? 'var(--accent-green)' : 'var(--accent-red)';
+                var sign = isPositive ? '+' : '';
+                
+                document.getElementById('basisProfitAmount').textContent = sign + '₪' + Math.abs(profit).toLocaleString('he-IL', {maximumFractionDigits: 0});
+                document.getElementById('basisProfitAmount').style.color = color;
+                document.getElementById('basisReturnPct').textContent = sign + pct.toFixed(2) + '%';
+                document.getElementById('basisReturnPct').style.color = color;
+                display.style.display = 'block';
+                
+                // Auto-fill return field
+                document.getElementById('assetReturn').value = formatNum(pct);
+            } else {
+                display.style.display = 'none';
+            }
+        }
+
         function calculateEquity() {
             const propertyValue = parseNum(document.getElementById('propertyValue'));
             const mortgage = parseNum(document.getElementById('mortgage'));
@@ -3178,8 +3221,11 @@
                     document.getElementById('assetProvider').value = asset.provider;
                     document.getElementById('assetCurrency').value = asset.currency || 'ILS';
                     document.getElementById('assetValue').value = formatNum(asset.value);
+                    document.getElementById('assetCostBasis').value = asset.costBasis ? formatNum(asset.costBasis) : '';
                     document.getElementById('assetReturn').value = formatNum(asset.return || 0);
                     document.getElementById('assetMonthly').value = formatNum(asset.monthly || 0);
+                    // Show basis return display if costBasis exists
+                    if (asset.costBasis > 0) { setTimeout(calcReturnFromBasis, 50); }
                     
                     if (asset.type === 'real_estate') {
                         document.getElementById('propertyValue').value = formatNum(asset.propertyValue || 0);
@@ -3280,6 +3326,8 @@
             var fundNumInput = document.getElementById('fundNumber'); if (fundNumInput) fundNumInput.value = '';
             var fundUnitsInput = document.getElementById('fundUnits'); if (fundUnitsInput) fundUnitsInput.value = '';
             var fundBtn = document.getElementById('fundSearchBtn'); if (fundBtn) { fundBtn.textContent = '🔍 חפש'; fundBtn.disabled = false; }
+            var costBasisInput = document.getElementById('assetCostBasis'); if (costBasisInput) costBasisInput.value = '';
+            var basisDisplay = document.getElementById('basisReturnDisplay'); if (basisDisplay) basisDisplay.style.display = 'none';
             editingAssetId = null;
         }
 
@@ -3307,6 +3355,7 @@
                 provider: document.getElementById('assetProvider').value,
                 currency: document.getElementById('assetCurrency').value,
                 value: parseNum(document.getElementById('assetValue')),
+                costBasis: parseNum(document.getElementById('assetCostBasis')),
                 return: parseNum(document.getElementById('assetReturn')),
                 monthly: parseNum(document.getElementById('assetMonthly'))
             };
@@ -4255,6 +4304,14 @@
                             ${showUSD ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">שווי בדולר</span>
                                 <span class="asset-row-detail-value">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</span>
+                            </div>` : ''}
+                            ${asset.costBasis > 0 ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">עלות בסיס</span>
+                                <span class="asset-row-detail-value">${formatAmount(asset.costBasis, currency)}</span>
+                            </div>
+                            <div class="asset-row-detail">
+                                <span class="asset-row-detail-label">רווח/הפסד</span>
+                                <span class="asset-row-detail-value" style="color:${(asset.value - asset.costBasis) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${(asset.value - asset.costBasis) >= 0 ? '+' : ''}${formatAmount(asset.value - asset.costBasis, currency)} (${((asset.value - asset.costBasis) / asset.costBasis * 100).toFixed(1)}%)</span>
                             </div>` : ''}
                             ${asset.monthly > 0 ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">הפקדה חודשית</span>
