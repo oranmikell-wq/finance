@@ -1778,6 +1778,55 @@
                         </div>
                     </div>
                     
+                    <!-- Israeli Fund Tracking fields (for savings type) -->
+                    <div id="fundTrackingFields" style="display:none;">
+                        <div style="padding:14px;background:linear-gradient(135deg,rgba(0,217,255,0.08),rgba(16,185,129,0.08));border:1px solid rgba(0,217,255,0.15);border-radius:12px;margin-bottom:14px;">
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--accent-cyan);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                                📊 מעקב אוטומטי אחר קרן נאמנות
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label>מספר קרן (7 ספרות)</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="text" inputmode="numeric" id="fundNumber" placeholder="לדוגמה: 5136544" maxlength="7" style="flex:1;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                    <button type="button" onclick="fetchAndShowFundNAV()" style="padding:8px 14px;background:linear-gradient(135deg,var(--accent-cyan),#0097b2);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap;">🔍 חפש</button>
+                                </div>
+                            </div>
+                            <div id="fundSearchResult" style="display:none;">
+                                <div style="padding:10px;background:rgba(0,0,0,0.15);border-radius:8px;margin-bottom:10px;">
+                                    <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;" id="fundNameDisplay">-</div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                                        <div>
+                                            <div style="font-size:0.6rem;color:var(--text-secondary);">שער יחידה</div>
+                                            <div style="font-size:0.95rem;font-weight:700;color:var(--accent-green);" id="fundNAVDisplay">-</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size:0.6rem;color:var(--text-secondary);">יומי</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="fundDailyDisplay">-</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size:0.6rem;color:var(--text-secondary);">שנתי</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="fundYearlyDisplay">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>כמות יחידות שברשותך</label>
+                                    <input type="text" inputmode="decimal" id="fundUnits" placeholder="לדוגמה: 85.432" oninput="formatNumberInput(this); calculateFundValue()">
+                                </div>
+                                <div id="fundCalcDisplay" style="padding:10px;background:rgba(0,217,255,0.08);border-radius:8px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="font-size:0.75rem;color:var(--text-secondary);">שווי מחושב:</span>
+                                        <span style="font-size:1.2rem;font-weight:700;color:var(--accent-gold);" id="fundTotalValue">₪0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="fundLoadingIndicator" style="display:none;text-align:center;padding:10px;">
+                                <span style="font-size:0.85rem;color:var(--text-secondary);">⏳ מחפש נתוני קרן...</span>
+                            </div>
+                            <div id="fundError" style="display:none;padding:8px;background:rgba(239,68,68,0.1);border-radius:8px;font-size:0.75rem;color:var(--accent-red);text-align:center;"></div>
+                        </div>
+                    </div>
+
                     <div id="currencyField" style="margin-bottom:14px;">
                         <div class="form-group" style="margin:0;">
                             <label>מטבע</label>
@@ -1996,6 +2045,166 @@
         }
 
         // Manual SPY price entry
+        // ============ Israeli Fund NAV Tracking ============
+        var fundDataCache = {}; // { fundNumber: { nav, dailyPct, monthlyPct, yearlyPct, name, date } }
+
+        async function fetchFundNAV(fundNumber) {
+            try {
+                var url = 'https://www.bizportal.co.il/mutualfunds/quote/generalview/' + fundNumber;
+                var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+                var response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                var html = await response.text();
+                
+                // Parse fund name from title tag
+                var nameMatch = html.match(/<h1[^>]*>([^<]+)/i) || html.match(/<title>([^|<]+)/i);
+                var fundName = nameMatch ? nameMatch[1].trim() : 'קרן ' + fundNumber;
+                // Clean up name
+                fundName = fundName.replace(/\s*\|\s*ביזפורטל\s*$/, '').trim();
+                
+                // Parse NAV price - look for "מחיר פדיון" followed by a number
+                var navMatch = html.match(/מחיר פדיון[\s\S]{0,200?}?([\d,]+\.?\d*)/);
+                if (!navMatch) {
+                    // Try alternate pattern
+                    navMatch = html.match(/מחיר קנייה[\s\S]{0,200?}?([\d,]+\.?\d*)/);
+                }
+                if (!navMatch) throw new Error('NAV not found');
+                var nav = parseFloat(navMatch[1].replace(/,/g, ''));
+                
+                // Parse daily change percentage
+                var dailyPct = 0;
+                var dailyMatch = html.match(/([\-−]?[\d.]+)%[\s\S]{0,80}?% החודש/);
+                if (!dailyMatch) {
+                    // Try: number followed by % that comes after the NAV
+                    var afterNav = html.substring(html.indexOf(navMatch[0]));
+                    dailyMatch = afterNav.match(/([\-−]?[\d.]+)%/);
+                }
+                if (dailyMatch) dailyPct = parseFloat(dailyMatch[1].replace('−', '-'));
+
+                // Parse monthly change
+                var monthlyPct = 0;
+                var monthlyMatch = html.match(/% החודש[:\s]*([\-−]?[\d.]+)/);
+                if (!monthlyMatch) monthlyMatch = html.match(/([\-−]?[\d.]+)%[\s\S]{0,20}?חודש/);
+                if (monthlyMatch) monthlyPct = parseFloat(monthlyMatch[1].replace('−', '-'));
+
+                // Parse yearly change
+                var yearlyPct = 0;
+                var yearlyMatch = html.match(/% 12 חודשים[:\s]*([\-−]?[\d.]+)/);
+                if (!yearlyMatch) yearlyMatch = html.match(/([\-−]?[\d.]+)%[\s\S]{0,20}?12 חודשים/);
+                if (yearlyMatch) yearlyPct = parseFloat(yearlyMatch[1].replace('−', '-'));
+
+                var result = {
+                    nav: nav,
+                    dailyPct: dailyPct,
+                    monthlyPct: monthlyPct,
+                    yearlyPct: yearlyPct,
+                    name: fundName,
+                    date: new Date().toISOString()
+                };
+                
+                fundDataCache[fundNumber] = result;
+                try { localStorage.setItem('fund-cache-' + fundNumber, JSON.stringify(result)); } catch(e){}
+                
+                return result;
+            } catch (err) {
+                console.error('Fund NAV fetch error:', err);
+                // Try cache
+                try {
+                    var cached = localStorage.getItem('fund-cache-' + fundNumber);
+                    if (cached) return JSON.parse(cached);
+                } catch(e){}
+                return null;
+            }
+        }
+
+        async function fetchAndShowFundNAV() {
+            var fundNum = document.getElementById('fundNumber').value.trim();
+            if (!fundNum || fundNum.length < 6) {
+                alert('נא להזין מספר קרן בן 7 ספרות');
+                return;
+            }
+            
+            document.getElementById('fundLoadingIndicator').style.display = 'block';
+            document.getElementById('fundSearchResult').style.display = 'none';
+            document.getElementById('fundError').style.display = 'none';
+            
+            var data = await fetchFundNAV(fundNum);
+            
+            document.getElementById('fundLoadingIndicator').style.display = 'none';
+            
+            if (data && data.nav > 0) {
+                document.getElementById('fundNameDisplay').textContent = data.name;
+                document.getElementById('fundNAVDisplay').textContent = '₪' + data.nav.toFixed(2);
+                
+                var dailyEl = document.getElementById('fundDailyDisplay');
+                dailyEl.textContent = data.dailyPct.toFixed(2) + '%';
+                dailyEl.style.color = data.dailyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                
+                var yearlyEl = document.getElementById('fundYearlyDisplay');
+                yearlyEl.textContent = data.yearlyPct.toFixed(2) + '%';
+                yearlyEl.style.color = data.yearlyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                
+                document.getElementById('fundSearchResult').style.display = 'block';
+                
+                // Auto-fill name and return fields
+                var nameInput = document.getElementById('assetName');
+                if (!nameInput.value) nameInput.value = data.name;
+                document.getElementById('assetReturn').value = formatNum(data.yearlyPct);
+                
+                calculateFundValue();
+            } else {
+                document.getElementById('fundError').style.display = 'block';
+                document.getElementById('fundError').textContent = '❌ לא נמצאו נתונים לקרן ' + fundNum + '. ודא שמספר הקרן נכון.';
+            }
+        }
+
+        function calculateFundValue() {
+            var fundNum = document.getElementById('fundNumber').value.trim();
+            var units = parseNum(document.getElementById('fundUnits'));
+            var data = fundDataCache[fundNum];
+            
+            if (data && data.nav > 0 && units > 0) {
+                var totalValue = units * data.nav;
+                document.getElementById('fundTotalValue').textContent = '₪' + totalValue.toLocaleString('he-IL', { maximumFractionDigits: 0 });
+                // Update hidden value field
+                document.getElementById('assetValue').value = formatNum(totalValue);
+            } else {
+                document.getElementById('fundTotalValue').textContent = '₪0';
+            }
+        }
+
+        // Update all fund-linked assets
+        async function updateFundAssets() {
+            var fundAssets = assets.filter(function(a) { return a.fundNumber; });
+            if (fundAssets.length === 0) return [];
+            
+            var results = [];
+            var uniqueFunds = {};
+            fundAssets.forEach(function(a) { uniqueFunds[a.fundNumber] = true; });
+            
+            for (var fundNum of Object.keys(uniqueFunds)) {
+                var data = await fetchFundNAV(fundNum);
+                if (data && data.nav > 0) {
+                    results.push('✅ ' + data.name + ': ₪' + data.nav.toFixed(2) + ' (' + data.dailyPct.toFixed(2) + '%)');
+                    // Update all assets with this fund number
+                    fundAssets.filter(function(a) { return a.fundNumber === fundNum; }).forEach(function(a) {
+                        a.value = (a.fundUnits || 0) * data.nav;
+                        a.return = data.yearlyPct;
+                        a.fundNAV = data.nav;
+                        a.fundDailyPct = data.dailyPct;
+                        a.fundMonthlyPct = data.monthlyPct;
+                        a.fundYearlyPct = data.yearlyPct;
+                        a.fundName = data.name;
+                    });
+                } else {
+                    results.push('❌ קרן ' + fundNum + ' - נכשל');
+                }
+            }
+            
+            if (results.length > 0) await saveAssets();
+            return results;
+        }
+
         function manualSpyEntry() {
             const current = spyPrice > 0 ? spyPrice.toFixed(2) : '';
             const input = prompt(`הזן מחיר SPY נוכחי בדולרים:\n\n💡 חפש בגוגל: "SPY stock price"\n📱 או: finance.yahoo.com/quote/SPY\n\n` + (current ? `מחיר שמור: $${current}` : 'אין מחיר שמור'), current);
@@ -2310,25 +2519,30 @@
             const spyPensionCheckbox = document.getElementById('spyPensionCheckbox');
             const currencyField = document.getElementById('currencyField');
             const valueField = document.getElementById('valueField');
+            const fundFields = document.getElementById('fundTrackingFields');
             
             // Hide all special fields first
             realEstateFields.style.display = 'none';
             spyPensionCheckbox.style.display = 'none';
             document.getElementById('spyFields').style.display = 'none';
             document.getElementById('isSpyPension').checked = false;
+            fundFields.style.display = 'none';
             
             if (assetType === 'real_estate') {
                 realEstateFields.style.display = 'block';
                 currencyField.style.display = 'none';
                 valueField.style.display = 'none';
-                // Set currency to ILS for real estate
                 document.getElementById('assetCurrency').value = 'ILS';
                 calculateEquity();
             } else if (assetType === 'pension') {
-                // Show SPY checkbox for pension
                 spyPensionCheckbox.style.display = 'block';
                 currencyField.style.display = 'block';
                 valueField.style.display = 'block';
+            } else if (assetType === 'savings') {
+                fundFields.style.display = 'block';
+                currencyField.style.display = 'none';
+                valueField.style.display = 'none';
+                document.getElementById('assetCurrency').value = 'ILS';
             } else {
                 currencyField.style.display = 'block';
                 valueField.style.display = 'block';
@@ -2722,7 +2936,7 @@
         }
 
         async function updateAllRates() {
-            const auto = confirm('רוצה למשוך שערי המרה עדכניים מהאינטרנט?\n(דולר, ביטקוין, איתריום + SPY)\n\nלחץ "אישור" למשיכה אוטומטית\nלחץ "ביטול" להזנה ידנית');
+            const auto = confirm('רוצה למשוך שערים עדכניים מהאינטרנט?\n(דולר, ביטקוין, SPY, קרנות נאמנות)\n\nלחץ "אישור" למשיכה אוטומטית\nלחץ "ביטול" להזנה ידנית');
             
             if (auto) {
                 var results = [];
@@ -2736,6 +2950,10 @@
                     var spySuccess = await fetchSpyPrice();
                     results.push(spySuccess ? '✅ SPY: $' + spyPrice.toFixed(2) : '❌ SPY - נכשל');
                 }
+
+                // Fetch fund NAVs
+                var fundResults = await updateFundAssets();
+                results = results.concat(fundResults);
                 
                 updateUI();
                 
@@ -2858,6 +3076,35 @@
                     editingAssetId = assetId;
                     var delBtn = document.getElementById('deleteAssetBtn');
                     if (delBtn) delBtn.style.display = '';
+
+                    // Handle fund tracking in edit mode
+                    if (asset.type === 'savings' && asset.fundNumber) {
+                        document.getElementById('fundNumber').value = asset.fundNumber;
+                        document.getElementById('fundUnits').value = asset.fundUnits ? formatNum(asset.fundUnits) : '';
+                        // Load cached data or fetch
+                        if (asset.fundNAV) {
+                            fundDataCache[asset.fundNumber] = {
+                                nav: asset.fundNAV,
+                                dailyPct: asset.fundDailyPct || 0,
+                                monthlyPct: asset.fundMonthlyPct || 0,
+                                yearlyPct: asset.fundYearlyPct || 0,
+                                name: asset.fundName || asset.name,
+                                date: new Date().toISOString()
+                            };
+                            document.getElementById('fundNameDisplay').textContent = asset.fundName || asset.name;
+                            document.getElementById('fundNAVDisplay').textContent = '₪' + asset.fundNAV.toFixed(2);
+                            var dEl = document.getElementById('fundDailyDisplay');
+                            dEl.textContent = (asset.fundDailyPct || 0).toFixed(2) + '%';
+                            dEl.style.color = (asset.fundDailyPct || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                            var yEl = document.getElementById('fundYearlyDisplay');
+                            yEl.textContent = (asset.fundYearlyPct || 0).toFixed(2) + '%';
+                            yEl.style.color = (asset.fundYearlyPct || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                            document.getElementById('fundSearchResult').style.display = 'block';
+                            calculateFundValue();
+                        }
+                        // Also try to fetch fresh data
+                        fetchAndShowFundNAV();
+                    }
                 }
             } else {
                 title.textContent = 'הוסף נכס חדש';
@@ -2894,6 +3141,11 @@
             var ds = document.getElementById('assetDetailsSection'); if (ds) ds.style.display = 'none';
             var iconEl = document.getElementById('modalIcon'); if (iconEl) iconEl.textContent = '💰';
             var sub = document.getElementById('modalSubtitle'); if (sub) sub.textContent = 'בחר סוג נכס להתחלה';
+            // Reset fund tracking fields
+            var fundFields = document.getElementById('fundTrackingFields'); if (fundFields) fundFields.style.display = 'none';
+            var fundResult = document.getElementById('fundSearchResult'); if (fundResult) fundResult.style.display = 'none';
+            var fundErr = document.getElementById('fundError'); if (fundErr) fundErr.style.display = 'none';
+            var fundLoad = document.getElementById('fundLoadingIndicator'); if (fundLoad) fundLoad.style.display = 'none';
             editingAssetId = null;
         }
 
@@ -2903,9 +3155,10 @@
             const assetType = document.getElementById('assetType').value;
             const isSpy = assetType === 'pension' && document.getElementById('isSpyPension').checked;
             const isRealEstate = assetType === 'real_estate';
+            const isFundTracked = assetType === 'savings' && document.getElementById('fundNumber').value.trim().length >= 6;
 
-            // Validate: value is required unless it's SPY pension or real estate (which calculate it)
-            if (!isSpy && !isRealEstate) {
+            // Validate: value is required unless it's SPY pension, real estate, or fund-tracked savings
+            if (!isSpy && !isRealEstate && !isFundTracked) {
                 const val = parseNum(document.getElementById('assetValue'));
                 if (!val && val !== 0) {
                     alert('נא להזין שווי נוכחי');
@@ -2944,6 +3197,25 @@
                 // If ILS mode, save the ILS amount too
                 if (inputMode === 'ils') {
                     asset.spyAmountILS = parseNum(document.getElementById('spyAmountILS'));
+                }
+            }
+
+            // Add fund tracking specific fields
+            if (assetType === 'savings') {
+                var fundNum = document.getElementById('fundNumber').value.trim();
+                if (fundNum.length >= 6) {
+                    asset.fundNumber = fundNum;
+                    asset.fundUnits = parseNum(document.getElementById('fundUnits'));
+                    var fData = fundDataCache[fundNum];
+                    if (fData) {
+                        asset.fundNAV = fData.nav;
+                        asset.fundDailyPct = fData.dailyPct;
+                        asset.fundMonthlyPct = fData.monthlyPct;
+                        asset.fundYearlyPct = fData.yearlyPct;
+                        asset.fundName = fData.name;
+                        asset.value = asset.fundUnits * fData.nav;
+                    }
+                    asset.currency = 'ILS';
                 }
             }
 
@@ -3742,6 +4014,68 @@
                     </div>`;
                 }
                 
+                // ===== FUND-TRACKED SAVINGS =====
+                if (asset.type === 'savings' && asset.fundNumber) {
+                    const fNav = asset.fundNAV || 0;
+                    const fUnits = asset.fundUnits || 0;
+                    const fDaily = asset.fundDailyPct || 0;
+                    const fMonthly = asset.fundMonthlyPct || 0;
+                    const fYearly = asset.fundYearlyPct || 0;
+                    const fValue = fUnits * fNav;
+                    const dailyILS = fValue * (fDaily / 100);
+                    const fc = function(v) { return v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'; };
+                    const fs = function(v) { return v >= 0 ? '+' : ''; };
+                    
+                    return `
+                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s;border-right:3px solid var(--accent-cyan);" onclick="toggleAssetExpand(${asset.id})">
+                        <div class="asset-row-main">
+                            <div class="asset-row-icon" style="background:rgba(0,217,255,0.1);">${icon}</div>
+                            <div class="asset-row-info">
+                                <div class="asset-row-name">${asset.name}</div>
+                                <div class="asset-row-provider">${asset.provider} • <span style="color:${fc(fDaily)};font-weight:600;">${fs(fDaily)}${fDaily.toFixed(2)}%</span> יומי</div>
+                            </div>
+                            <div class="asset-row-values">
+                                <div class="asset-row-amount">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
+                                <div class="asset-row-sub" style="color:${fc(fYearly)};">${fs(fYearly)}${fYearly.toFixed(1)}% שנתי</div>
+                            </div>
+                            <div class="asset-row-chevron">▼</div>
+                        </div>
+                        <div class="asset-row-expand">
+                            <div class="asset-row-details">
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">מספר קרן</span>
+                                    <span class="asset-row-detail-value">${asset.fundNumber}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">שער יחידה</span>
+                                    <span class="asset-row-detail-value">₪${fNav.toFixed(2)}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">יחידות</span>
+                                    <span class="asset-row-detail-value">${fUnits.toLocaleString('he-IL', {maximumFractionDigits: 3})}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">תשואה יומית</span>
+                                    <span class="asset-row-detail-value" style="color:${fc(fDaily)};">${fs(fDaily)}${fDaily.toFixed(3)}% (${fs(dailyILS)}₪${Math.abs(dailyILS).toFixed(0)})</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">חודשי</span>
+                                    <span class="asset-row-detail-value" style="color:${fc(fMonthly)};">${fs(fMonthly)}${fMonthly.toFixed(2)}%</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">שנתי</span>
+                                    <span class="asset-row-detail-value" style="color:${fc(fYearly)};">${fs(fYearly)}${fYearly.toFixed(2)}%</span>
+                                </div>
+                                ${asset.monthly > 0 ? `<div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">הפקדה חודשית</span>
+                                    <span class="asset-row-detail-value">₪${(asset.monthly || 0).toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
+                                </div>` : ''}
+                            </div>
+                            ${editBtn}
+                        </div>
+                    </div>`;
+                }
+
                 // ===== REGULAR ASSET =====
                 const valueInUSD = currency === 'USD' ? asset.value : (currency === 'ILS' ? asset.value / exchangeRate : valueInILS / exchangeRate);
                 const showUSD = (asset.type === 'pension' || asset.type === 'gemel' || asset.type === 'fund') && currency === 'ILS';
