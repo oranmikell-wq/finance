@@ -1,93 +1,38 @@
-const CACHE_NAME = 'portfolio-v14-finnhub';
+const CACHE_NAME = 'portfolio-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/logo.svg'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
-// Install event - cache files
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(err => {
-        console.log('Cache failed:', err);
-      })
+      .then(cache => cache.addAll(urlsToCache))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(names =>
+      Promise.all(
+        names.filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
+      )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch event - NETWORK FIRST for HTML, cache first for others
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  
-  // For HTML files: always try network first (so updates are immediate)
-  if (event.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/') {
+  if (event.request.url.includes('api.') || event.request.url.includes('finnhub')) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // Save to cache
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-          return response;
-        })
-        .catch(() => {
-          // Offline fallback
-          return caches.match(event.request).then(r => r || caches.match('/'));
-        })
+      fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
-
-  // For other resources: cache first, fallback to network
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        
-        const fetchRequest = event.request.clone();
-        
-        return fetch(fetchRequest).then(response => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          
-          return response;
-        }).catch(() => {
-          return caches.match('/');
-        });
-      })
+      .then(response => response || fetch(event.request))
   );
 });
