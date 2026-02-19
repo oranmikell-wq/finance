@@ -1,8 +1,10 @@
-const CACHE_NAME = 'portfolio-v2';
+const CACHE_NAME = 'portfolio-v3';
+const BASE = self.registration.scope;
 const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json'
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'logo.svg'
 ];
 
 self.addEventListener('install', event => {
@@ -25,7 +27,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('api.') || event.request.url.includes('finnhub')) {
+  if (event.request.url.includes('api.') || event.request.url.includes('finnhub') || event.request.url.includes('coingecko') || event.request.url.includes('frankfurter')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
