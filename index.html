@@ -1437,7 +1437,7 @@
             </div>
         </div>
 
-        <div id="greetingBanner" style="display:none;text-align:center;padding:10px 20px 2px;"></div>
+        <div id="greetingBanner" style="display:none;text-align:center;padding:16px 20px 6px;"></div>
 
         <div class="total-worth-card">
             <div class="total-worth-content">
@@ -1651,7 +1651,7 @@
             <form id="assetForm">
                 <!-- Step 1: Type selector grid -->
                 <div id="typeSelector" style="margin-bottom:20px;">
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
                         <button type="button" class="type-tile" data-type="pension" onclick="selectAssetType('pension')">
                             <span style="font-size:1.5rem;">🏛️</span>
                             <span>פנסיה</span>
@@ -1665,8 +1665,12 @@
                             <span>השתלמות</span>
                         </button>
                         <button type="button" class="type-tile" data-type="savings" onclick="selectAssetType('savings')">
+                            <span style="font-size:1.5rem;">📊</span>
+                            <span>קרן נאמנות</span>
+                        </button>
+                        <button type="button" class="type-tile" data-type="deposit" onclick="selectAssetType('deposit')">
                             <span style="font-size:1.5rem;">💵</span>
-                            <span>חיסכון</span>
+                            <span>חיסכון/פיקדון</span>
                         </button>
                         <button type="button" class="type-tile" data-type="trade" onclick="selectAssetType('trade')">
                             <span style="font-size:1.5rem;">📈</span>
@@ -1692,7 +1696,8 @@
                     <option value="pension">פנסיה</option>
                     <option value="gemel">גמל</option>
                     <option value="fund">קרן השתלמות</option>
-                    <option value="savings">קרן כספית / חיסכון</option>
+                    <option value="savings">קרן נאמנות</option>
+                    <option value="deposit">חיסכון / פיקדון</option>
                     <option value="trade">טרייד / מניות</option>
                     <option value="crypto">קריפטו</option>
                     <option value="real_estate">נדל"ן / דירה</option>
@@ -2109,6 +2114,8 @@
                     nav = parseFloat(navMatch[1].replace(/,/g, ''));
                 }
                 if (!nav || nav <= 0) throw new Error('NAV not found in page');
+                // Bizportal reports NAV in points (agorot) — divide by 100 to get shekels
+                nav = nav / 100;
                 
                 // Parse daily change: the standalone percentage after the two prices
                 // Pattern: after "מחיר קנייה" and its value, there's a standalone X.XX%
@@ -2185,7 +2192,7 @@
             
             if (data && data.nav > 0) {
                 document.getElementById('fundNameDisplay').textContent = data.name + (data._fromCache ? ' (מטמון)' : '');
-                document.getElementById('fundNAVDisplay').textContent = '₪' + data.nav.toFixed(2);
+                document.getElementById('fundNAVDisplay').textContent = '₪' + data.nav.toFixed(4);
                 
                 var dailyEl = document.getElementById('fundDailyDisplay');
                 dailyEl.textContent = (data.dailyPct >= 0 ? '+' : '') + data.dailyPct.toFixed(2) + '%';
@@ -2238,7 +2245,7 @@
                 var data = await fetchFundNAV(fundNum);
                 if (data && data.nav > 0) {
                     var statusIcon = data._fromCache ? '⚠️' : '✅';
-                    results.push(statusIcon + ' ' + data.name + ': ₪' + data.nav.toFixed(2) + ' (' + (data.dailyPct >= 0 ? '+' : '') + data.dailyPct.toFixed(2) + '%)');
+                    results.push(statusIcon + ' ' + data.name + ': ₪' + data.nav.toFixed(4) + ' (' + (data.dailyPct >= 0 ? '+' : '') + data.dailyPct.toFixed(2) + '%)');
                     // Update all assets with this fund number
                     fundAssets.filter(function(a) { return a.fundNumber === fundNum; }).forEach(function(a) {
                         a.value = (a.fundUnits || 0) * data.nav;
@@ -2933,7 +2940,8 @@
             pension: '🏦',
             gemel: '💼',
             fund: '📈',
-            savings: '💰',
+            savings: '📊',
+            deposit: '💵',
             trade: '📊',
             crypto: '₿',
             real_estate: '🏠',
@@ -2944,7 +2952,8 @@
             pension: 'פנסיה',
             gemel: 'גמל',
             fund: 'קרן השתלמות',
-            savings: 'חיסכון',
+            savings: 'קרן נאמנות',
+            deposit: 'חיסכון/פיקדון',
             trade: 'טרייד',
             crypto: 'קריפטו',
             real_estate: 'נדל"ן',
@@ -2955,7 +2964,8 @@
             pension: '#00d9ff',
             gemel: '#b026ff',
             fund: 'var(--accent-gold)',
-            savings: '#7c3aed',
+            savings: '#0ea5e9',
+            deposit: '#7c3aed',
             trade: '#ff006e',
             crypto: '#a855f7',
             real_estate: '#10b981',
@@ -3105,7 +3115,7 @@
             document.getElementById('lastUpdate').textContent = now.toLocaleString('he-IL');
         }
 
-        var typeIcons = { pension:'🏛️', gemel:'🏦', fund:'📚', savings:'💵', trade:'📈', crypto:'₿', real_estate:'🏠', other:'📋' };
+        var typeIcons = { pension:'🏛️', gemel:'🏦', fund:'📚', savings:'📊', deposit:'💵', trade:'📈', crypto:'₿', real_estate:'🏠', other:'📋' };
 
         function selectAssetType(type) {
             // Update hidden select
@@ -3213,7 +3223,7 @@
                                 date: new Date().toISOString()
                             };
                             document.getElementById('fundNameDisplay').textContent = asset.fundName || asset.name;
-                            document.getElementById('fundNAVDisplay').textContent = '₪' + asset.fundNAV.toFixed(2);
+                            document.getElementById('fundNAVDisplay').textContent = '₪' + asset.fundNAV.toFixed(4);
                             var dEl = document.getElementById('fundDailyDisplay');
                             dEl.textContent = (asset.fundDailyPct || 0).toFixed(2) + '%';
                             dEl.style.color = (asset.fundDailyPct || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
@@ -4177,7 +4187,7 @@
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">שער יחידה</span>
-                                    <span class="asset-row-detail-value">₪${fNav.toFixed(2)}</span>
+                                    <span class="asset-row-detail-value">₪${fNav.toFixed(4)}</span>
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">יחידות</span>
