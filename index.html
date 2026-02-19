@@ -293,6 +293,39 @@
             border-top: 1px solid var(--border-color);
         }
 
+        .asset-row-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #ffd700 100%);
+            color: #0a0e27;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            margin-top: 12px;
+        }
+
+        .asset-row-edit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(244, 196, 48, 0.3);
+        }
+
+        .asset-row-chevron {
+            transition: transform 0.3s ease;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .asset-row.expanded .asset-row-chevron {
+            transform: rotate(180deg);
+        }
+
         .asset-row-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -534,6 +567,15 @@
             .asset-row:hover {
                 transform: none;
                 box-shadow: none;
+            }
+            .asset-row-chevron { font-size: 0.6rem; }
+            .asset-row-edit-btn {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+                min-height: 44px;
+                width: 100%;
+                justify-content: center;
+                border-radius: 10px;
             }
 
             /* SPY daily bar */
@@ -1251,9 +1293,9 @@
                 <span>עדכן SPY</span>
                 <span id="spyStatus" style="font-size: 0.7rem; color: var(--accent-green);"></span>
             </button>
-            <button class="quick-action-btn" onclick="exportData()">
+            <button class="quick-action-btn" onclick="showDataMenu()">
                 <span>💾</span>
-                <span>ייצא נתונים</span>
+                <span>ייצוא/ייבוא</span>
             </button>
             <button class="quick-action-btn" onclick="showInsights()">
                 <span>💡</span>
@@ -2972,40 +3014,192 @@
             `).join('');
         }
 
+        function showDataMenu() {
+            var overlay = document.createElement('div');
+            overlay.id = 'dataMenuOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            
+            var menu = document.createElement('div');
+            menu.style.cssText = 'background:var(--bg-card,#1a1f3a);border:1px solid var(--accent-gold,#f4c430);border-radius:20px;padding:30px;max-width:340px;width:90%;text-align:center;';
+            menu.innerHTML = `
+                <div style="font-size:2rem;margin-bottom:12px;">💾</div>
+                <div style="font-size:1.2rem;font-weight:600;margin-bottom:6px;">ניהול נתונים</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:24px;">ייצוא או ייבוא גיבוי של הנכסים שלך</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <button onclick="exportData();document.getElementById('dataMenuOverlay').remove();" style="padding:14px;background:linear-gradient(135deg,var(--accent-gold),#ffd700);color:#0a0e27;border:none;border-radius:12px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        📤 ייצוא נתונים
+                    </button>
+                    <button onclick="importData();document.getElementById('dataMenuOverlay').remove();" style="padding:14px;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:12px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        📥 ייבוא נתונים
+                    </button>
+                    <button onclick="document.getElementById('dataMenuOverlay').remove();" style="padding:12px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);border-radius:12px;font-size:0.85rem;cursor:pointer;font-family:inherit;margin-top:4px;">
+                        ביטול
+                    </button>
+                </div>
+            `;
+            overlay.appendChild(menu);
+            document.body.appendChild(overlay);
+        }
+
         function exportData() {
             if (assets.length === 0) {
                 alert('אין נתונים לייצוא. הוסף נכסים תחילה.');
                 return;
             }
             
-            const data = {
-                exportDate: new Date().toLocaleDateString('he-IL'),
-                totalAssets: assets.length,
-                totalValue: assets.reduce((sum, a) => sum + toILS(a.value, a.currency || 'ILS'), 0),
-                assets: assets.map(a => ({
-                    name: a.name,
-                    type: assetTypeNames[a.type],
-                    provider: a.provider,
-                    value: a.value,
-                    currency: a.currency,
-                    valueILS: toILS(a.value, a.currency || 'ILS'),
-                    return: a.return,
-                    monthly: a.monthly
-                }))
+            // Export full raw assets for re-import
+            const backup = {
+                version: 1,
+                exportDate: new Date().toISOString(),
+                assets: assets,
+                settings: {
+                    exchangeRate: exchangeRate,
+                    btcRate: btcRate,
+                    ethRate: ethRate,
+                    spyPrice: spyPrice
+                }
             };
             
-            const jsonStr = JSON.stringify(data, null, 2);
+            const jsonStr = JSON.stringify(backup, null, 2);
             const blob = new Blob([jsonStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `portfolio-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `portfolio-backup-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            alert('✅ הנתונים יוצאו בהצלחה!');
+            alert('✅ הנתונים יוצאו בהצלחה!\n\n📁 שם הקובץ:\nportfolio-backup-' + new Date().toISOString().split('T')[0] + '.json\n\nשמור את הקובץ במקום בטוח לגיבוי.');
+        }
+
+        function importData() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.style.display = 'none';
+            
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    try {
+                        var data = JSON.parse(ev.target.result);
+                        var importedAssets = null;
+                        
+                        // Support both backup format (version 1) and raw array
+                        if (data.version && data.assets && Array.isArray(data.assets)) {
+                            importedAssets = data.assets;
+                        } else if (Array.isArray(data)) {
+                            importedAssets = data;
+                        } else if (data.assets && Array.isArray(data.assets)) {
+                            importedAssets = data.assets;
+                        }
+                        
+                        if (!importedAssets || importedAssets.length === 0) {
+                            alert('❌ הקובץ לא מכיל נכסים תקינים.');
+                            return;
+                        }
+                        
+                        // Validate basic structure
+                        var valid = importedAssets.every(function(a) {
+                            return a.name && a.type;
+                        });
+                        
+                        if (!valid) {
+                            alert('❌ מבנה הקובץ לא תקין. ודא שזהו קובץ גיבוי שיוצא מהאפליקציה.');
+                            return;
+                        }
+                        
+                        // Ask user: replace or merge
+                        var hasExisting = assets.length > 0;
+                        var action = 'replace';
+                        
+                        if (hasExisting) {
+                            var choice = confirm(
+                                '📥 נמצאו ' + importedAssets.length + ' נכסים בקובץ.\n\n' +
+                                'יש לך כרגע ' + assets.length + ' נכסים.\n\n' +
+                                'לחץ OK להחליף את כל הנכסים הקיימים,\n' +
+                                'או Cancel להוסיף את הנכסים החדשים לקיימים.'
+                            );
+                            action = choice ? 'replace' : 'merge';
+                        }
+                        
+                        if (action === 'replace') {
+                            assets = importedAssets;
+                        } else {
+                            // Merge: add imported assets with new IDs
+                            var maxId = assets.reduce(function(m, a) { return Math.max(m, a.id || 0); }, 0);
+                            importedAssets.forEach(function(a) {
+                                maxId++;
+                                a.id = maxId;
+                                assets.push(a);
+                            });
+                        }
+                        
+                        // Restore settings if available
+                        if (data.settings) {
+                            if (data.settings.exchangeRate) exchangeRate = data.settings.exchangeRate;
+                            if (data.settings.btcRate) btcRate = data.settings.btcRate;
+                            if (data.settings.ethRate) ethRate = data.settings.ethRate;
+                            if (data.settings.spyPrice) {
+                                spyPrice = data.settings.spyPrice;
+                                try { localStorage.setItem('spy-price', spyPrice.toString()); } catch(e) {}
+                            }
+                            updateRateDisplay();
+                        }
+                        
+                        saveAssets();
+                        updateUI();
+                        
+                        alert('✅ הייבוא הושלם בהצלחה!\n\n' + 
+                              (action === 'replace' ? 'הוחלפו' : 'נוספו') + ' ' + 
+                              importedAssets.length + ' נכסים.\n' +
+                              'סה"כ נכסים: ' + assets.length);
+                        
+                    } catch (err) {
+                        alert('❌ שגיאה בקריאת הקובץ:\n' + err.message + '\n\nודא שזהו קובץ JSON תקין.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            document.body.appendChild(input);
+            input.click();
+            document.body.removeChild(input);
+        }
+
+        function toggleAssetExpand(assetId, event) {
+            if (event) event.stopPropagation();
+            var row = document.querySelector('[data-asset-id="' + assetId + '"]');
+            if (!row) return;
+            var expand = row.querySelector('.asset-row-expand');
+            if (!expand) return;
+            var isOpen = row.classList.contains('expanded');
+            // Close all others
+            document.querySelectorAll('.asset-row.expanded').forEach(function(r) {
+                if (r !== row) {
+                    r.classList.remove('expanded');
+                    var ex = r.querySelector('.asset-row-expand');
+                    if (ex) ex.classList.remove('open');
+                }
+            });
+            if (isOpen) {
+                row.classList.remove('expanded');
+                expand.classList.remove('open');
+            } else {
+                row.classList.add('expanded');
+                expand.classList.add('open');
+            }
+        }
+
+        function editAsset(assetId, event) {
+            if (event) event.stopPropagation();
+            openModal('edit', assetId);
         }
 
         function updateAssetsGrid() {
@@ -3031,14 +3225,16 @@
                 const icon = assetTypeIcons[asset.type] || '📋';
                 const typeName = assetTypeNames[asset.type] || asset.type;
                 const delay = Math.min(idx * 0.05, 0.4);
+                const editBtn = `<button class="asset-row-edit-btn" onclick="editAsset(${asset.id}, event)">✏️ עריכה</button>`;
                 
                 // ===== REAL ESTATE =====
                 if (asset.type === 'real_estate') {
                     const pv = asset.propertyValue || 0;
                     const mg = asset.mortgage || 0;
                     const eq = asset.value;
+                    const pctOwned = pv > 0 ? ((eq / pv) * 100) : 0;
                     return `
-                    <div class="asset-row" style="animation-delay:${delay}s" onclick="openModal('edit', ${asset.id})">
+                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s" onclick="toggleAssetExpand(${asset.id})">
                         <div class="asset-row-main">
                             <div class="asset-row-icon" style="background:rgba(16,185,129,0.1);">${icon}</div>
                             <div class="asset-row-info">
@@ -3049,8 +3245,9 @@
                                 <div class="asset-row-amount">₪${eq.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 <div class="asset-row-sub">הון עצמי</div>
                             </div>
+                            <div class="asset-row-chevron">▼</div>
                         </div>
-                        <div class="asset-row-expand open" style="max-height:200px;opacity:1;padding-top:12px;margin-top:12px;border-top:1px solid var(--border-color);">
+                        <div class="asset-row-expand">
                             <div class="asset-row-details">
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">שווי נכס</span>
@@ -3060,7 +3257,16 @@
                                     <span class="asset-row-detail-label">משכנתא</span>
                                     <span class="asset-row-detail-value" style="color:var(--accent-red);">₪${mg.toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
                                 </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">אחוז בעלות</span>
+                                    <span class="asset-row-detail-value">${pctOwned.toFixed(1)}%</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">סוג</span>
+                                    <span class="asset-row-detail-value">${typeName}</span>
+                                </div>
                             </div>
+                            ${editBtn}
                         </div>
                     </div>`;
                 }
@@ -3081,9 +3287,11 @@
                     const dailyILS = vILS * (combPct / 100);
                     const c = function(v) { return v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'; };
                     const s = function(v) { return v >= 0 ? '+' : ''; };
+                    const profitUSD = vUSD - (units * avgP);
+                    const profitILS = profitUSD * exchangeRate;
 
                     return `
-                    <div class="asset-row spy-row" style="animation-delay:${delay}s" onclick="openModal('edit', ${asset.id})">
+                    <div class="asset-row spy-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s" onclick="toggleAssetExpand(${asset.id})">
                         <div class="asset-row-main">
                             <div class="asset-row-icon" style="background:rgba(244,196,48,0.12);">${icon}</div>
                             <div class="asset-row-info">
@@ -3095,8 +3303,9 @@
                                 <div class="asset-row-amount">₪${vILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 <div class="asset-row-sub">$${vUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
                             </div>
+                            <div class="asset-row-chevron">▼</div>
                         </div>
-                        <div class="asset-row-expand open" style="max-height:500px;opacity:1;padding-top:12px;margin-top:12px;border-top:1px solid rgba(244,196,48,0.15);">
+                        <div class="asset-row-expand">
                             <div class="asset-row-details">
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">יחידות</span>
@@ -3114,6 +3323,14 @@
                                     <span class="asset-row-detail-label">שער $/₪</span>
                                     <span class="asset-row-detail-value">₪${exchangeRate.toFixed(4)}</span>
                                 </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">רווח $</span>
+                                    <span class="asset-row-detail-value" style="color:${c(profitUSD)};">${s(profitUSD)}$${Math.abs(profitUSD).toLocaleString('en-US',{maximumFractionDigits:2})}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">רווח ₪</span>
+                                    <span class="asset-row-detail-value" style="color:${c(profitILS)};">${s(profitILS)}₪${Math.abs(profitILS).toLocaleString('he-IL',{maximumFractionDigits:0})}</span>
+                                </div>
                             </div>
                             <div class="spy-daily-bar">
                                 <div class="spy-daily-item">
@@ -3129,6 +3346,7 @@
                                     <span class="spy-daily-value" style="color:${c(combPct)};">${s(combPct)}${combPct.toFixed(2)}% (${s(dailyILS)}₪${Math.abs(dailyILS).toLocaleString('he-IL',{maximumFractionDigits:0})})</span>
                                 </div>
                             </div>
+                            ${editBtn}
                         </div>
                     </div>`;
                 }
@@ -3138,9 +3356,10 @@
                 const showUSD = (asset.type === 'pension' || asset.type === 'gemel' || asset.type === 'fund') && currency === 'ILS';
                 const monthlyInILS = toILS(asset.monthly || 0, currency);
                 const iconBg = asset.type === 'crypto' ? 'rgba(168,85,247,0.1)' : asset.type === 'pension' || asset.type === 'gemel' ? 'rgba(0,217,255,0.1)' : asset.type === 'fund' ? 'rgba(244,196,48,0.1)' : 'rgba(255,255,255,0.04)';
+                const currencyName = currency === 'USD' ? 'דולר' : currency === 'BTC' ? 'ביטקוין' : currency === 'ETH' ? 'איתריום' : 'שקל';
                 
                 return `
-                <div class="asset-row" style="animation-delay:${delay}s" onclick="openModal('edit', ${asset.id})">
+                <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s" onclick="toggleAssetExpand(${asset.id})">
                     <div class="asset-row-main">
                         <div class="asset-row-icon" style="background:${iconBg};">${icon}</div>
                         <div class="asset-row-info">
@@ -3153,11 +3372,37 @@
                             ${showUSD ? `<div class="asset-row-sub">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>` : ''}
                             ${currency !== 'ILS' && !showUSD ? `<div class="asset-row-sub">${formatAmount(asset.value, currency)}</div>` : ''}
                         </div>
+                        <div class="asset-row-chevron">▼</div>
                     </div>
-                    ${asset.monthly > 0 ? `
-                    <div style="display:flex;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-color);">
-                        <span style="font-size:0.7rem;color:var(--text-secondary);">הפקדה חודשית: <span style="color:var(--text-primary);font-weight:500;">₪${monthlyInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</span></span>
-                    </div>` : ''}
+                    <div class="asset-row-expand">
+                        <div class="asset-row-details">
+                            <div class="asset-row-detail">
+                                <span class="asset-row-detail-label">סוג נכס</span>
+                                <span class="asset-row-detail-value">${typeName}</span>
+                            </div>
+                            <div class="asset-row-detail">
+                                <span class="asset-row-detail-label">מטבע</span>
+                                <span class="asset-row-detail-value">${currencyName}</span>
+                            </div>
+                            <div class="asset-row-detail">
+                                <span class="asset-row-detail-label">תשואה שנתית</span>
+                                <span class="asset-row-detail-value ${retClass}">${retSign}${retPct}%</span>
+                            </div>
+                            ${showUSD ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">שווי בדולר</span>
+                                <span class="asset-row-detail-value">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</span>
+                            </div>` : ''}
+                            ${asset.monthly > 0 ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">הפקדה חודשית</span>
+                                <span class="asset-row-detail-value">₪${monthlyInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
+                            </div>` : ''}
+                            ${asset.monthly > 0 ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">הפקדה שנתית</span>
+                                <span class="asset-row-detail-value">₪${(monthlyInILS * 12).toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
+                            </div>` : ''}
+                        </div>
+                        ${editBtn}
+                    </div>
                 </div>`;
             }).join('');
         }
