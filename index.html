@@ -630,6 +630,21 @@
 
             /* History chart */
             #historyChart { border-radius: 12px; }
+            
+            /* New elements - mobile fix */
+            .summary-cards { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .summary-card { padding: 10px; }
+            .summary-card-value { font-size: 0.95rem; }
+            .summary-card-label { font-size: 0.6rem; }
+            .range-btn { padding: 3px 8px; font-size: 0.65rem; }
+            .gains-table { font-size: 0.7rem; }
+            .gains-table th, .gains-table td { padding: 6px 4px; }
+            .exposure-item { gap: 6px; }
+            .exposure-flag { font-size: 1rem; width: 24px; }
+            .watchlist-item { padding: 8px 10px; }
+            .projection-row { font-size: 0.75rem; }
+            .rule-bar-segment { font-size: 0.55rem; }
+            .alert-item { padding: 6px 10px; font-size: 0.75rem; }
         }
 
         /* ============ IPHONE SE / Mini (375px) ============ */
@@ -1461,22 +1476,6 @@
         .summary-card-value { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
         .summary-card-label { font-size: 0.65rem; color: var(--text-secondary); }
 
-        /* Progress bar */
-        .goal-progress-track {
-            width: 100%;
-            height: 14px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        .goal-progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            background: linear-gradient(90deg, var(--accent-gold), #ffd700);
-            transition: width 0.5s ease;
-        }
-
         /* Budget bars */
         .budget-bar-track {
             width: 100%;
@@ -1519,11 +1518,6 @@
         /* 50/30/20 visual */
         .rule-bar { display:flex; height:28px; border-radius:10px; overflow:hidden; margin:8px 0; }
         .rule-bar-segment { display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:600; color:#fff; transition:width 0.4s ease; }
-        /* Daily recap */
-        .recap-banner { background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:14px 16px; margin-bottom:14px; }
-        .recap-item { display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-size:0.8rem; }
-        .recap-item-name { color:var(--text-secondary); }
-        .recap-item-change { font-weight:600; }
         /* Chart range buttons */
         .range-btn { padding:4px 12px; border-radius:16px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); font-size:0.7rem; cursor:pointer; font-family:inherit; }
         .range-btn.active { background:rgba(244,196,48,0.15); color:var(--accent-gold); border-color:var(--accent-gold); }
@@ -1597,15 +1591,6 @@
 
         <!-- TAB 1: Dashboard -->
         <div class="tab-content active" id="tabDashboard">
-
-        <!-- Daily Recap -->
-        <div class="recap-banner" id="dailyRecap" style="display:none;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span style="font-size:0.85rem;font-weight:600;">📋 סיכום יומי</span>
-                <button onclick="document.getElementById('dailyRecap').style.display='none'" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:1rem;">✕</button>
-            </div>
-            <div id="recapContent"></div>
-        </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;margin-top:12px;">
             <div class="section-title" style="margin-bottom:0;">הנכסים שלי</div>
@@ -1834,32 +1819,6 @@
             </div>
 
             <!-- Savings Goal -->
-            <div class="section-title" style="margin-top:16px;">🎯 יעד חיסכון</div>
-            <div class="chart-card" style="padding:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">🎯 סכום יעד</label>
-                        <input type="text" inputmode="decimal" id="goalAmount" placeholder="500,000" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcGoal()">
-                    </div>
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">📝 שם היעד</label>
-                        <input type="text" id="goalName" placeholder="דירה / חופשה / חירום" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile(); calcGoal()">
-                    </div>
-                </div>
-                <div id="goalDisplay" style="display:none;">
-                    <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;">
-                        <span id="goalCurrentLabel">₪0</span>
-                        <span id="goalTargetLabel">₪0</span>
-                    </div>
-                    <div class="goal-progress-track">
-                        <div class="goal-progress-fill" id="goalProgressFill" style="width:0%;"></div>
-                    </div>
-                    <div style="text-align:center;margin-top:8px;">
-                        <div style="font-size:1.3rem;font-weight:700;color:var(--accent-gold);" id="goalPctText">0%</div>
-                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px;" id="goalEtaText"></div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Fee Analysis -->
             <div class="section-title" style="margin-top:16px;">💸 ניתוח דמי ניהול</div>
@@ -1868,7 +1827,7 @@
             </div>
 
             <!-- Pension / Retirement Calculator -->
-            <div class="section-title" style="margin-top:16px;">🧮 מחשבון פרישה</div>
+            <div class="section-title" style="margin-top:16px;">🧮 מחשבון פרישה (פנסיה)</div>
             <div class="chart-card" style="padding:20px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div class="form-group" style="margin:0;">
@@ -2257,7 +2216,7 @@
                             </div>
                         </div>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));gap:10px;margin-bottom:14px;">
                         <div class="form-group" style="margin:0;">
                             <label>תשואה (%)</label>
                             <input type="text" inputmode="decimal" id="assetReturn" placeholder="0" oninput="formatNumberInput(this)">
@@ -3221,9 +3180,7 @@
                 lastName: document.getElementById('profileLastName').value.trim(),
                 age: document.getElementById('profileAge').value.trim(),
                 gender: document.getElementById('profileGender').value,
-                salary: document.getElementById('profileSalary').value.trim(),
-                goalAmount: document.getElementById('goalAmount').value.trim(),
-                goalName: document.getElementById('goalName').value.trim()
+                salary: document.getElementById('profileSalary').value.trim()
             };
             // Save expense breakdown
             expenseKeys.forEach(function(k) {
@@ -3246,8 +3203,6 @@
                     document.getElementById('profileAge').value = profile.age || '';
                     document.getElementById('profileGender').value = profile.gender || '';
                     document.getElementById('profileSalary').value = profile.salary || '';
-                    document.getElementById('goalAmount').value = profile.goalAmount || '';
-                    document.getElementById('goalName').value = profile.goalName || '';
                     // Load expense breakdown
                     expenseKeys.forEach(function(k) {
                         var el = document.getElementById(k);
@@ -3261,7 +3216,6 @@
             } catch(e){}
             updateGreeting();
             calcExpenses();
-            calcGoal();
             loadTheme();
         }
 
@@ -3327,7 +3281,7 @@
             var display = document.getElementById('actualSavingsDisplay');
             if (salary <= 0) { display.style.display = 'none'; return; }
             var totalDeposits = assets.reduce(function(s, a) {
-                return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0);
+                return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || a.currency || 'ILS') : 0);
             }, 0);
             if (totalDeposits <= 0) { display.style.display = 'none'; return; }
             var actual = salary - expenses - totalDeposits;
@@ -3342,7 +3296,7 @@
             if (salary <= 0) { container.innerHTML = '<span style="color:var(--text-secondary);font-size:0.8rem;">הזן שכר חודשי כדי לראות ניתוח</span>'; return; }
             var ideal50 = salary * 0.5, ideal30 = salary * 0.3, ideal20 = salary * 0.2;
             var totalDeposits = assets.reduce(function(s, a) {
-                return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0);
+                return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || a.currency || 'ILS') : 0);
             }, 0);
             var actualNeeds = expenses;
             var actualSavings = totalDeposits;
@@ -3377,46 +3331,6 @@
             html += '</div>';
 
             container.innerHTML = html;
-        }
-
-        function calcGoal() {
-            var goalAmt = parseNum(document.getElementById('goalAmount'));
-            var display = document.getElementById('goalDisplay');
-            if (goalAmt <= 0) { display.style.display = 'none'; return; }
-
-            var totalILS = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var pct = Math.min((totalILS / goalAmt) * 100, 100);
-            var goalName = document.getElementById('goalName').value.trim();
-
-            display.style.display = 'block';
-            document.getElementById('goalCurrentLabel').textContent = '₪' + totalILS.toLocaleString('he-IL', {maximumFractionDigits: 0});
-            document.getElementById('goalTargetLabel').textContent = '₪' + goalAmt.toLocaleString('he-IL', {maximumFractionDigits: 0});
-            document.getElementById('goalProgressFill').style.width = pct + '%';
-            document.getElementById('goalPctText').textContent = pct.toFixed(1) + '%';
-
-            // ETA calculation
-            var totalDeposits = assets.reduce(function(s, a) {
-                return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0);
-            }, 0);
-            var remaining = goalAmt - totalILS;
-            var eta = '';
-            if (remaining <= 0) {
-                eta = '🎉 הגעת ליעד' + (goalName ? ' "' + goalName + '"!' : '!');
-                document.getElementById('goalPctText').style.color = 'var(--accent-green)';
-            } else if (totalDeposits > 0) {
-                var months = Math.ceil(remaining / totalDeposits);
-                var years = Math.floor(months / 12);
-                var remMonths = months % 12;
-                eta = '📅 צפי הגעה: ';
-                if (years > 0) eta += years + ' שנים';
-                if (years > 0 && remMonths > 0) eta += ' ו-';
-                if (remMonths > 0) eta += remMonths + ' חודשים';
-                document.getElementById('goalPctText').style.color = 'var(--accent-gold)';
-            } else {
-                eta = '💡 הוסף הפקדות חודשיות כדי לקבל תחזית';
-                document.getElementById('goalPctText').style.color = 'var(--accent-gold)';
-            }
-            document.getElementById('goalEtaText').textContent = eta;
         }
 
         // ============ Search / Filter ============
@@ -3458,7 +3372,7 @@
                 var valILS = toILS(a.value, a.currency || 'ILS');
                 totalCurrent += valILS;
                 if (a.costBasis > 0) totalBasis += toILS(a.costBasis, a.currency || 'ILS');
-                if (a.monthly) totalDeposits += toILS(a.monthly, a.currency || 'ILS');
+                if (a.monthly) totalDeposits += toILS(a.monthly, a.monthlyCurrency || a.currency || 'ILS');
             });
 
             var totalProfit = totalBasis > 0 ? totalCurrent - totalBasis : 0;
@@ -3504,50 +3418,6 @@
             document.querySelectorAll('#chartRangeBtns .range-btn').forEach(function(b) { b.classList.remove('active'); });
             if (btn) btn.classList.add('active');
             renderHistoryChart();
-        }
-
-        // ============ Daily Recap ============
-        function showDailyRecap() {
-            var recap = document.getElementById('dailyRecap');
-            var content = document.getElementById('recapContent');
-            if (!recap || !content) return;
-            
-            var items = [];
-            // Exchange rate change
-            var savedRate = parseFloat(localStorage.getItem('prev-exchange-rate') || 0);
-            if (savedRate > 0 && exchangeRate > 0) {
-                var rChg = ((exchangeRate - savedRate) / savedRate * 100);
-                if (Math.abs(rChg) > 0.01) items.push({ name: '💵 שער דולר', val: '₪' + exchangeRate.toFixed(4), chg: rChg });
-            }
-            // SPY change
-            var savedSpy = parseFloat(localStorage.getItem('prev-spy-price') || 0);
-            if (savedSpy > 0 && spyPrice > 0) {
-                var sChg = ((spyPrice - savedSpy) / savedSpy * 100);
-                items.push({ name: '📈 SPY', val: '$' + spyPrice.toFixed(2), chg: sChg });
-            }
-            // Fund changes
-            assets.forEach(function(a) {
-                if (a.type === 'savings' && a.fundDailyPct !== undefined) {
-                    items.push({ name: '📊 ' + (a.fundName || a.name), val: '', chg: a.fundDailyPct || 0 });
-                }
-            });
-
-            if (items.length === 0) { recap.style.display = 'none'; return; }
-            
-            var html = '';
-            items.forEach(function(item) {
-                var color = item.chg >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                var sign = item.chg >= 0 ? '+' : '';
-                html += '<div class="recap-item"><span class="recap-item-name">' + item.name + '</span>';
-                if (item.val) html += '<span style="color:var(--text-primary);font-size:0.8rem;margin:0 8px;">' + item.val + '</span>';
-                html += '<span class="recap-item-change" style="color:' + color + ';">' + sign + item.chg.toFixed(2) + '%</span></div>';
-            });
-            content.innerHTML = html;
-            recap.style.display = 'block';
-            
-            // Save current prices for next comparison
-            if (exchangeRate > 0) localStorage.setItem('prev-exchange-rate', exchangeRate);
-            if (spyPrice > 0) localStorage.setItem('prev-spy-price', spyPrice);
         }
 
         // ============ Unrealized Gains Table ============
@@ -3808,8 +3678,12 @@
             if (currentAge <= 0 || currentAge >= retireAge) { display.style.display = 'none'; return; }
             
             var yearsToRetire = retireAge - currentAge;
-            var totalNow = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var monthlyDeposits = assets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0); }, 0);
+            // Only pension-type assets
+            var pensionAssets = assets.filter(function(a) { return a.type === 'pension'; });
+            var totalNow = pensionAssets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
+            var monthlyDeposits = pensionAssets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || a.currency || 'ILS') : 0); }, 0);
+            
+            if (totalNow <= 0 && monthlyDeposits <= 0) { display.style.display = 'none'; return; }
             
             var monthlyRate = retireReturn / 100 / 12;
             var months = yearsToRetire * 12;
@@ -3819,7 +3693,7 @@
             
             display.style.display = 'block';
             document.getElementById('retireAmount').textContent = '₪' + total.toLocaleString('he-IL', {maximumFractionDigits: 0});
-            document.getElementById('retireDetails').textContent = 'בעוד ' + yearsToRetire + ' שנים | תשואה ' + retireReturn + '% | הפקדות ₪' + monthlyDeposits.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '/חודש';
+            document.getElementById('retireDetails').textContent = 'בעוד ' + yearsToRetire + ' שנים | תשואה ' + retireReturn + '% | הפקדות ₪' + monthlyDeposits.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '/חודש | פנסיה בלבד';
         }
 
         // ============ Future Projection ============
@@ -3827,7 +3701,7 @@
             var container = document.getElementById('projectionContent');
             if (!container) return;
             var totalNow = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var monthlyDeposits = assets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0); }, 0);
+            var monthlyDeposits = assets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || a.currency || 'ILS') : 0); }, 0);
             if (totalNow <= 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף נכסים כדי לראות תחזית</div>'; return; }
             
             var rate = 0.06;
@@ -4369,7 +4243,7 @@
                 if (spyMonthly > 0) {
                     asset.spyMonthlyILS = spyMonthly;
                     asset.monthly = spyMonthly;
-                    asset.currency = 'ILS';
+                    asset.monthlyCurrency = 'ILS';
                 }
             }
 
@@ -4434,7 +4308,6 @@
             renderHistoryChart();
             updateTrendsTab();
             updateSummaryCards();
-            calcGoal();
             calcBudget();
             updateGainsTable();
             updateExposure();
@@ -4443,7 +4316,6 @@
             calcRetirement();
             updateProjection();
             checkAlerts();
-            showDailyRecap();
         }
 
         function updateTotalWorth() {
@@ -4476,7 +4348,7 @@
             const monthlyChange = assets.reduce((sum, asset) => {
                 const valueInILS = toILS(asset.value, asset.currency || 'ILS');
                 const monthlyGain = (valueInILS * (asset.return / 100) / 12);
-                const monthlyDeposit = toILS(asset.monthly || 0, asset.currency || 'ILS');
+                const monthlyDeposit = toILS(asset.monthly || 0, asset.monthlyCurrency || asset.currency || 'ILS');
                 return sum + monthlyGain + monthlyDeposit;
             }, 0);
             
@@ -4527,7 +4399,9 @@
             }
 
             // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
         }
 
         function updateTrendsTab() {
@@ -5280,7 +5154,7 @@
                 // ===== REGULAR ASSET =====
                 const valueInUSD = currency === 'USD' ? asset.value : (currency === 'ILS' ? asset.value / exchangeRate : valueInILS / exchangeRate);
                 const showUSD = (asset.type === 'pension' || asset.type === 'gemel' || asset.type === 'fund') && currency === 'ILS';
-                const monthlyInILS = toILS(asset.monthly || 0, currency);
+                const monthlyInILS = toILS(asset.monthly || 0, asset.monthlyCurrency || currency);
                 const iconBg = asset.type === 'crypto' ? 'rgba(168,85,247,0.1)' : asset.type === 'pension' || asset.type === 'gemel' ? 'rgba(0,217,255,0.1)' : asset.type === 'fund' ? 'rgba(244,196,48,0.1)' : 'rgba(255,255,255,0.04)';
                 const currencyName = currency === 'USD' ? 'דולר' : currency === 'BTC' ? 'ביטקוין' : currency === 'ETH' ? 'איתריום' : 'שקל';
                 
