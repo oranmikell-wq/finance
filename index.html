@@ -1415,6 +1415,124 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--accent-gold);
         }
+
+        /* Light mode */
+        body.light-mode {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #e4e7ec;
+            --bg-card: #ffffff;
+            --bg-hover: #f5f6f8;
+            --text-primary: #1a1a2e;
+            --text-secondary: #6b7280;
+            --border-color: #d1d5db;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            background: linear-gradient(135deg, #f0f2f5 0%, #e4e7ec 50%, #f0f2f5 100%) !important;
+        }
+        body.light-mode .total-worth-card {
+            background: linear-gradient(135deg, #1a1f3a 0%, #2d3348 100%) !important;
+            color: #e8eaf6 !important;
+        }
+        body.light-mode .total-worth-card * { color: #e8eaf6 !important; }
+        body.light-mode .total-worth-card .total-change.positive { color: #10b981 !important; }
+        body.light-mode .total-worth-card .total-change.negative { color: #ef4444 !important; }
+        body.light-mode .tab-bar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-top: 1px solid #d1d5db; }
+        body.light-mode .tab-btn { color: #6b7280; }
+        body.light-mode .tab-btn.active { color: #f4c430; }
+        body.light-mode select, body.light-mode input { background: rgba(0,0,0,0.03) !important; color: #1a1a2e !important; border-color: #d1d5db !important; }
+        body.light-mode .type-tile { background: rgba(0,0,0,0.03) !important; border-color: #d1d5db !important; color: #1a1a2e !important; }
+        body.light-mode .type-tile.selected { background: rgba(244,196,48,0.15) !important; border-color: var(--accent-gold) !important; }
+        body.light-mode .modal-content { background: #ffffff; }
+
+        /* Summary cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+        }
+        .summary-card-icon { font-size: 1.3rem; margin-bottom: 4px; }
+        .summary-card-value { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+        .summary-card-label { font-size: 0.65rem; color: var(--text-secondary); }
+
+        /* Progress bar */
+        .goal-progress-track {
+            width: 100%;
+            height: 14px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .goal-progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--accent-gold), #ffd700);
+            transition: width 0.5s ease;
+        }
+
+        /* Budget bars */
+        .budget-bar-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .budget-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.4s ease;
+        }
+
+        /* Search */
+        .search-input {
+            width: 100%;
+            padding: 10px 14px 10px 36px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            margin-bottom: 12px;
+        }
+        .search-input:focus { border-color: var(--accent-gold); }
+        .search-wrapper { position: relative; }
+        .search-wrapper::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        /* 50/30/20 visual */
+        .rule-bar {
+            display: flex;
+            height: 28px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .rule-bar-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #fff;
+            transition: width 0.4s ease;
+        }
     </style>
 </head>
 <body>
@@ -1470,9 +1588,7 @@
         <!-- TAB 1: Dashboard -->
         <div class="tab-content active" id="tabDashboard">
 
-        <div style="height:12px;"></div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;margin-top:12px;">
             <div class="section-title" style="margin-bottom:0;">הנכסים שלי</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button onclick="sortAssets('value')" class="sort-btn active-sort" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.75rem;cursor:pointer;font-family:inherit;">שווי ↓</button>
@@ -1480,6 +1596,10 @@
                 <button onclick="sortAssets('return')" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">תשואה ↓</button>
                 <button onclick="sortAssets('name')" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">שם</button>
             </div>
+        </div>
+        <!-- Search bar -->
+        <div class="search-wrapper" id="searchWrapper" style="display:none;">
+            <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש נכסים..." oninput="filterAssets(this.value)">
         </div>
         <div class="assets-grid" id="assetsGrid">
             <!-- Assets will be dynamically added here -->
@@ -1533,6 +1653,31 @@
 
         <!-- TAB 3: Personal -->
         <div class="tab-content" id="tabPersonal">
+            <!-- Summary Cards -->
+            <div class="section-title">📊 סיכום פיננסי</div>
+            <div class="summary-cards" id="summaryCards">
+                <div class="summary-card">
+                    <div class="summary-card-icon">📈</div>
+                    <div class="summary-card-value" id="summTotalProfit" style="color:var(--accent-green);">₪0</div>
+                    <div class="summary-card-label">רווח כולל</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-icon">💹</div>
+                    <div class="summary-card-value" id="summTotalReturnPct" style="color:var(--accent-green);">0%</div>
+                    <div class="summary-card-label">תשואה כוללת</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-icon">🏦</div>
+                    <div class="summary-card-value" id="summTotalDeposits" style="color:var(--accent-blue);">₪0</div>
+                    <div class="summary-card-label">הפקדות חודשיות</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-icon">💰</div>
+                    <div class="summary-card-value" id="summNetWorth" style="color:var(--accent-gold);">₪0</div>
+                    <div class="summary-card-label">שווי נטו</div>
+                </div>
+            </div>
+
             <div class="section-title">👤 פרטים אישיים</div>
             <div class="chart-card" style="padding:20px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
@@ -1567,17 +1712,101 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">💵 שכר חודשי (נטו)</label>
-                        <input type="text" inputmode="decimal" id="profileSalary" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcDisposable()">
+                        <input type="text" inputmode="decimal" id="profileSalary" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
                     </div>
                     <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">📋 הוצאות קבועות</label>
-                        <input type="text" inputmode="decimal" id="profileExpenses" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcDisposable()">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">📋 סה"כ הוצאות קבועות</label>
+                        <input type="text" inputmode="decimal" id="profileExpenses" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;direction:rtl;" readonly>
                     </div>
                 </div>
+
+                <!-- Expense breakdown -->
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;">📊 פירוט הוצאות:</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">🏠</span>
+                            <input type="text" inputmode="decimal" id="expHousing" placeholder="דיור/שכ\"ד" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">🚗</span>
+                            <input type="text" inputmode="decimal" id="expTransport" placeholder="רכב/תחבורה" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">🛒</span>
+                            <input type="text" inputmode="decimal" id="expFood" placeholder="מזון/סופר" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">🛡️</span>
+                            <input type="text" inputmode="decimal" id="expInsurance" placeholder="ביטוחים" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">📱</span>
+                            <input type="text" inputmode="decimal" id="expBills" placeholder="חשבונות" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">🎓</span>
+                            <input type="text" inputmode="decimal" id="expEducation" placeholder="חינוך" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">💳</span>
+                            <input type="text" inputmode="decimal" id="expDebt" placeholder="הלוואות/חובות" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:0.8rem;">📦</span>
+                            <input type="text" inputmode="decimal" id="expOther" placeholder="אחר" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                    <!-- Expense breakdown bars -->
+                    <div id="expenseBreakdownBars" style="display:none;margin-top:10px;"></div>
+                </div>
+
+                <!-- Disposable income -->
                 <div id="disposableDisplay" style="display:none;padding:14px;border-radius:10px;text-align:center;">
                     <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:6px;">הכנסה פנויה חודשית</div>
                     <div style="font-size:1.6rem;font-weight:700;" id="disposableAmount">₪0</div>
                     <div style="font-size:0.7rem;margin-top:4px;" id="disposablePct"></div>
+                </div>
+
+                <!-- Actual savings (salary - expenses - deposits) -->
+                <div id="actualSavingsDisplay" style="display:none;padding:10px;margin-top:8px;border-radius:10px;text-align:center;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);">
+                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">אחרי הפקדות לנכסים:</div>
+                    <div style="font-size:1.1rem;font-weight:600;" id="actualSavingsAmount">₪0</div>
+                </div>
+            </div>
+
+            <!-- 50/30/20 Rule -->
+            <div class="section-title" style="margin-top:16px;">📐 כלל 50/30/20</div>
+            <div class="chart-card" style="padding:20px;" id="ruleCard">
+                <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px;">המלצה: 50% צרכים, 30% רצונות, 20% חיסכון</div>
+                <div id="ruleContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הזן שכר חודשי כדי לראות ניתוח</div>
+            </div>
+
+            <!-- Savings Goal -->
+            <div class="section-title" style="margin-top:16px;">🎯 יעד חיסכון</div>
+            <div class="chart-card" style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">🎯 סכום יעד</label>
+                        <input type="text" inputmode="decimal" id="goalAmount" placeholder="500,000" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcGoal()">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">📝 שם היעד</label>
+                        <input type="text" id="goalName" placeholder="דירה / חופשה / חירום" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile(); calcGoal()">
+                    </div>
+                </div>
+                <div id="goalDisplay" style="display:none;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;">
+                        <span id="goalCurrentLabel">₪0</span>
+                        <span id="goalTargetLabel">₪0</span>
+                    </div>
+                    <div class="goal-progress-track">
+                        <div class="goal-progress-fill" id="goalProgressFill" style="width:0%;"></div>
+                    </div>
+                    <div style="text-align:center;margin-top:8px;">
+                        <div style="font-size:1.3rem;font-weight:700;color:var(--accent-gold);" id="goalPctText">0%</div>
+                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px;" id="goalEtaText"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1587,6 +1816,16 @@
             <div class="section-title">⚙️ הגדרות</div>
 
             <div style="display:flex;flex-direction:column;gap:10px;">
+                <!-- Light/Dark toggle -->
+                <button onclick="toggleTheme()" class="settings-row" id="themeToggleRow">
+                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);" id="themeToggleIcon">🌙</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title" id="themeToggleTitle">מצב בהיר</div>
+                        <div class="settings-row-desc" id="themeToggleDesc">עבור למצב תצוגה בהיר</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+
                 <!-- Update rates -->
                 <button onclick="updateAllRates()" class="settings-row">
                     <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">🔄</div>
@@ -1629,7 +1868,7 @@
             </div>
 
             <div style="text-align:center;margin-top:30px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
-                פיננסייר v1.0
+                פיננסייר v2.0
             </div>
         </div>
 
@@ -2860,6 +3099,10 @@
 
         // Add event listeners for real estate calculations
         // ============ Profile & Greeting ============
+        var expenseKeys = ['expHousing','expTransport','expFood','expInsurance','expBills','expEducation','expDebt','expOther'];
+        var expenseLabels = {expHousing:'🏠 דיור', expTransport:'🚗 רכב', expFood:'🛒 מזון', expInsurance:'🛡️ ביטוח', expBills:'📱 חשבונות', expEducation:'🎓 חינוך', expDebt:'💳 הלוואות', expOther:'📦 אחר'};
+        var expenseColors = {expHousing:'#ef4444', expTransport:'#f59e0b', expFood:'#10b981', expInsurance:'#3b82f6', expBills:'#8b5cf6', expEducation:'#ec4899', expDebt:'#f97316', expOther:'#64748b'};
+
         function saveProfile() {
             var profile = {
                 firstName: document.getElementById('profileFirstName').value.trim(),
@@ -2867,10 +3110,15 @@
                 age: document.getElementById('profileAge').value.trim(),
                 gender: document.getElementById('profileGender').value,
                 salary: document.getElementById('profileSalary').value.trim(),
-                expenses: document.getElementById('profileExpenses').value.trim()
+                goalAmount: document.getElementById('goalAmount').value.trim(),
+                goalName: document.getElementById('goalName').value.trim()
             };
+            // Save expense breakdown
+            expenseKeys.forEach(function(k) {
+                var el = document.getElementById(k);
+                if (el) profile[k] = el.value.trim();
+            });
             try { localStorage.setItem('user-profile', JSON.stringify(profile)); } catch(e){}
-            // Show saved indicator
             var msg = document.getElementById('profileSavedMsg');
             if (msg) { msg.style.opacity = '1'; setTimeout(function(){ msg.style.opacity = '0'; }, 1500); }
             updateGreeting();
@@ -2886,42 +3134,255 @@
                     document.getElementById('profileAge').value = profile.age || '';
                     document.getElementById('profileGender').value = profile.gender || '';
                     document.getElementById('profileSalary').value = profile.salary || '';
-                    document.getElementById('profileExpenses').value = profile.expenses || '';
+                    document.getElementById('goalAmount').value = profile.goalAmount || '';
+                    document.getElementById('goalName').value = profile.goalName || '';
+                    // Load expense breakdown
+                    expenseKeys.forEach(function(k) {
+                        var el = document.getElementById(k);
+                        if (el && profile[k]) el.value = profile[k];
+                    });
+                    // Legacy: load old single expenses field
+                    if (profile.expenses && !profile.expHousing) {
+                        document.getElementById('expOther').value = profile.expenses;
+                    }
                 }
             } catch(e){}
             updateGreeting();
-            calcDisposable();
+            calcExpenses();
+            calcGoal();
+            loadTheme();
         }
 
-        function calcDisposable() {
+        function calcExpenses() {
+            var total = 0;
+            expenseKeys.forEach(function(k) {
+                total += parseNum(document.getElementById(k));
+            });
+            document.getElementById('profileExpenses').value = total > 0 ? total.toLocaleString('he-IL') : '';
+            saveProfile();
+            calcBudget();
+            renderExpenseBars(total);
+        }
+
+        function renderExpenseBars(total) {
+            var container = document.getElementById('expenseBreakdownBars');
+            if (!container || total <= 0) { if (container) container.style.display = 'none'; return; }
+            container.style.display = 'block';
+            var html = '';
+            expenseKeys.forEach(function(k) {
+                var val = parseNum(document.getElementById(k));
+                if (val <= 0) return;
+                var pct = (val / total * 100).toFixed(1);
+                html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+                    '<span style="font-size:0.7rem;width:70px;color:var(--text-secondary);white-space:nowrap;">' + expenseLabels[k] + '</span>' +
+                    '<div class="budget-bar-track" style="flex:1;"><div class="budget-bar-fill" style="width:' + pct + '%;background:' + expenseColors[k] + ';"></div></div>' +
+                    '<span style="font-size:0.7rem;color:var(--text-secondary);width:55px;text-align:left;">₪' + val.toLocaleString('he-IL') + '</span>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function calcBudget() {
             var salary = parseNum(document.getElementById('profileSalary'));
             var expenses = parseNum(document.getElementById('profileExpenses'));
+            calcDisposable(salary, expenses);
+            calcRule503020(salary, expenses);
+            calcActualSavings(salary, expenses);
+        }
+
+        function calcDisposable(salary, expenses) {
             var display = document.getElementById('disposableDisplay');
-            
             if (salary > 0) {
                 var disposable = salary - expenses;
                 var isPositive = disposable >= 0;
                 var color = isPositive ? 'var(--accent-green)' : 'var(--accent-red)';
-                var bgColor = isPositive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)';
-                var borderColor = isPositive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-                
                 display.style.display = 'block';
-                display.style.background = bgColor;
-                display.style.border = '1px solid ' + borderColor;
-                
+                display.style.background = isPositive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)';
+                display.style.border = '1px solid ' + (isPositive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)');
                 document.getElementById('disposableAmount').textContent = '₪' + disposable.toLocaleString('he-IL', {maximumFractionDigits: 0});
                 document.getElementById('disposableAmount').style.color = color;
-                
                 if (expenses > 0) {
-                    var pct = ((disposable / salary) * 100).toFixed(1);
-                    document.getElementById('disposablePct').textContent = pct + '% מהשכר פנוי';
-                    document.getElementById('disposablePct').style.color = 'var(--text-secondary)';
+                    document.getElementById('disposablePct').textContent = ((disposable / salary) * 100).toFixed(1) + '% מהשכר פנוי';
                 } else {
                     document.getElementById('disposablePct').textContent = '';
                 }
             } else {
                 display.style.display = 'none';
             }
+        }
+
+        function calcActualSavings(salary, expenses) {
+            var display = document.getElementById('actualSavingsDisplay');
+            if (salary <= 0) { display.style.display = 'none'; return; }
+            var totalDeposits = assets.reduce(function(s, a) {
+                return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0);
+            }, 0);
+            if (totalDeposits <= 0) { display.style.display = 'none'; return; }
+            var actual = salary - expenses - totalDeposits;
+            var isPos = actual >= 0;
+            display.style.display = 'block';
+            document.getElementById('actualSavingsAmount').textContent = '₪' + actual.toLocaleString('he-IL', {maximumFractionDigits: 0});
+            document.getElementById('actualSavingsAmount').style.color = isPos ? 'var(--accent-blue)' : 'var(--accent-red)';
+        }
+
+        function calcRule503020(salary, expenses) {
+            var container = document.getElementById('ruleContent');
+            if (salary <= 0) { container.innerHTML = '<span style="color:var(--text-secondary);font-size:0.8rem;">הזן שכר חודשי כדי לראות ניתוח</span>'; return; }
+            var ideal50 = salary * 0.5, ideal30 = salary * 0.3, ideal20 = salary * 0.2;
+            var totalDeposits = assets.reduce(function(s, a) {
+                return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0);
+            }, 0);
+            var actualNeeds = expenses;
+            var actualSavings = totalDeposits;
+            var actualWants = Math.max(0, salary - expenses - totalDeposits);
+            var needsPct = salary > 0 ? (actualNeeds / salary * 100) : 0;
+            var savingsPct = salary > 0 ? (actualSavings / salary * 100) : 0;
+            var wantsPct = salary > 0 ? (actualWants / salary * 100) : 0;
+
+            var html = '<div style="margin-bottom:12px;">' +
+                '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">חלוקה מומלצת:</div>' +
+                '<div class="rule-bar">' +
+                '<div class="rule-bar-segment" style="width:50%;background:#3b82f6;">50% צרכים</div>' +
+                '<div class="rule-bar-segment" style="width:30%;background:#8b5cf6;">30% רצונות</div>' +
+                '<div class="rule-bar-segment" style="width:20%;background:#10b981;">20% חיסכון</div>' +
+                '</div></div>';
+
+            html += '<div>' +
+                '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">החלוקה שלך:</div>' +
+                '<div class="rule-bar">' +
+                '<div class="rule-bar-segment" style="width:' + Math.min(needsPct, 100) + '%;background:#3b82f6;">' + needsPct.toFixed(0) + '%</div>' +
+                '<div class="rule-bar-segment" style="width:' + Math.min(wantsPct, 100 - needsPct) + '%;background:#8b5cf6;">' + wantsPct.toFixed(0) + '%</div>' +
+                '<div class="rule-bar-segment" style="width:' + Math.min(savingsPct, 100 - needsPct - wantsPct) + '%;background:#10b981;">' + savingsPct.toFixed(0) + '%</div>' +
+                '</div></div>';
+
+            // Tips
+            html += '<div style="margin-top:10px;font-size:0.7rem;">';
+            if (needsPct > 50) html += '<div style="color:var(--accent-red);margin-bottom:3px;">⚠️ ההוצאות הקבועות (' + needsPct.toFixed(0) + '%) חורגות מההמלצה (50%)</div>';
+            else html += '<div style="color:var(--accent-green);margin-bottom:3px;">✅ הוצאות קבועות תקינות (' + needsPct.toFixed(0) + '%)</div>';
+            if (savingsPct >= 20) html += '<div style="color:var(--accent-green);">✅ חיסכון מצוין! (' + savingsPct.toFixed(0) + '%)</div>';
+            else if (savingsPct > 0) html += '<div style="color:var(--accent-gold);">💡 חיסכון ' + savingsPct.toFixed(0) + '% — מומלץ להגיע ל-20%</div>';
+            else html += '<div style="color:var(--text-secondary);">💡 הוסף הפקדות חודשיות לנכסים כדי לראות חיסכון</div>';
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function calcGoal() {
+            var goalAmt = parseNum(document.getElementById('goalAmount'));
+            var display = document.getElementById('goalDisplay');
+            if (goalAmt <= 0) { display.style.display = 'none'; return; }
+
+            var totalILS = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
+            var pct = Math.min((totalILS / goalAmt) * 100, 100);
+            var goalName = document.getElementById('goalName').value.trim();
+
+            display.style.display = 'block';
+            document.getElementById('goalCurrentLabel').textContent = '₪' + totalILS.toLocaleString('he-IL', {maximumFractionDigits: 0});
+            document.getElementById('goalTargetLabel').textContent = '₪' + goalAmt.toLocaleString('he-IL', {maximumFractionDigits: 0});
+            document.getElementById('goalProgressFill').style.width = pct + '%';
+            document.getElementById('goalPctText').textContent = pct.toFixed(1) + '%';
+
+            // ETA calculation
+            var totalDeposits = assets.reduce(function(s, a) {
+                return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0);
+            }, 0);
+            var remaining = goalAmt - totalILS;
+            var eta = '';
+            if (remaining <= 0) {
+                eta = '🎉 הגעת ליעד' + (goalName ? ' "' + goalName + '"!' : '!');
+                document.getElementById('goalPctText').style.color = 'var(--accent-green)';
+            } else if (totalDeposits > 0) {
+                var months = Math.ceil(remaining / totalDeposits);
+                var years = Math.floor(months / 12);
+                var remMonths = months % 12;
+                eta = '📅 צפי הגעה: ';
+                if (years > 0) eta += years + ' שנים';
+                if (years > 0 && remMonths > 0) eta += ' ו-';
+                if (remMonths > 0) eta += remMonths + ' חודשים';
+                document.getElementById('goalPctText').style.color = 'var(--accent-gold)';
+            } else {
+                eta = '💡 הוסף הפקדות חודשיות כדי לקבל תחזית';
+                document.getElementById('goalPctText').style.color = 'var(--accent-gold)';
+            }
+            document.getElementById('goalEtaText').textContent = eta;
+        }
+
+        // ============ Search / Filter ============
+        function filterAssets(query) {
+            query = query.trim().toLowerCase();
+            var items = document.querySelectorAll('#assetsGrid .asset-row');
+            items.forEach(function(item) {
+                var text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) || query === '' ? '' : 'none';
+            });
+        }
+
+        // ============ Theme Toggle ============
+        function toggleTheme() {
+            var isLight = document.body.classList.toggle('light-mode');
+            localStorage.setItem('app-theme', isLight ? 'light' : 'dark');
+            updateThemeButton(isLight);
+        }
+        function loadTheme() {
+            var theme = localStorage.getItem('app-theme');
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+                updateThemeButton(true);
+            }
+        }
+        function updateThemeButton(isLight) {
+            var icon = document.getElementById('themeToggleIcon');
+            var title = document.getElementById('themeToggleTitle');
+            var desc = document.getElementById('themeToggleDesc');
+            if (icon) icon.textContent = isLight ? '☀️' : '🌙';
+            if (title) title.textContent = isLight ? 'מצב כהה' : 'מצב בהיר';
+            if (desc) desc.textContent = isLight ? 'עבור למצב תצוגה כהה' : 'עבור למצב תצוגה בהיר';
+        }
+
+        // ============ Summary Cards ============
+        function updateSummaryCards() {
+            var totalBasis = 0, totalCurrent = 0, totalDeposits = 0;
+            assets.forEach(function(a) {
+                var valILS = toILS(a.value, a.currency || 'ILS');
+                totalCurrent += valILS;
+                if (a.costBasis > 0) totalBasis += toILS(a.costBasis, a.currency || 'ILS');
+                if (a.monthly) totalDeposits += toILS(a.monthly, a.currency || 'ILS');
+            });
+
+            var totalProfit = totalBasis > 0 ? totalCurrent - totalBasis : 0;
+            var totalReturnPct = totalBasis > 0 ? (totalProfit / totalBasis * 100) : 0;
+            var isProfit = totalProfit >= 0;
+
+            // Net worth: assets - liabilities (mortgages)
+            var totalMortgages = assets.filter(function(a) { return a.type === 'real_estate' && a.mortgage; })
+                .reduce(function(s, a) { return s + (a.mortgage || 0); }, 0);
+            var netWorth = totalCurrent;
+
+            var el;
+            el = document.getElementById('summTotalProfit');
+            if (el) {
+                el.textContent = (isProfit ? '+' : '') + '₪' + Math.abs(totalProfit).toLocaleString('he-IL', {maximumFractionDigits: 0});
+                el.style.color = totalBasis > 0 ? (isProfit ? 'var(--accent-green)' : 'var(--accent-red)') : 'var(--text-secondary)';
+            }
+            el = document.getElementById('summTotalReturnPct');
+            if (el) {
+                el.textContent = totalBasis > 0 ? ((isProfit ? '+' : '') + totalReturnPct.toFixed(1) + '%') : '--';
+                el.style.color = totalBasis > 0 ? (isProfit ? 'var(--accent-green)' : 'var(--accent-red)') : 'var(--text-secondary)';
+            }
+            el = document.getElementById('summTotalDeposits');
+            if (el) {
+                el.textContent = totalDeposits > 0 ? '₪' + totalDeposits.toLocaleString('he-IL', {maximumFractionDigits: 0}) : '₪0';
+                el.style.color = 'var(--accent-blue)';
+            }
+            el = document.getElementById('summNetWorth');
+            if (el) {
+                el.textContent = '₪' + netWorth.toLocaleString('he-IL', {maximumFractionDigits: 0});
+                el.style.color = 'var(--accent-gold)';
+            }
+
+            // Show search bar if 4+ assets
+            var sw = document.getElementById('searchWrapper');
+            if (sw) sw.style.display = assets.length >= 4 ? 'block' : 'none';
         }
 
         function updateGreeting() {
@@ -3498,6 +3959,9 @@
             saveHistorySnapshot();
             renderHistoryChart();
             updateTrendsTab();
+            updateSummaryCards();
+            calcGoal();
+            calcBudget();
         }
 
         function updateTotalWorth() {
