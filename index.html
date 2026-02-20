@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-title" content="פיננסייר">
     <meta name="theme-color" content="#0a0e27">
     <meta name="color-scheme" content="dark">
-    <title>פיננסייר - העוזר הפיננסי שלך</title>
+    <title>פיננסייר - הסוכן הפיננסי שלך</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/svg+xml" href="./logo.svg">
     <link rel="apple-touch-icon" href="./logo.svg">
@@ -1421,7 +1421,7 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <h1><img src="./logo.svg" alt="logo" style="width:36px;height:36px;vertical-align:middle;margin-left:8px;border-radius:8px;"> פיננסייר - העוזר הפיננסי שלך</h1>
+                <h1><img src="./logo.svg" alt="logo" style="width:36px;height:36px;vertical-align:middle;margin-left:8px;border-radius:8px;"> פיננסייר - הסוכן הפיננסי שלך</h1>
             </div>
             <div class="last-update">
                 עדכון אחרון: <span id="lastUpdate">--</span>
@@ -1560,6 +1560,25 @@
                     </div>
                 </div>
                 <div id="profileSavedMsg" style="text-align:center;font-size:0.75rem;color:var(--accent-green);opacity:0;transition:opacity 0.3s;">✅ נשמר</div>
+            </div>
+
+            <div class="section-title" style="margin-top:16px;">💰 תקציב חודשי</div>
+            <div class="chart-card" style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">💵 שכר חודשי (נטו)</label>
+                        <input type="text" inputmode="decimal" id="profileSalary" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcDisposable()">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">📋 הוצאות קבועות</label>
+                        <input type="text" inputmode="decimal" id="profileExpenses" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcDisposable()">
+                    </div>
+                </div>
+                <div id="disposableDisplay" style="display:none;padding:14px;border-radius:10px;text-align:center;">
+                    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:6px;">הכנסה פנויה חודשית</div>
+                    <div style="font-size:1.6rem;font-weight:700;" id="disposableAmount">₪0</div>
+                    <div style="font-size:0.7rem;margin-top:4px;" id="disposablePct"></div>
+                </div>
             </div>
         </div>
 
@@ -2846,7 +2865,9 @@
                 firstName: document.getElementById('profileFirstName').value.trim(),
                 lastName: document.getElementById('profileLastName').value.trim(),
                 age: document.getElementById('profileAge').value.trim(),
-                gender: document.getElementById('profileGender').value
+                gender: document.getElementById('profileGender').value,
+                salary: document.getElementById('profileSalary').value.trim(),
+                expenses: document.getElementById('profileExpenses').value.trim()
             };
             try { localStorage.setItem('user-profile', JSON.stringify(profile)); } catch(e){}
             // Show saved indicator
@@ -2864,9 +2885,43 @@
                     document.getElementById('profileLastName').value = profile.lastName || '';
                     document.getElementById('profileAge').value = profile.age || '';
                     document.getElementById('profileGender').value = profile.gender || '';
+                    document.getElementById('profileSalary').value = profile.salary || '';
+                    document.getElementById('profileExpenses').value = profile.expenses || '';
                 }
             } catch(e){}
             updateGreeting();
+            calcDisposable();
+        }
+
+        function calcDisposable() {
+            var salary = parseNum(document.getElementById('profileSalary'));
+            var expenses = parseNum(document.getElementById('profileExpenses'));
+            var display = document.getElementById('disposableDisplay');
+            
+            if (salary > 0) {
+                var disposable = salary - expenses;
+                var isPositive = disposable >= 0;
+                var color = isPositive ? 'var(--accent-green)' : 'var(--accent-red)';
+                var bgColor = isPositive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)';
+                var borderColor = isPositive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                
+                display.style.display = 'block';
+                display.style.background = bgColor;
+                display.style.border = '1px solid ' + borderColor;
+                
+                document.getElementById('disposableAmount').textContent = '₪' + disposable.toLocaleString('he-IL', {maximumFractionDigits: 0});
+                document.getElementById('disposableAmount').style.color = color;
+                
+                if (expenses > 0) {
+                    var pct = ((disposable / salary) * 100).toFixed(1);
+                    document.getElementById('disposablePct').textContent = pct + '% מהשכר פנוי';
+                    document.getElementById('disposablePct').style.color = 'var(--text-secondary)';
+                } else {
+                    document.getElementById('disposablePct').textContent = '';
+                }
+            } else {
+                display.style.display = 'none';
+            }
         }
 
         function updateGreeting() {
@@ -3453,9 +3508,9 @@
             
             document.getElementById('totalWorth').textContent = `₪${totalILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}`;
             
-            // Breakdown by category
+            // Breakdown by category: pension=only pension, real_estate=only real_estate, liquid=everything else
             const pensionILS = assets
-                .filter(a => a.type === 'pension' || a.type === 'gemel' || a.type === 'fund')
+                .filter(a => a.type === 'pension')
                 .reduce((s, a) => s + toILS(a.value, a.currency || 'ILS'), 0);
             const realEstateILS = assets
                 .filter(a => a.type === 'real_estate')
