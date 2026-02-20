@@ -1517,22 +1517,32 @@
         }
 
         /* 50/30/20 visual */
-        .rule-bar {
-            display: flex;
-            height: 28px;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 8px 0;
-        }
-        .rule-bar-segment {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            font-weight: 600;
-            color: #fff;
-            transition: width 0.4s ease;
-        }
+        .rule-bar { display:flex; height:28px; border-radius:10px; overflow:hidden; margin:8px 0; }
+        .rule-bar-segment { display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:600; color:#fff; transition:width 0.4s ease; }
+        /* Daily recap */
+        .recap-banner { background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+        .recap-item { display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-size:0.8rem; }
+        .recap-item-name { color:var(--text-secondary); }
+        .recap-item-change { font-weight:600; }
+        /* Chart range buttons */
+        .range-btn { padding:4px 12px; border-radius:16px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); font-size:0.7rem; cursor:pointer; font-family:inherit; }
+        .range-btn.active { background:rgba(244,196,48,0.15); color:var(--accent-gold); border-color:var(--accent-gold); }
+        /* Gains table */
+        .gains-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+        .gains-table th { text-align:right; color:var(--text-secondary); font-weight:500; padding:8px 6px; border-bottom:1px solid var(--border-color); font-size:0.7rem; }
+        .gains-table td { padding:8px 6px; border-bottom:1px solid rgba(255,255,255,0.03); }
+        /* Exposure bars */
+        .exposure-item { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+        .exposure-flag { font-size:1.2rem; width:28px; text-align:center; }
+        .exposure-bar { flex:1; height:10px; background:rgba(255,255,255,0.06); border-radius:6px; overflow:hidden; }
+        .exposure-fill { height:100%; border-radius:6px; transition:width 0.4s ease; }
+        .exposure-pct { width:45px; text-align:left; font-size:0.75rem; font-weight:600; }
+        /* Watchlist */
+        .watchlist-item { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; margin-bottom:6px; }
+        /* Projection chart */
+        .projection-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.8rem; }
+        /* Alert item */
+        .alert-item { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; margin-bottom:6px; font-size:0.8rem; }
     </style>
 </head>
 <body>
@@ -1588,6 +1598,15 @@
         <!-- TAB 1: Dashboard -->
         <div class="tab-content active" id="tabDashboard">
 
+        <!-- Daily Recap -->
+        <div class="recap-banner" id="dailyRecap" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="font-size:0.85rem;font-weight:600;">📋 סיכום יומי</span>
+                <button onclick="document.getElementById('dailyRecap').style.display='none'" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:1rem;">✕</button>
+            </div>
+            <div id="recapContent"></div>
+        </div>
+
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;margin-top:12px;">
             <div class="section-title" style="margin-bottom:0;">הנכסים שלי</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -1633,16 +1652,48 @@
             <div class="section-title">📈 מגמות ותובנות</div>
 
             <div class="chart-card" style="margin-bottom:20px;">
-                <h3 style="margin-bottom:15px;">מגמת שווי לאורך זמן</h3>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                    <h3 style="margin:0;">מגמת שווי לאורך זמן</h3>
+                    <div style="display:flex;gap:4px;" id="chartRangeBtns">
+                        <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
+                        <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
+                        <button class="range-btn" onclick="setChartRange('3month',this)">3 חודשים</button>
+                        <button class="range-btn" onclick="setChartRange('year',this)">שנה</button>
+                        <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
+                    </div>
+                </div>
                 <canvas id="historyChart" style="width:100%;height:220px;"></canvas>
                 <div id="historyEmpty" style="text-align:center;color:var(--text-secondary);padding:30px;display:none;">
                     📊 נתונים היסטוריים יתחילו להצטבר מהיום. חזור מחר!
                 </div>
             </div>
 
+            <!-- Unrealized Gains -->
+            <div class="chart-card" style="margin-bottom:20px;">
+                <h3 style="margin-bottom:12px;">💰 רווחים והפסדים לא ממומשים</h3>
+                <div id="gainsTableContainer" style="overflow-x:auto;"></div>
+            </div>
+
+            <!-- Geographic Exposure -->
+            <div class="chart-card" style="margin-bottom:20px;">
+                <h3 style="margin-bottom:12px;">🌍 חשיפה גיאוגרפית</h3>
+                <div id="exposureContent"></div>
+            </div>
+
             <div class="chart-card" style="margin-bottom:20px;">
                 <h3 style="margin-bottom:15px;">פילוח קטגוריות</h3>
                 <div id="trendsCategoryBreakdown" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+
+            <!-- Watchlist -->
+            <div class="chart-card" style="margin-bottom:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3 style="margin:0;">👀 רשימת מעקב</h3>
+                    <button onclick="addWatchlistItem()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.1);color:var(--accent-gold);font-size:0.75rem;cursor:pointer;font-family:inherit;">+ הוסף</button>
+                </div>
+                <div id="watchlistContent">
+                    <div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:15px;">עקוב אחרי נכסים שמעניינים אותך לפני שקונים</div>
+                </div>
             </div>
 
             <div class="chart-card">
@@ -1809,6 +1860,38 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Fee Analysis -->
+            <div class="section-title" style="margin-top:16px;">💸 ניתוח דמי ניהול</div>
+            <div class="chart-card" style="padding:20px;">
+                <div id="feeAnalysisContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף דמי ניהול לנכסים כדי לראות ניתוח</div>
+            </div>
+
+            <!-- Pension / Retirement Calculator -->
+            <div class="section-title" style="margin-top:16px;">🧮 מחשבון פרישה</div>
+            <div class="chart-card" style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">גיל פרישה</label>
+                        <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">תשואה שנתית צפויה (%)</label>
+                        <input type="text" inputmode="decimal" id="retireReturn" value="6" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
+                    </div>
+                </div>
+                <div id="retirementResult" style="display:none;text-align:center;padding:14px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.12);border-radius:10px;">
+                    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:6px;">צפי חיסכון בגיל פרישה:</div>
+                    <div style="font-size:1.8rem;font-weight:700;color:var(--accent-gold);" id="retireAmount">₪0</div>
+                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:6px;" id="retireDetails"></div>
+                </div>
+            </div>
+
+            <!-- Fast Forward Projection -->
+            <div class="section-title" style="margin-top:16px;">⏩ תחזית עתידית</div>
+            <div class="chart-card" style="padding:20px;">
+                <div id="projectionContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף נכסים כדי לראות תחזית</div>
+            </div>
         </div>
 
         <!-- TAB 4: Settings -->
@@ -1856,6 +1939,26 @@
                     <div class="settings-row-arrow">‹</div>
                 </button>
 
+                <!-- CSV Export -->
+                <button onclick="exportCSV()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">📊</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">ייצוא CSV</div>
+                        <div class="settings-row-desc">ייצוא לאקסל / Google Sheets</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+
+                <!-- Price Alerts -->
+                <button onclick="showAlertsManager()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);">🔔</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">התראות מחיר</div>
+                        <div class="settings-row-desc">קבל התראה כשנכס מגיע לסכום מסוים</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+
                 <!-- Clear data -->
                 <button onclick="if(confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים? פעולה זו בלתי הפיכה!')){assets=[];saveAssets();updateUI();alert('✅ כל הנתונים נמחקו.');}" class="settings-row" style="border-color:rgba(239,68,68,0.15);">
                     <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);">🗑️</div>
@@ -1868,7 +1971,7 @@
             </div>
 
             <div style="text-align:center;margin-top:30px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
-                פיננסייר v2.0
+                פיננסייר v3.0
             </div>
         </div>
 
@@ -2154,14 +2257,18 @@
                             </div>
                         </div>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
                         <div class="form-group" style="margin:0;">
-                            <label>תשואה שנתית (%)</label>
+                            <label>תשואה (%)</label>
                             <input type="text" inputmode="decimal" id="assetReturn" placeholder="0" oninput="formatNumberInput(this)">
                         </div>
                         <div class="form-group" style="margin:0;">
-                            <label>הפקדה חודשית (₪)</label>
+                            <label>הפקדה (₪)</label>
                             <input type="text" inputmode="decimal" id="assetMonthly" placeholder="0" oninput="formatNumberInput(this)">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>דמי ניהול (%)</label>
+                            <input type="text" inputmode="decimal" id="assetFee" placeholder="0" oninput="formatNumberInput(this)">
                         </div>
                     </div>
                     <div class="button-group" style="gap:8px;">
@@ -3390,6 +3497,357 @@
             if (sw) sw.style.display = assets.length >= 4 ? 'block' : 'none';
         }
 
+        // ============ Chart Range Selector ============
+        var chartRange = 'all';
+        function setChartRange(range, btn) {
+            chartRange = range;
+            document.querySelectorAll('#chartRangeBtns .range-btn').forEach(function(b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            renderHistoryChart();
+        }
+
+        // ============ Daily Recap ============
+        function showDailyRecap() {
+            var recap = document.getElementById('dailyRecap');
+            var content = document.getElementById('recapContent');
+            if (!recap || !content) return;
+            
+            var items = [];
+            // Exchange rate change
+            var savedRate = parseFloat(localStorage.getItem('prev-exchange-rate') || 0);
+            if (savedRate > 0 && exchangeRate > 0) {
+                var rChg = ((exchangeRate - savedRate) / savedRate * 100);
+                if (Math.abs(rChg) > 0.01) items.push({ name: '💵 שער דולר', val: '₪' + exchangeRate.toFixed(4), chg: rChg });
+            }
+            // SPY change
+            var savedSpy = parseFloat(localStorage.getItem('prev-spy-price') || 0);
+            if (savedSpy > 0 && spyPrice > 0) {
+                var sChg = ((spyPrice - savedSpy) / savedSpy * 100);
+                items.push({ name: '📈 SPY', val: '$' + spyPrice.toFixed(2), chg: sChg });
+            }
+            // Fund changes
+            assets.forEach(function(a) {
+                if (a.type === 'savings' && a.fundDailyPct !== undefined) {
+                    items.push({ name: '📊 ' + (a.fundName || a.name), val: '', chg: a.fundDailyPct || 0 });
+                }
+            });
+
+            if (items.length === 0) { recap.style.display = 'none'; return; }
+            
+            var html = '';
+            items.forEach(function(item) {
+                var color = item.chg >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                var sign = item.chg >= 0 ? '+' : '';
+                html += '<div class="recap-item"><span class="recap-item-name">' + item.name + '</span>';
+                if (item.val) html += '<span style="color:var(--text-primary);font-size:0.8rem;margin:0 8px;">' + item.val + '</span>';
+                html += '<span class="recap-item-change" style="color:' + color + ';">' + sign + item.chg.toFixed(2) + '%</span></div>';
+            });
+            content.innerHTML = html;
+            recap.style.display = 'block';
+            
+            // Save current prices for next comparison
+            if (exchangeRate > 0) localStorage.setItem('prev-exchange-rate', exchangeRate);
+            if (spyPrice > 0) localStorage.setItem('prev-spy-price', spyPrice);
+        }
+
+        // ============ Unrealized Gains Table ============
+        function updateGainsTable() {
+            var container = document.getElementById('gainsTableContainer');
+            if (!container) return;
+            var rows = [];
+            assets.forEach(function(a) {
+                if (a.costBasis > 0) {
+                    var valILS = toILS(a.value, a.currency || 'ILS');
+                    var basisILS = toILS(a.costBasis, a.currency || 'ILS');
+                    var profit = valILS - basisILS;
+                    var pct = (profit / basisILS * 100);
+                    rows.push({ name: a.name, basis: basisILS, current: valILS, profit: profit, pct: pct });
+                }
+            });
+            if (rows.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:15px;">הוסף עלות בסיס לנכסים כדי לראות רווחים</div>'; return; }
+            rows.sort(function(a, b) { return b.pct - a.pct; });
+            var html = '<table class="gains-table"><thead><tr><th>נכס</th><th>בסיס</th><th>נוכחי</th><th>רווח</th><th>%</th></tr></thead><tbody>';
+            rows.forEach(function(r) {
+                var color = r.profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                var sign = r.profit >= 0 ? '+' : '';
+                html += '<tr><td style="font-weight:500;">' + r.name + '</td>';
+                html += '<td>₪' + r.basis.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</td>';
+                html += '<td>₪' + r.current.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</td>';
+                html += '<td style="color:' + color + ';">' + sign + '₪' + Math.abs(r.profit).toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</td>';
+                html += '<td style="color:' + color + ';font-weight:600;">' + sign + r.pct.toFixed(1) + '%</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ============ Geographic Exposure ============
+        function updateExposure() {
+            var container = document.getElementById('exposureContent');
+            if (!container) return;
+            var total = 0, israel = 0, us = 0, crypto = 0, other = 0;
+            assets.forEach(function(a) {
+                var v = toILS(a.value, a.currency || 'ILS');
+                total += v;
+                if (a.currency === 'BTC' || a.currency === 'ETH' || a.type === 'crypto') crypto += v;
+                else if (a.isSpyPension || a.type === 'trade') us += v;
+                else if (a.currency === 'USD') us += v;
+                else israel += v;
+            });
+            if (total <= 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף נכסים לצפייה בחשיפה</div>'; return; }
+            var data = [
+                { flag: '🇮🇱', name: 'ישראל', val: israel, color: '#3b82f6' },
+                { flag: '🇺🇸', name: 'ארה"ב', val: us, color: '#ef4444' },
+                { flag: '🌐', name: 'קריפטו', val: crypto, color: '#a855f7' },
+                { flag: '🌍', name: 'אחר', val: other, color: '#64748b' }
+            ].filter(function(d) { return d.val > 0; });
+            var html = '';
+            data.forEach(function(d) {
+                var pct = (d.val / total * 100);
+                html += '<div class="exposure-item">';
+                html += '<span class="exposure-flag">' + d.flag + '</span>';
+                html += '<div style="flex:1;"><div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:3px;">' + d.name + ' — ₪' + d.val.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</div>';
+                html += '<div class="exposure-bar"><div class="exposure-fill" style="width:' + pct + '%;background:' + d.color + ';"></div></div></div>';
+                html += '<span class="exposure-pct" style="color:' + d.color + ';">' + pct.toFixed(1) + '%</span></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        // ============ Watchlist ============
+        function getWatchlist() { try { return JSON.parse(localStorage.getItem('watchlist') || '[]'); } catch(e) { return []; } }
+        function saveWatchlist(list) { localStorage.setItem('watchlist', JSON.stringify(list)); }
+        
+        function addWatchlistItem() {
+            var name = prompt('שם הנכס / הסימול:');
+            if (!name) return;
+            var target = prompt('מחיר יעד (אופציונלי):');
+            var list = getWatchlist();
+            list.push({ id: Date.now(), name: name.trim(), target: parseFloat(target) || 0, added: new Date().toLocaleDateString('he-IL') });
+            saveWatchlist(list);
+            renderWatchlist();
+        }
+        
+        function removeWatchlistItem(id) {
+            var list = getWatchlist().filter(function(w) { return w.id !== id; });
+            saveWatchlist(list);
+            renderWatchlist();
+        }
+        
+        function renderWatchlist() {
+            var container = document.getElementById('watchlistContent');
+            if (!container) return;
+            var list = getWatchlist();
+            if (list.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:15px;">עקוב אחרי נכסים שמעניינים אותך לפני שקונים</div>';
+                return;
+            }
+            var html = '';
+            list.forEach(function(w) {
+                html += '<div class="watchlist-item"><div>';
+                html += '<div style="font-weight:500;font-size:0.85rem;">' + w.name + '</div>';
+                html += '<div style="font-size:0.7rem;color:var(--text-secondary);">נוסף: ' + w.added + (w.target > 0 ? ' | יעד: ₪' + w.target.toLocaleString('he-IL') : '') + '</div>';
+                html += '</div><button onclick="removeWatchlistItem(' + w.id + ')" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:0.9rem;">✕</button></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        // ============ CSV Export ============
+        function exportCSV() {
+            if (assets.length === 0) { alert('אין נכסים לייצוא'); return; }
+            var headers = ['שם','סוג','ספק','מטבע','שווי','עלות בסיס','תשואה %','הפקדה חודשית','דמי ניהול %'];
+            var rows = [headers.join(',')];
+            assets.forEach(function(a) {
+                var typeNames = { pension:'פנסיה', gemel:'גמל', fund:'קרן השתלמות', savings:'קרן נאמנות', deposit:'חיסכון/פיקדון', trade:'מניות', crypto:'קריפטו', real_estate:'נדל"ן', other:'אחר' };
+                rows.push([
+                    '"' + (a.name || '') + '"',
+                    '"' + (typeNames[a.type] || a.type) + '"',
+                    '"' + (a.provider || '') + '"',
+                    a.currency || 'ILS',
+                    a.value || 0,
+                    a.costBasis || 0,
+                    a.return || 0,
+                    a.monthly || 0,
+                    a.fee || 0
+                ].join(','));
+            });
+            var csv = '\uFEFF' + rows.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = 'financier_' + new Date().toISOString().slice(0,10) + '.csv';
+            a.click(); URL.revokeObjectURL(url);
+        }
+
+        // ============ Price Alerts ============
+        function getAlerts() { try { return JSON.parse(localStorage.getItem('price-alerts') || '[]'); } catch(e) { return []; } }
+        function saveAlerts(list) { localStorage.setItem('price-alerts', JSON.stringify(list)); }
+        
+        function showAlertsManager() {
+            var alerts = getAlerts();
+            var html = '<div style="padding:20px;">';
+            html += '<h3 style="text-align:center;margin-bottom:16px;">🔔 התראות מחיר</h3>';
+            
+            if (alerts.length > 0) {
+                alerts.forEach(function(al, i) {
+                    html += '<div class="alert-item"><div>';
+                    html += '<div style="font-weight:500;">' + al.name + '</div>';
+                    html += '<div style="font-size:0.7rem;color:var(--text-secondary);">' + (al.direction === 'above' ? '⬆️ מעל' : '⬇️ מתחת') + ' ₪' + al.target.toLocaleString('he-IL') + '</div>';
+                    html += '</div><button onclick="removeAlert(' + i + ')" style="background:none;border:none;color:var(--accent-red);cursor:pointer;">✕</button></div>';
+                });
+            } else {
+                html += '<div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;padding:15px;">אין התראות פעילות</div>';
+            }
+            
+            html += '<button onclick="addAlert()" style="width:100%;padding:12px;margin-top:12px;background:rgba(244,196,48,0.1);border:1px solid var(--accent-gold);border-radius:10px;color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.85rem;">+ הוסף התראה</button>';
+            html += '<button onclick="this.closest(\'.modal\').classList.remove(\'active\')" style="width:100%;padding:12px;margin-top:8px;background:transparent;border:1px solid var(--border-color);border-radius:10px;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.85rem;">סגור</button>';
+            html += '</div>';
+            
+            var overlay = document.createElement('div');
+            overlay.className = 'modal active';
+            overlay.id = 'alertsModal';
+            overlay.innerHTML = '<div class="modal-content" style="max-width:400px;">' + html + '</div>';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            document.body.appendChild(overlay);
+        }
+        
+        function addAlert() {
+            var modal = document.getElementById('alertsModal');
+            if (modal) modal.remove();
+            
+            var assetNames = assets.map(function(a) { return a.name; });
+            if (assetNames.length === 0) { alert('הוסף נכסים קודם'); return; }
+            
+            var name = prompt('שם הנכס:\n(' + assetNames.join(', ') + ')');
+            if (!name) return;
+            var target = prompt('סכום יעד בשקלים:');
+            if (!target) return;
+            var direction = confirm('התראה כשעולה מעל? (ביטול = יורד מתחת)') ? 'above' : 'below';
+            
+            var alerts = getAlerts();
+            alerts.push({ name: name.trim(), target: parseFloat(target) || 0, direction: direction });
+            saveAlerts(alerts);
+            showAlertsManager();
+        }
+        
+        function removeAlert(idx) {
+            var alerts = getAlerts();
+            alerts.splice(idx, 1);
+            saveAlerts(alerts);
+            var modal = document.getElementById('alertsModal');
+            if (modal) modal.remove();
+            showAlertsManager();
+        }
+        
+        function checkAlerts() {
+            if (!('Notification' in window)) return;
+            var alerts = getAlerts();
+            if (alerts.length === 0) return;
+            
+            alerts.forEach(function(al) {
+                var asset = assets.find(function(a) { return a.name === al.name; });
+                if (!asset) return;
+                var valILS = toILS(asset.value, asset.currency || 'ILS');
+                var triggered = false;
+                if (al.direction === 'above' && valILS >= al.target) triggered = true;
+                if (al.direction === 'below' && valILS <= al.target) triggered = true;
+                
+                if (triggered && Notification.permission === 'granted') {
+                    new Notification('🔔 פיננסייר — התראת מחיר', {
+                        body: al.name + ' הגיע ל-₪' + valILS.toLocaleString('he-IL', {maximumFractionDigits: 0}),
+                        icon: './logo.svg'
+                    });
+                }
+            });
+            
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        // ============ Fee Analysis ============
+        function updateFeeAnalysis() {
+            var container = document.getElementById('feeAnalysisContent');
+            if (!container) return;
+            var feeData = [];
+            var totalFees = 0;
+            assets.forEach(function(a) {
+                if (a.fee > 0) {
+                    var valILS = toILS(a.value, a.currency || 'ILS');
+                    var annualFee = valILS * (a.fee / 100);
+                    totalFees += annualFee;
+                    feeData.push({ name: a.name, fee: a.fee, annual: annualFee, val: valILS });
+                }
+            });
+            if (feeData.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף דמי ניהול לנכסים כדי לראות ניתוח</div>'; return; }
+            feeData.sort(function(a, b) { return b.annual - a.annual; });
+            var fee20y = 0;
+            feeData.forEach(function(f) {
+                var v = f.val;
+                for (var y = 0; y < 20; y++) { fee20y += v * (f.fee / 100); v *= 1.06; }
+            });
+            var html = '<div style="text-align:center;margin-bottom:14px;">';
+            html += '<div style="font-size:0.75rem;color:var(--text-secondary);">עלות עמלות שנתית:</div>';
+            html += '<div style="font-size:1.5rem;font-weight:700;color:var(--accent-red);">₪' + totalFees.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</div>';
+            html += '<div style="font-size:0.7rem;color:var(--accent-red);margin-top:4px;">בעוד 20 שנה: ~₪' + fee20y.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</div>';
+            html += '</div>';
+            feeData.forEach(function(f) {
+                html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.8rem;">';
+                html += '<span>' + f.name + ' (' + f.fee + '%)</span>';
+                html += '<span style="color:var(--accent-red);">₪' + f.annual.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '/שנה</span></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        // ============ Retirement Calculator ============
+        function calcRetirement() {
+            var retireAge = parseInt(document.getElementById('retireAge').value) || 67;
+            var retireReturn = parseFloat(document.getElementById('retireReturn').value) || 6;
+            var display = document.getElementById('retirementResult');
+            
+            var currentAge = 0;
+            try { var p = JSON.parse(localStorage.getItem('user-profile') || '{}'); currentAge = parseInt(p.age) || 0; } catch(e) {}
+            if (currentAge <= 0 || currentAge >= retireAge) { display.style.display = 'none'; return; }
+            
+            var yearsToRetire = retireAge - currentAge;
+            var totalNow = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
+            var monthlyDeposits = assets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0); }, 0);
+            
+            var monthlyRate = retireReturn / 100 / 12;
+            var months = yearsToRetire * 12;
+            var fvCurrent = totalNow * Math.pow(1 + monthlyRate, months);
+            var fvDeposits = monthlyDeposits > 0 ? monthlyDeposits * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) : 0;
+            var total = fvCurrent + fvDeposits;
+            
+            display.style.display = 'block';
+            document.getElementById('retireAmount').textContent = '₪' + total.toLocaleString('he-IL', {maximumFractionDigits: 0});
+            document.getElementById('retireDetails').textContent = 'בעוד ' + yearsToRetire + ' שנים | תשואה ' + retireReturn + '% | הפקדות ₪' + monthlyDeposits.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '/חודש';
+        }
+
+        // ============ Future Projection ============
+        function updateProjection() {
+            var container = document.getElementById('projectionContent');
+            if (!container) return;
+            var totalNow = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
+            var monthlyDeposits = assets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.currency || 'ILS') : 0); }, 0);
+            if (totalNow <= 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף נכסים כדי לראות תחזית</div>'; return; }
+            
+            var rate = 0.06;
+            var years = [1, 3, 5, 10, 15, 20];
+            var html = '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;text-align:center;">תחזית לפי תשואה שנתית 6% + הפקדות חודשיות</div>';
+            years.forEach(function(y) {
+                var months = y * 12;
+                var monthlyRate = rate / 12;
+                var fv = totalNow * Math.pow(1 + monthlyRate, months);
+                if (monthlyDeposits > 0) fv += monthlyDeposits * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+                var gain = fv - totalNow - (monthlyDeposits * months);
+                html += '<div class="projection-row">';
+                html += '<span style="color:var(--text-secondary);">בעוד ' + y + ' שנים</span>';
+                html += '<span style="font-weight:600;color:var(--accent-gold);">₪' + fv.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</span>';
+                html += '<span style="font-size:0.7rem;color:var(--accent-green);">(+₪' + gain.toLocaleString('he-IL', {maximumFractionDigits: 0}) + ' רווח)</span>';
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        }
+
         function updateGreeting() {
             var banner = document.getElementById('greetingBanner');
             if (!banner) return;
@@ -3745,6 +4203,7 @@
                     document.getElementById('assetCostBasis').value = asset.costBasis ? formatNum(asset.costBasis) : '';
                     document.getElementById('assetReturn').value = formatNum(asset.return || 0);
                     document.getElementById('assetMonthly').value = formatNum(asset.monthly || 0);
+                    document.getElementById('assetFee').value = asset.fee ? formatNum(asset.fee) : '';
                     // Show basis return display if costBasis exists
                     if (asset.costBasis > 0) { setTimeout(calcReturnFromBasis, 50); }
                     
@@ -3879,7 +4338,8 @@
                 value: parseNum(document.getElementById('assetValue')),
                 costBasis: parseNum(document.getElementById('assetCostBasis')),
                 return: parseNum(document.getElementById('assetReturn')),
-                monthly: parseNum(document.getElementById('assetMonthly'))
+                monthly: parseNum(document.getElementById('assetMonthly')),
+                fee: parseNum(document.getElementById('assetFee'))
             };
 
             // Add real estate specific fields
@@ -3976,6 +4436,14 @@
             updateSummaryCards();
             calcGoal();
             calcBudget();
+            updateGainsTable();
+            updateExposure();
+            renderWatchlist();
+            updateFeeAnalysis();
+            calcRetirement();
+            updateProjection();
+            checkAlerts();
+            showDailyRecap();
         }
 
         function updateTotalWorth() {
@@ -4192,6 +4660,18 @@
 
             var history = [];
             try { history = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
+
+            // Filter by chart range
+            if (chartRange !== 'all' && history.length > 0) {
+                var now = new Date();
+                var cutoff = new Date();
+                if (chartRange === 'week') cutoff.setDate(now.getDate() - 7);
+                else if (chartRange === 'month') cutoff.setMonth(now.getMonth() - 1);
+                else if (chartRange === '3month') cutoff.setMonth(now.getMonth() - 3);
+                else if (chartRange === 'year') cutoff.setFullYear(now.getFullYear() - 1);
+                var cutStr = cutoff.toISOString().slice(0, 10);
+                history = history.filter(function(h) { return h.date >= cutStr; });
+            }
 
             if (history.length < 2) {
                 canvas.style.display = 'none';
