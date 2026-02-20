@@ -1,5 +1,5 @@
 // Service Worker — Network First for HTML, Cache First for static assets
-var CACHE_VERSION = 'financier-v5';
+var CACHE_VERSION = 'financier-v6';
 
 // Listen for skip waiting message
 self.addEventListener('message', function(event) {

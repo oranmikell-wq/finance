@@ -642,7 +642,6 @@
             .exposure-item { gap: 6px; }
             .exposure-flag { font-size: 1rem; width: 24px; }
             .watchlist-item { padding: 8px 10px; }
-            .projection-row { font-size: 0.75rem; }
             .rule-bar-segment { font-size: 0.55rem; }
             .alert-item { padding: 6px 10px; font-size: 0.75rem; }
         }
@@ -1533,8 +1532,6 @@
         .exposure-pct { width:45px; text-align:left; font-size:0.75rem; font-weight:600; }
         /* Watchlist */
         .watchlist-item { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; margin-bottom:6px; }
-        /* Projection chart */
-        .projection-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.8rem; }
         /* Alert item */
         .alert-item { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; margin-bottom:6px; font-size:0.8rem; }
     </style>
@@ -1846,11 +1843,6 @@
                 </div>
             </div>
 
-            <!-- Fast Forward Projection -->
-            <div class="section-title" style="margin-top:16px;">⏩ תחזית עתידית</div>
-            <div class="chart-card" style="padding:20px;">
-                <div id="projectionContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף נכסים כדי לראות תחזית</div>
-            </div>
         </div>
 
         <!-- TAB 4: Settings -->
@@ -2828,32 +2820,59 @@
         async function fetchExchangeRate() {
             try {
                 var prevRate = exchangeRate;
-
-                // Source 1: Frankfurter API (ECB data, more accurate, free)
                 var gotUSD = false;
-                try {
-                    var fResp = await fetch('https://api.frankfurter.dev/v1/latest?from=USD&to=ILS');
-                    if (fResp.ok) {
-                        var fData = await fResp.json();
-                        if (fData && fData.rates && fData.rates.ILS) {
-                            exchangeRate = fData.rates.ILS;
-                            gotUSD = true;
-                            console.log('[Rate] Frankfurter USD/ILS:', exchangeRate);
-                        }
-                    }
-                } catch(e) { console.warn('[Rate] Frankfurter failed:', e.message); }
 
-                // Source 2: Fallback to exchangerate-api
+                // Source 1: Frankfurter API (ECB data, free, no key)
                 if (!gotUSD) {
                     try {
-                        var eResp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                        var eData = await eResp.json();
-                        if (eData && eData.rates && eData.rates.ILS) {
-                            exchangeRate = eData.rates.ILS;
-                            gotUSD = true;
-                            console.log('[Rate] exchangerate-api USD/ILS:', exchangeRate);
+                        var fResp = await fetch('https://api.frankfurter.app/latest?from=USD&to=ILS');
+                        if (fResp.ok) {
+                            var fData = await fResp.json();
+                            if (fData && fData.rates && fData.rates.ILS) {
+                                exchangeRate = fData.rates.ILS;
+                                gotUSD = true;
+                                console.log('[Rate] Frankfurter USD/ILS:', exchangeRate);
+                            }
+                        }
+                    } catch(e) { console.warn('[Rate] Frankfurter failed:', e.message); }
+                }
+
+                // Source 2: open.er-api.com (free, no key)
+                if (!gotUSD) {
+                    try {
+                        var eResp = await fetch('https://open.er-api.com/v6/latest/USD');
+                        if (eResp.ok) {
+                            var eData = await eResp.json();
+                            if (eData && eData.rates && eData.rates.ILS) {
+                                exchangeRate = eData.rates.ILS;
+                                gotUSD = true;
+                                console.log('[Rate] open.er-api USD/ILS:', exchangeRate);
+                            }
+                        }
+                    } catch(e) { console.warn('[Rate] open.er-api failed:', e.message); }
+                }
+
+                // Source 3: exchangerate-api v4 fallback
+                if (!gotUSD) {
+                    try {
+                        var e2Resp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                        if (e2Resp.ok) {
+                            var e2Data = await e2Resp.json();
+                            if (e2Data && e2Data.rates && e2Data.rates.ILS) {
+                                exchangeRate = e2Data.rates.ILS;
+                                gotUSD = true;
+                                console.log('[Rate] exchangerate-api USD/ILS:', exchangeRate);
+                            }
                         }
                     } catch(e) { console.warn('[Rate] exchangerate-api failed:', e.message); }
+                }
+
+                // Only update timestamp if we actually got data
+                if (!gotUSD) {
+                    console.error('[Rate] All USD/ILS sources failed!');
+                    // Schedule retry in 30 seconds
+                    setTimeout(function() { fetchExchangeRate(); }, 30000);
+                    return false;
                 }
 
                 // Store previous close for daily change
@@ -2864,12 +2883,12 @@
                     if (savedPrevDate === today && savedPrev) {
                         exchangeRatePrevClose = parseFloat(savedPrev);
                     } else {
-                        // New day - save current as previous for tomorrow, use old rate as prev
+                        // New day - use old cached rate as prev close
                         var oldRate = parseFloat(localStorage.getItem('exchange-rate') || '0');
-                        if (oldRate > 0 && oldRate !== exchangeRate) {
+                        if (oldRate > 0 && Math.abs(oldRate - exchangeRate) > 0.001) {
                             exchangeRatePrevClose = oldRate;
                         } else {
-                            exchangeRatePrevClose = exchangeRate;
+                            exchangeRatePrevClose = prevRate > 1 ? prevRate : exchangeRate;
                         }
                         localStorage.setItem('usdils-prev-close', exchangeRatePrevClose.toString());
                         localStorage.setItem('usdils-prev-date', today);
@@ -2879,9 +2898,11 @@
                 // Fetch crypto rates (BTC and ETH in USD)
                 try {
                     var cryptoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
-                    var cryptoData = await cryptoResponse.json();
-                    if (cryptoData && cryptoData.bitcoin) btcRate = cryptoData.bitcoin.usd;
-                    if (cryptoData && cryptoData.ethereum) ethRate = cryptoData.ethereum.usd;
+                    if (cryptoResponse.ok) {
+                        var cryptoData = await cryptoResponse.json();
+                        if (cryptoData && cryptoData.bitcoin) btcRate = cryptoData.bitcoin.usd;
+                        if (cryptoData && cryptoData.ethereum) ethRate = cryptoData.ethereum.usd;
+                    }
                 } catch(e) { console.warn('[Rate] Crypto fetch failed:', e.message); }
                 
                 lastRateUpdate = new Date().toISOString();
@@ -2897,9 +2918,11 @@
                 updateRateDisplay();
                 updateRateIndicator(0);
                 updateUI();
+                console.log('[Rate] Updated successfully: $1 = ₪' + exchangeRate.toFixed(4));
                 return true;
             } catch (error) {
                 console.error('Failed to fetch exchange rate:', error);
+                setTimeout(function() { fetchExchangeRate(); }, 30000);
                 return false;
             }
         }
@@ -3696,32 +3719,6 @@
             document.getElementById('retireDetails').textContent = 'בעוד ' + yearsToRetire + ' שנים | תשואה ' + retireReturn + '% | הפקדות ₪' + monthlyDeposits.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '/חודש | פנסיה בלבד';
         }
 
-        // ============ Future Projection ============
-        function updateProjection() {
-            var container = document.getElementById('projectionContent');
-            if (!container) return;
-            var totalNow = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var monthlyDeposits = assets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || a.currency || 'ILS') : 0); }, 0);
-            if (totalNow <= 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף נכסים כדי לראות תחזית</div>'; return; }
-            
-            var rate = 0.06;
-            var years = [1, 3, 5, 10, 15, 20];
-            var html = '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;text-align:center;">תחזית לפי תשואה שנתית 6% + הפקדות חודשיות</div>';
-            years.forEach(function(y) {
-                var months = y * 12;
-                var monthlyRate = rate / 12;
-                var fv = totalNow * Math.pow(1 + monthlyRate, months);
-                if (monthlyDeposits > 0) fv += monthlyDeposits * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
-                var gain = fv - totalNow - (monthlyDeposits * months);
-                html += '<div class="projection-row">';
-                html += '<span style="color:var(--text-secondary);">בעוד ' + y + ' שנים</span>';
-                html += '<span style="font-weight:600;color:var(--accent-gold);">₪' + fv.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</span>';
-                html += '<span style="font-size:0.7rem;color:var(--accent-green);">(+₪' + gain.toLocaleString('he-IL', {maximumFractionDigits: 0}) + ' רווח)</span>';
-                html += '</div>';
-            });
-            container.innerHTML = html;
-        }
-
         function updateGreeting() {
             var banner = document.getElementById('greetingBanner');
             if (!banner) return;
@@ -3766,7 +3763,7 @@
             document.getElementById('mortgage')?.addEventListener('input', calculateEquity);
         });
 
-        // Check if rate needs update (every 4 hours)
+        // Check if rate needs update (every 2 hours, retry in 1 min on failure)
         async function checkAndUpdateRate() {
             try {
                 const savedDate = localStorage.getItem('exchange-rate-date');
@@ -3777,23 +3774,29 @@
                     
                     updateRateIndicator(hoursSinceUpdate);
                     
-                    // Update if more than 4 hours old
-                    if (hoursSinceUpdate > 4) {
-                        await fetchExchangeRate();
+                    // Update if more than 2 hours old
+                    if (hoursSinceUpdate > 2) {
+                        var success = await fetchExchangeRate();
+                        if (!success) {
+                            console.log('[Rate] Check failed, will retry in 60s');
+                        }
                     }
                 } else {
                     // No saved date, fetch now
-                    await fetchExchangeRate();
+                    var success = await fetchExchangeRate();
+                    if (!success) {
+                        console.log('[Rate] Initial fetch failed, retry scheduled');
+                    }
                 }
             } catch (e) {
-                console.log('Rate check skipped');
+                console.log('[Rate] Check error:', e.message);
             }
         }
 
-        // Auto-update rates every 4 hours
+        // Auto-update rates every 2 hours
         setInterval(function() {
             checkAndUpdateRate();
-        }, 4 * 60 * 60 * 1000);
+        }, 2 * 60 * 60 * 1000);
 
         // Update rate indicator color based on age
         function updateRateIndicator(hoursSinceUpdate) {
@@ -4314,7 +4317,6 @@
             renderWatchlist();
             updateFeeAnalysis();
             calcRetirement();
-            updateProjection();
             checkAlerts();
         }
 
