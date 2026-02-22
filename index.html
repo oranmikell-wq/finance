@@ -2366,40 +2366,7 @@
         })();
 
         // ============================================================
-        // 📱 מניעת Rubber Banding – חסימה רק בגבולות ה-body עצמו
-        // ============================================================
-        (() => {
-            let startY = 0;
-            document.addEventListener('touchstart', (e) => {
-                startY = e.touches[0].clientY;
-            }, { passive: true });
-
-            document.addEventListener('touchmove', (e) => {
-                // מצא את האלמנט הגלילה הרלוונטי
-                let el = e.target;
-                while (el && el !== document.body) {
-                    const style = window.getComputedStyle(el);
-                    const overflow = style.overflowY;
-                    if (overflow === 'auto' || overflow === 'scroll') break;
-                    el = el.parentElement;
-                }
-
-                const dy = e.touches[0].clientY - startY;
-
-                if (!el || el === document.body) {
-                    // גלילה על ה-body – חסום רק אם אנחנו בגבול
-                    const atTop    = document.documentElement.scrollTop <= 0 && dy > 0;
-                    const atBottom = (document.documentElement.scrollTop + window.innerHeight) >= document.documentElement.scrollHeight && dy < 0;
-                    if (atTop || atBottom) e.preventDefault();
-                } else {
-                    // גלילה בתוך אלמנט – חסום רק בגבולות האלמנט
-                    const atTop    = el.scrollTop <= 0 && dy > 0;
-                    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight && dy < 0;
-                    if (atTop || atBottom) e.preventDefault();
-                }
-            }, { passive: false });
-        })();
-
+        // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
         let assets = [];
