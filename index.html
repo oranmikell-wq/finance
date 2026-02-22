@@ -81,10 +81,12 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             overscroll-behavior-y: contain;
+            overflow-x: hidden;
         }
 
         html {
             height: -webkit-fill-available;
+            overflow-x: hidden;
         }
 
         body::before {
@@ -1112,10 +1114,12 @@
         /* ============ TAB SYSTEM ============ */
         .tab-content {
             display: none;
+            overflow-x: hidden;
         }
         .tab-content.active {
             display: block;
             animation: fadeIn 0.3s ease;
+            overflow-x: hidden;
         }
 
         .tab-bar {
@@ -1131,7 +1135,8 @@
             border-top: 1px solid rgba(255,255,255,0.08);
             padding: 6px 0;
             padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
-            z-index: 900;
+            z-index: 9000;
+            overflow: hidden;
         }
 
         .tab-btn {
@@ -2361,29 +2366,36 @@
         })();
 
         // ============================================================
-        // 📱 מניעת Rubber Banding – אפקט גומי של iOS בגבולות הגלילה
+        // 📱 מניעת Rubber Banding – חסימה רק בגבולות ה-body עצמו
         // ============================================================
         (() => {
-            let lastY = 0;
+            let startY = 0;
             document.addEventListener('touchstart', (e) => {
-                lastY = e.touches[0].clientY;
+                startY = e.touches[0].clientY;
             }, { passive: true });
 
             document.addEventListener('touchmove', (e) => {
-                const el = e.target.closest('[data-scrollable], .modal-body, .table-container, .chart-container');
-                if (!el) {
-                    // לא בתוך אלמנט גלילה פנימי – בלוק את הגלילה הגלובלית
-                    e.preventDefault();
-                    return;
+                // מצא את האלמנט הגלילה הרלוונטי
+                let el = e.target;
+                while (el && el !== document.body) {
+                    const style = window.getComputedStyle(el);
+                    const overflow = style.overflowY;
+                    if (overflow === 'auto' || overflow === 'scroll') break;
+                    el = el.parentElement;
                 }
-                const scrollTop = el.scrollTop;
-                const maxScroll = el.scrollHeight - el.clientHeight;
-                const dy = e.touches[0].clientY - lastY;
-                lastY = e.touches[0].clientY;
 
-                // בלוק גלילה מעבר לגבולות האלמנט (מניעת rubber band)
-                if ((scrollTop <= 0 && dy > 0) || (scrollTop >= maxScroll && dy < 0)) {
-                    e.preventDefault();
+                const dy = e.touches[0].clientY - startY;
+
+                if (!el || el === document.body) {
+                    // גלילה על ה-body – חסום רק אם אנחנו בגבול
+                    const atTop    = document.documentElement.scrollTop <= 0 && dy > 0;
+                    const atBottom = (document.documentElement.scrollTop + window.innerHeight) >= document.documentElement.scrollHeight && dy < 0;
+                    if (atTop || atBottom) e.preventDefault();
+                } else {
+                    // גלילה בתוך אלמנט – חסום רק בגבולות האלמנט
+                    const atTop    = el.scrollTop <= 0 && dy > 0;
+                    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight && dy < 0;
+                    if (atTop || atBottom) e.preventDefault();
                 }
             }, { passive: false });
         })();
