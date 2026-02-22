@@ -17,6 +17,29 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/svg+xml" href="./logo.svg">
     <link rel="apple-touch-icon" href="./logo.svg">
+
+    <!-- iOS Splash Screens – מסכי טעינה לגדלי אייפון שונים -->
+    <!-- iPhone 16 Pro Max (430×932) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1290x2796.png">
+    <!-- iPhone 16 Pro (393×852) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1179x2556.png">
+    <!-- iPhone 15 Plus / 14 Pro Max (430×932) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1290x2796.png">
+    <!-- iPhone 14 Pro (393×852) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1179x2556.png">
+    <!-- iPhone 14 / 13 / 12 (390×844) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1170x2532.png">
+    <!-- iPhone 13 mini / 12 mini (375×812) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1125x2436.png">
+    <!-- iPhone 11 Pro Max / XS Max (414×896) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1242x2688.png">
+    <!-- iPhone 11 / XR (414×896 @2x) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="./splash/splash-828x1792.png">
+    <!-- iPhone 8 Plus / 7 Plus (414×736) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1242x2208.png">
+    <!-- iPhone 8 / 7 / SE 2nd & 3rd gen (375×667) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="./splash/splash-750x1334.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -2232,7 +2255,141 @@
         </div>
     </div>
 
+    <!-- CryptoJS – הצפנת LocalStorage -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCFhl7yl6Mn+OuLGEPHECFC0EkfR21TvANTn6Gt4Q5SZm04fKF7vEFBCFqMcHTpg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
+
+        // ============================================================
+        // 🔐 SECURE STORAGE – הצפנת AES לנתונים פיננסיים רגישים
+        // ============================================================
+        const SecureStorage = (() => {
+            // מפתח הצפנה ייחודי למכשיר, נגזר מ-fingerprint יציב
+            const _deriveKey = () => {
+                const fp = [
+                    navigator.userAgent,
+                    navigator.language,
+                    screen.colorDepth,
+                    new Date().getTimezoneOffset(),
+                    screen.width,
+                    screen.height
+                ].join('||');
+                return CryptoJS.SHA256(fp).toString();
+            };
+
+            let _key = null;
+            const getKey = () => {
+                if (!_key) _key = _deriveKey();
+                return _key;
+            };
+
+            // מפתחות הדורשים הצפנה (נתונים פיננסיים אישיים)
+            const SENSITIVE = new Set([
+                'user-profile',
+                'portfolio-assets',
+                'portfolio-history',
+                'watchlist',
+                'price-alerts',
+                'finnhub-api-key'
+            ]);
+
+            const ENC_PREFIX = 'πENC:'; // prefix ייחודי שמסמן ערך מוצפן
+
+            return {
+                setItem(key, value) {
+                    try {
+                        if (SENSITIVE.has(key) && typeof CryptoJS !== 'undefined') {
+                            const encrypted = CryptoJS.AES.encrypt(value, getKey()).toString();
+                            localStorage.setItem(key, ENC_PREFIX + encrypted);
+                        } else {
+                            localStorage.setItem(key, value);
+                        }
+                    } catch(e) {
+                        localStorage.setItem(key, value); // fallback ללא הצפנה
+                    }
+                },
+                getItem(key) {
+                    try {
+                        const raw = localStorage.getItem(key);
+                        if (raw && raw.startsWith(ENC_PREFIX) && typeof CryptoJS !== 'undefined') {
+                            const bytes = CryptoJS.AES.decrypt(raw.slice(ENC_PREFIX.length), getKey());
+                            const decoded = bytes.toString(CryptoJS.enc.Utf8);
+                            return decoded || raw; // fallback אם הפענוח נכשל
+                        }
+                        return raw;
+                    } catch(e) {
+                        return localStorage.getItem(key);
+                    }
+                },
+                removeItem(key) { localStorage.removeItem(key); },
+                isSensitive(key) { return SENSITIVE.has(key); }
+            };
+        })();
+
+        // Patch localStorage – יירוט שקוף של כל שמירה/קריאה למפתחות רגישים
+        (() => {
+            const _origSet = Storage.prototype.setItem;
+            const _origGet = Storage.prototype.getItem;
+            const ENC_PREFIX = 'πENC:';
+            const SENSITIVE = new Set([
+                'user-profile', 'portfolio-assets', 'portfolio-history',
+                'watchlist', 'price-alerts', 'finnhub-api-key'
+            ]);
+
+            Storage.prototype.setItem = function(key, value) {
+                if (this === localStorage && SENSITIVE.has(key) && typeof CryptoJS !== 'undefined') {
+                    try {
+                        const fp = [navigator.userAgent, navigator.language, screen.colorDepth, new Date().getTimezoneOffset(), screen.width, screen.height].join('||');
+                        const k = CryptoJS.SHA256(fp).toString();
+                        value = ENC_PREFIX + CryptoJS.AES.encrypt(String(value), k).toString();
+                    } catch(e) {}
+                }
+                return _origSet.call(this, key, value);
+            };
+
+            Storage.prototype.getItem = function(key) {
+                const raw = _origGet.call(this, key);
+                if (this === localStorage && raw && raw.startsWith(ENC_PREFIX) && typeof CryptoJS !== 'undefined') {
+                    try {
+                        const fp = [navigator.userAgent, navigator.language, screen.colorDepth, new Date().getTimezoneOffset(), screen.width, screen.height].join('||');
+                        const k = CryptoJS.SHA256(fp).toString();
+                        const bytes = CryptoJS.AES.decrypt(raw.slice(ENC_PREFIX.length), k);
+                        return bytes.toString(CryptoJS.enc.Utf8) || raw;
+                    } catch(e) { return raw; }
+                }
+                return raw;
+            };
+        })();
+
+        // ============================================================
+        // 📱 מניעת Rubber Banding – אפקט גומי של iOS בגבולות הגלילה
+        // ============================================================
+        (() => {
+            let lastY = 0;
+            document.addEventListener('touchstart', (e) => {
+                lastY = e.touches[0].clientY;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                const el = e.target.closest('[data-scrollable], .modal-body, .table-container, .chart-container');
+                if (!el) {
+                    // לא בתוך אלמנט גלילה פנימי – בלוק את הגלילה הגלובלית
+                    e.preventDefault();
+                    return;
+                }
+                const scrollTop = el.scrollTop;
+                const maxScroll = el.scrollHeight - el.clientHeight;
+                const dy = e.touches[0].clientY - lastY;
+                lastY = e.touches[0].clientY;
+
+                // בלוק גלילה מעבר לגבולות האלמנט (מניעת rubber band)
+                if ((scrollTop <= 0 && dy > 0) || (scrollTop >= maxScroll && dy < 0)) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        })();
+
+        // ============================================================
+
         let assets = [];
         let editingAssetId = null;
         let exchangeRate = 3.7; // USD to ILS exchange rate
