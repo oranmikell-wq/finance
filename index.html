@@ -1549,9 +1549,12 @@
         .range-btn { padding:4px 12px; border-radius:16px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); font-size:0.7rem; cursor:pointer; font-family:inherit; }
         .range-btn.active { background:rgba(244,196,48,0.15); color:var(--accent-gold); border-color:var(--accent-gold); }
         /* Gains table */
-        .gains-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
-        .gains-table th { text-align:right; color:var(--text-secondary); font-weight:500; padding:8px 6px; border-bottom:1px solid var(--border-color); font-size:0.7rem; }
-        .gains-table td { padding:8px 6px; border-bottom:1px solid rgba(255,255,255,0.03); }
+        .gains-table { width:100%; border-collapse:collapse; font-size:0.78rem; table-layout:fixed; }
+        .gains-table th { text-align:right; color:var(--text-secondary); font-weight:500; padding:8px 4px; border-bottom:1px solid var(--border-color); font-size:0.68rem; white-space:nowrap; }
+        .gains-table td { padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.03); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .gains-table .col-name { width:28%; }
+        .gains-table .col-num { width:20%; }
+        .gains-table .col-pct { width:13%; font-weight:600; }
         /* Exposure bars */
         .exposure-item { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
         .exposure-flag { font-size:1.2rem; width:28px; text-align:center; }
@@ -1769,53 +1772,53 @@
             </div>
 
             <div class="section-title" style="margin-top:16px;">💰 תקציב חודשי</div>
-            <div class="chart-card" style="padding:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div class="chart-card" style="padding:14px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
                     <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">💵 שכר חודשי (נטו)</label>
-                        <input type="text" inputmode="decimal" id="profileSalary" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
+                        <label style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;display:block;">💵 שכר חודשי (נטו)</label>
+                        <input type="text" inputmode="decimal" id="profileSalary" placeholder="0" style="width:100%;padding:9px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.85rem;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
                     </div>
                     <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">📋 סה"כ הוצאות קבועות</label>
-                        <input type="text" inputmode="decimal" id="profileExpenses" placeholder="0" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;direction:rtl;" readonly>
+                        <label style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;display:block;">📋 סה"כ הוצאות</label>
+                        <input type="text" inputmode="decimal" id="profileExpenses" placeholder="0" style="width:100%;padding:9px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.85rem;direction:rtl;" readonly>
                     </div>
                 </div>
 
                 <!-- Expense breakdown -->
-                <div style="margin-bottom:14px;">
-                    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;">📊 פירוט הוצאות:</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">🏠</span>
-                            <input type="text" inputmode="decimal" id="expHousing" placeholder="דיור/שכ\"ד" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;">📊 פירוט הוצאות:</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">🏠</span>
+                            <input type="text" inputmode="decimal" id="expHousing" placeholder="דיור/שכ״ד" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">🚗</span>
-                            <input type="text" inputmode="decimal" id="expTransport" placeholder="רכב/תחבורה" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">🚗</span>
+                            <input type="text" inputmode="decimal" id="expTransport" placeholder="רכב" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">🛒</span>
-                            <input type="text" inputmode="decimal" id="expFood" placeholder="מזון/סופר" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">🛒</span>
+                            <input type="text" inputmode="decimal" id="expFood" placeholder="מזון/סופר" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">🛡️</span>
-                            <input type="text" inputmode="decimal" id="expInsurance" placeholder="ביטוחים" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">🛡️</span>
+                            <input type="text" inputmode="decimal" id="expInsurance" placeholder="ביטוחים" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">📱</span>
-                            <input type="text" inputmode="decimal" id="expBills" placeholder="חשבונות" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">📱</span>
+                            <input type="text" inputmode="decimal" id="expBills" placeholder="חשבונות" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">🎓</span>
-                            <input type="text" inputmode="decimal" id="expEducation" placeholder="חינוך" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">🎓</span>
+                            <input type="text" inputmode="decimal" id="expEducation" placeholder="חינוך" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">💳</span>
-                            <input type="text" inputmode="decimal" id="expDebt" placeholder="הלוואות/חובות" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">💳</span>
+                            <input type="text" inputmode="decimal" id="expDebt" placeholder="הלוואות" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:0.8rem;">📦</span>
-                            <input type="text" inputmode="decimal" id="expOther" placeholder="אחר" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;" oninput="formatNumberInput(this); calcExpenses()">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="font-size:0.85rem;flex-shrink:0;">📦</span>
+                            <input type="text" inputmode="decimal" id="expOther" placeholder="אחר" style="flex:1;min-width:0;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
                     </div>
                     <!-- Expense breakdown bars -->
@@ -3595,15 +3598,30 @@
             });
             if (rows.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:15px;">הוסף עלות בסיס לנכסים כדי לראות רווחים</div>'; return; }
             rows.sort(function(a, b) { return b.pct - a.pct; });
-            var html = '<table class="gains-table"><thead><tr><th>נכס</th><th>בסיס</th><th>נוכחי</th><th>רווח</th><th>%</th></tr></thead><tbody>';
+            // פורמט קומפקטי: 33,079 → ₪33k
+            function fmtK(n) {
+                var abs = Math.abs(n);
+                if (abs >= 1000000) return '₪' + (n/1000000).toFixed(1) + 'M';
+                if (abs >= 1000) return '₪' + Math.round(n/1000) + 'k';
+                return '₪' + Math.round(n);
+            }
+            var html = '<table class="gains-table"><thead><tr>' +
+                '<th class="col-name">נכס</th>' +
+                '<th class="col-num">בסיס</th>' +
+                '<th class="col-num">נוכחי</th>' +
+                '<th class="col-num">רווח</th>' +
+                '<th class="col-pct">%</th>' +
+                '</tr></thead><tbody>';
             rows.forEach(function(r) {
                 var color = r.profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 var sign = r.profit >= 0 ? '+' : '';
-                html += '<tr><td style="font-weight:500;">' + r.name + '</td>';
-                html += '<td>₪' + r.basis.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</td>';
-                html += '<td>₪' + r.current.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</td>';
-                html += '<td style="color:' + color + ';">' + sign + '₪' + Math.abs(r.profit).toLocaleString('he-IL', {maximumFractionDigits: 0}) + '</td>';
-                html += '<td style="color:' + color + ';font-weight:600;">' + sign + r.pct.toFixed(1) + '%</td></tr>';
+                html += '<tr>';
+                html += '<td class="col-name" style="font-weight:500;">' + r.name + '</td>';
+                html += '<td class="col-num">' + fmtK(r.basis) + '</td>';
+                html += '<td class="col-num">' + fmtK(r.current) + '</td>';
+                html += '<td class="col-num" style="color:' + color + ';">' + sign + fmtK(r.profit) + '</td>';
+                html += '<td class="col-pct" style="color:' + color + ';">' + sign + r.pct.toFixed(1) + '%</td>';
+                html += '</tr>';
             });
             html += '</tbody></table>';
             container.innerHTML = html;
