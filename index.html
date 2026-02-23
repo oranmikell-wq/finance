@@ -4186,14 +4186,24 @@
                         const inputMode = asset.spyInputMode || 'units';
                         if (inputMode === 'ils') {
                             document.querySelector('input[name="spyInputMode"][value="ils"]').checked = true;
-                            document.getElementById('spyAmountILS').value = formatNum(asset.spyAmountILS || 0);
+                            // Show current value (not stale saved amount)
+                            const editCurP = spyPrice || asset.spyCurrentPrice || 0;
+                            const editCurILS = editCurP > 0
+                                ? Math.round(asset.spyUnits * editCurP * exchangeRate)
+                                : (asset.spyAmountILS || 0);
+                            document.getElementById('spyAmountILS').value = formatNum(editCurILS);
                             document.getElementById('spyAvgPriceILS').value = formatNum(asset.spyAvgPrice || 0);
                         } else {
                             document.querySelector('input[name="spyInputMode"][value="units"]').checked = true;
-                            document.getElementById('spyUnitsDisplay').value = asset.spyUnits || 0;
+                            document.getElementById('spyUnitsDisplay').value = formatNum(asset.spyUnits || 0);
                             document.getElementById('spyAvgPriceDisplay').value = formatNum(asset.spyAvgPrice || 0);
                         }
                         toggleSpyFields();
+                        setTimeout(() => {
+                            const mode = document.querySelector('input[name="spyInputMode"]:checked');
+                            if (mode && mode.value === 'ils') calculateFromILS();
+                            else if (mode && mode.value === 'units') calculateSpyValue();
+                        }, 50);
                     }
                     
                     toggleRealEstateFields();
@@ -5121,6 +5131,10 @@
                                     <span class="asset-row-detail-label">רווח ₪</span>
                                     <span class="asset-row-detail-value" style="color:${c(profitILS)};">${s(profitILS)}₪${Math.abs(profitILS).toLocaleString('he-IL',{maximumFractionDigits:0})}</span>
                                 </div>
+                                ${asset.monthly > 0 ? `<div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">הפקדה חודשית</span>
+                                    <span class="asset-row-detail-value">₪${(asset.monthly).toLocaleString('he-IL', {maximumFractionDigits:0})}</span>
+                                </div>` : ''}
                             </div>
                             <div class="spy-daily-bar">
                                 <div class="spy-daily-item">
