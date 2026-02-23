@@ -3794,8 +3794,8 @@
 
             var yearsToRetire = retireAge - currentAge;
 
-            // Pension + gemel assets
-            var retireAssets = assets.filter(function(a) { return a.type === 'pension' || a.type === 'gemel'; });
+            // Pension assets only
+            var retireAssets = assets.filter(function(a) { return a.type === 'pension'; });
             var totalNow = retireAssets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
             var assetsMonthly = retireAssets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0); }, 0);
 
@@ -3859,7 +3859,7 @@
                 ? ' | ד.נ. ' + feeBalance + '% מצבירה' + (feeDeposit > 0 ? ' + ' + feeDeposit + '% מהפקדה' : '')
                 : '';
             document.getElementById('retireDetails').textContent =
-                'פנסיה + גמל | תשואה ' + retireReturn + '%' + feeDesc + ' | הפקדות ₪' + Math.round(monthlyDeposits).toLocaleString('he-IL') + '/חודש';
+                'פנסיה בלבד | תשואה ' + retireReturn + '%' + feeDesc + ' | הפקדות ₪' + Math.round(monthlyDeposits).toLocaleString('he-IL') + '/חודש';
         }
 
         function updateGreeting() {
