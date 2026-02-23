@@ -1611,12 +1611,6 @@
                 </div>
             </div>
 
-            <!-- Unrealized Gains -->
-            <div class="chart-card" style="margin-bottom:20px;">
-                <h3 style="margin-bottom:12px;">💰 רווחים והפסדים לא ממומשים</h3>
-                <div id="gainsTableContainer" style="overflow-x:auto;"></div>
-            </div>
-
             <!-- Geographic Exposure -->
             <div class="chart-card" style="margin-bottom:20px;">
                 <h3 style="margin-bottom:12px;">🌍 חשיפה גיאוגרפית</h3>
@@ -2423,13 +2417,29 @@
         async function fetchFundNAV(fundNumber) {
             try {
                 var bizUrl = 'https://www.bizportal.co.il/mutualfunds/quote/generalview/' + fundNumber;
-                // Cache-busting param forces allorigins.win to fetch fresh content each time
-                var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bizUrl + '?_=' + Date.now());
-                var response = await fetch(proxyUrl, { signal: AbortSignal.timeout(20000) });
-                if (!response.ok) throw new Error('Proxy HTTP ' + response.status);
-                var json = await response.json();
-                if (!json.contents) throw new Error('Empty response');
-                var html = json.contents;
+                var html = null;
+
+                // Proxy 1: corsproxy.io — no server cache, direct raw HTML
+                try {
+                    var r1 = await fetch('https://corsproxy.io/?' + encodeURIComponent(bizUrl), { signal: AbortSignal.timeout(15000) });
+                    if (r1.ok) {
+                        var t1 = await r1.text();
+                        if (t1 && t1.length > 1000) html = t1;
+                    }
+                } catch(e) { console.warn('[Fund] corsproxy failed:', e.message); }
+
+                // Proxy 2: allorigins.win with cache-bust — fallback
+                if (!html) {
+                    try {
+                        var r2 = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(bizUrl + '?_=' + Date.now()), { signal: AbortSignal.timeout(20000) });
+                        if (r2.ok) {
+                            var j2 = await r2.json();
+                            if (j2 && j2.contents && j2.contents.length > 1000) html = j2.contents;
+                        }
+                    } catch(e) { console.warn('[Fund] allorigins failed:', e.message); }
+                }
+
+                if (!html) throw new Error('All proxies failed or returned empty content');
                 
                 // Strip HTML tags to get clean text for parsing
                 var text = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
@@ -2495,13 +2505,19 @@
                 
                 return result;
             } catch (err) {
-                console.error('Fund NAV fetch error:', err);
-                // Try localStorage cache
+                console.error('[Fund] fetchFundNAV error:', err.message);
+                // Try localStorage cache as fallback
                 try {
                     var cached = localStorage.getItem('fund-cache-' + fundNumber);
                     if (cached) {
                         var c = JSON.parse(cached);
+                        var cacheAgeHours = c.date ? (new Date() - new Date(c.date)) / 3600000 : 9999;
+                        if (cacheAgeHours > 72) {
+                            console.warn('[Fund] Cache too stale (' + Math.round(cacheAgeHours) + 'h), skipping');
+                            return null;
+                        }
                         c._fromCache = true;
+                        c._cacheAgeHours = Math.round(cacheAgeHours);
                         fundDataCache[fundNumber] = c;
                         return c;
                     }
@@ -2584,8 +2600,9 @@
             for (var fundNum of Object.keys(uniqueFunds)) {
                 var data = await fetchFundNAV(fundNum);
                 if (data && data.nav > 0) {
+                    var cacheNote = data._fromCache ? ' ⚠️ (מ-cache לפני ' + (data._cacheAgeHours || '?') + 'ש\')' : '';
                     var statusIcon = data._fromCache ? '⚠️' : '✅';
-                    results.push(statusIcon + ' ' + data.name + ': ₪' + data.nav.toFixed(4) + ' (' + (data.dailyPct >= 0 ? '+' : '') + data.dailyPct.toFixed(2) + '%)');
+                    results.push(statusIcon + ' ' + data.name + ': ₪' + data.nav.toFixed(4) + ' (' + (data.dailyPct >= 0 ? '+' : '') + data.dailyPct.toFixed(2) + '%)' + cacheNote);
                     // Update all assets with this fund number
                     fundAssets.filter(function(a) { return a.fundNumber === fundNum; }).forEach(function(a) {
                         a.value = (a.fundUnits || 0) * data.nav;
@@ -3448,50 +3465,6 @@
             renderHistoryChart();
         }
 
-        // ============ Unrealized Gains Table ============
-        function updateGainsTable() {
-            var container = document.getElementById('gainsTableContainer');
-            if (!container) return;
-            var rows = [];
-            assets.forEach(function(a) {
-                if (a.costBasis > 0) {
-                    var valILS = toILS(a.value, a.currency || 'ILS');
-                    var basisILS = toILS(a.costBasis, a.currency || 'ILS');
-                    var profit = valILS - basisILS;
-                    var pct = (profit / basisILS * 100);
-                    rows.push({ name: a.name, basis: basisILS, current: valILS, profit: profit, pct: pct });
-                }
-            });
-            if (rows.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:15px;">הוסף עלות בסיס לנכסים כדי לראות רווחים</div>'; return; }
-            rows.sort(function(a, b) { return b.pct - a.pct; });
-            // פורמט קומפקטי: 33,079 → ₪33k
-            function fmtK(n) {
-                var abs = Math.abs(n);
-                if (abs >= 1000000) return '₪' + (n/1000000).toFixed(1) + 'M';
-                if (abs >= 1000) return '₪' + Math.round(n/1000) + 'k';
-                return '₪' + Math.round(n);
-            }
-            var html = '<table class="gains-table"><thead><tr>' +
-                '<th class="col-name">נכס</th>' +
-                '<th class="col-val">שווי נוכחי</th>' +
-                '<th class="col-profit">רווח / %</th>' +
-                '</tr></thead><tbody>';
-            rows.forEach(function(r) {
-                var color = r.profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                var sign = r.profit >= 0 ? '+' : '';
-                html += '<tr>';
-                html += '<td class="col-name">' + r.name + '</td>';
-                html += '<td class="col-val">' + fmtK(r.current) + '</td>';
-                html += '<td class="col-profit" style="color:' + color + ';">' +
-                    '<div style="font-weight:600;line-height:1.4;">' + sign + fmtK(r.profit) + '</div>' +
-                    '<div style="font-size:0.8em;opacity:0.85;">' + sign + r.pct.toFixed(1) + '%</div>' +
-                    '</td>';
-                html += '</tr>';
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
         // ============ Geographic Exposure ============
         function updateExposure() {
             var container = document.getElementById('exposureContent');
@@ -4342,7 +4315,6 @@
             updateTrendsTab();
             updateSummaryCards();
             calcBudget();
-            updateGainsTable();
             updateExposure();
             renderWatchlist();
             updateFeeAnalysis();
