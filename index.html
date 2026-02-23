@@ -1966,59 +1966,59 @@
                 </button>
             </div>
 
-        <!-- About Menu Modal -->
-        <div id="aboutMenuModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutMenu()">
-            <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px 32px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">
-                    <div style="font-size:1.1rem;font-weight:700;">ℹ️ אודות</div>
-                    <button onclick="closeAboutMenu()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                    <button onclick="closeAboutMenu();showAboutModal('developer')" class="settings-row">
-                        <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);">👨‍💻</div>
-                        <div class="settings-row-info">
-                            <div class="settings-row-title">מי בנה את האפליקציה</div>
-                            <div class="settings-row-desc">מידע על המפתח</div>
-                        </div>
-                        <div class="settings-row-arrow">‹</div>
-                    </button>
-                    <button onclick="closeAboutMenu();showAboutModal('terms')" class="settings-row">
-                        <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">📋</div>
-                        <div class="settings-row-info">
-                            <div class="settings-row-title">תנאי שימוש</div>
-                            <div class="settings-row-desc">תקנון ותנאי השימוש באפליקציה</div>
-                        </div>
-                        <div class="settings-row-arrow">‹</div>
-                    </button>
-                    <button onclick="closeAboutMenu();showAboutModal('privacy')" class="settings-row">
-                        <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);">🔒</div>
-                        <div class="settings-row-info">
-                            <div class="settings-row-title">מדיניות פרטיות</div>
-                            <div class="settings-row-desc">כיצד האפליקציה מטפלת בנתונים שלך</div>
-                        </div>
-                        <div class="settings-row-arrow">‹</div>
-                    </button>
-                </div>
-            </div>
-        </div>
-
             <div style="text-align:center;margin-top:24px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
                 פיננסייר v3.0
             </div>
         </div>
 
-        <!-- About Modal -->
-        <div id="aboutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutModal()">
-            <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:24px;" id="aboutModalContent">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                    <div id="aboutModalTitle" style="font-size:1.1rem;font-weight:700;"></div>
-                    <button onclick="closeAboutModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
-                </div>
-                <div id="aboutModalBody" style="font-size:0.85rem;line-height:1.7;color:var(--text-secondary);"></div>
+    </div> <!-- end container -->
+
+    <!-- About Menu Modal -->
+    <div id="aboutMenuModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutMenu()">
+        <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px 32px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">
+                <div style="font-size:1.1rem;font-weight:700;">ℹ️ אודות</div>
+                <button onclick="closeAboutMenu()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button onclick="closeAboutMenu();showAboutModal('developer')" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);">👨‍💻</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">מי בנה את האפליקציה</div>
+                        <div class="settings-row-desc">מידע על המפתח</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+                <button onclick="closeAboutMenu();showAboutModal('terms')" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">📋</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">תנאי שימוש</div>
+                        <div class="settings-row-desc">תקנון ותנאי השימוש באפליקציה</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+                <button onclick="closeAboutMenu();showAboutModal('privacy')" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);">🔒</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">מדיניות פרטיות</div>
+                        <div class="settings-row-desc">כיצד האפליקציה מטפלת בנתונים שלך</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
             </div>
         </div>
+    </div>
 
-    </div> <!-- end container -->
+    <!-- About Modal -->
+    <div id="aboutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutModal()">
+        <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:24px;" id="aboutModalContent">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <div id="aboutModalTitle" style="font-size:1.1rem;font-weight:700;"></div>
+                <button onclick="closeAboutModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
+            </div>
+            <div id="aboutModalBody" style="font-size:0.85rem;line-height:1.7;color:var(--text-secondary);"></div>
+        </div>
+    </div>
 
     <!-- ============ BOTTOM TAB BAR ============ -->
     <nav class="tab-bar" id="tabBar">
