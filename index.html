@@ -3763,12 +3763,12 @@
 
             var yearsToRetire = retireAge - currentAge;
 
-            // Pension + Gemel assets
-            var retireAssets = assets.filter(function(a) { return a.type === 'pension' || a.type === 'gemel'; });
+            // Pension assets only
+            var retireAssets = assets.filter(function(a) { return a.type === 'pension'; });
             var totalNow = retireAssets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
             var monthlyDeposits = retireAssets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0); }, 0);
 
-            if (totalNow <= 0 && monthlyDeposits <= 0) { showNoData('הוסף נכסי פנסיה / גמל כדי לראות תחזית'); return; }
+            if (totalNow <= 0 && monthlyDeposits <= 0) { showNoData('הוסף נכסי פנסיה כדי לראות תחזית'); return; }
 
             noDataDiv.style.display = 'none';
 
@@ -3795,7 +3795,7 @@
             document.getElementById('retireProgressFill').style.width = pct + '%';
             document.getElementById('retireProgressLabel').textContent = fmtShort(totalNow) + ' / ' + fmtShort(total);
             document.getElementById('retireDetails').textContent =
-                'פנסיה + גמל | תשואה ' + retireReturn + '% | הפקדות ₪' + Math.round(monthlyDeposits).toLocaleString('he-IL') + '/חודש';
+                'פנסיה בלבד | תשואה ' + retireReturn + '% | הפקדות ₪' + Math.round(monthlyDeposits).toLocaleString('he-IL') + '/חודש';
         }
 
         function updateGreeting() {
