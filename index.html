@@ -2923,6 +2923,27 @@
                 var prevRate = exchangeRate;
                 var gotUSD = false;
 
+                // Source 0: Yahoo Finance (real-time market rate)
+                if (!gotUSD) {
+                    try {
+                        const yUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USD%3DILS');
+                        const yCtrl = new AbortController();
+                        const yTimeout = setTimeout(() => yCtrl.abort(), 10000);
+                        const yResp = await fetch(yUrl, { signal: yCtrl.signal });
+                        clearTimeout(yTimeout);
+                        if (yResp.ok) {
+                            const yData = await yResp.json();
+                            const meta = yData && yData.chart && yData.chart.result && yData.chart.result[0] && yData.chart.result[0].meta;
+                            const rate = meta ? (meta.regularMarketPrice || meta.previousClose) : 0;
+                            if (rate > 0) {
+                                exchangeRate = rate;
+                                gotUSD = true;
+                                console.log('[Rate] Yahoo Finance USD/ILS:', exchangeRate);
+                            }
+                        }
+                    } catch(e) { console.warn('[Rate] Yahoo Finance failed:', e.message); }
+                }
+
                 // Source 1: Frankfurter API (ECB data, free, no key)
                 if (!gotUSD) {
                     try {
