@@ -1460,18 +1460,20 @@
             font-family: inherit;
             font-size: 0.85rem;
             outline: none;
-            margin-bottom: 12px;
+            margin-bottom: 0;
+            box-sizing: border-box;
         }
         .search-input:focus { border-color: var(--accent-gold); }
         .search-wrapper { position: relative; }
         .search-wrapper::before {
             content: '🔍';
             position: absolute;
-            left: 12px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             pointer-events: none;
+            line-height: 1;
         }
 
         /* 50/30/20 visual */
