@@ -1485,6 +1485,22 @@
         .budget-row:last-child { border-bottom:none; }
         .budget-row-label { font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px; flex-shrink:0; }
         .budget-row-input { width:110px; padding:7px 10px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); border-radius:8px; color:var(--text-primary); font-family:inherit; font-size:0.85rem; text-align:right; box-sizing:border-box; }
+        /* Retirement Calculator */
+        .retire-label { font-size:0.75rem; color:var(--text-secondary); margin-bottom:6px; }
+        .retire-input { width:100%; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:10px; color:var(--text-primary); font-family:inherit; font-size:0.9rem; box-sizing:border-box; transition:border-color 0.2s; }
+        .retire-input:focus { outline:none; border-color:var(--accent-gold); }
+        .retire-main-card { text-align:center; padding:16px 12px; background:rgba(244,196,48,0.06); border:1px solid rgba(244,196,48,0.15); border-radius:12px; margin-bottom:12px; }
+        .retire-main-label { font-size:0.72rem; color:var(--text-secondary); margin-bottom:6px; letter-spacing:0.02em; }
+        .retire-main-amount { font-size:2rem; font-weight:700; color:var(--accent-gold); line-height:1.2; }
+        .retire-main-sub { font-size:0.78rem; color:var(--text-secondary); margin-top:6px; }
+        .retire-stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:4px; }
+        .retire-stat { background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:10px 6px; text-align:center; }
+        .retire-stat-value { font-size:0.95rem; font-weight:600; color:var(--text-primary); line-height:1.3; }
+        .retire-stat-gold { color:var(--accent-gold); }
+        .retire-stat-blue { color:var(--accent-blue); }
+        .retire-stat-label { font-size:0.65rem; color:var(--text-secondary); margin-top:3px; line-height:1.2; }
+        .retire-progress-track { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
+        .retire-progress-fill { height:100%; background:linear-gradient(90deg, var(--accent-gold), #f97316); border-radius:3px; transition:width 0.4s ease; min-width:2px; }
         /* Exposure bars */
         .exposure-item { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
         .exposure-flag { font-size:1.2rem; width:28px; text-align:center; }
@@ -1778,22 +1794,61 @@
             </div>
 
             <!-- Pension / Retirement Calculator -->
-            <div class="section-title" style="margin-top:16px;">🧮 מחשבון פרישה (פנסיה)</div>
+            <div class="section-title" style="margin-top:16px;">🧮 מחשבון פרישה</div>
             <div class="chart-card" style="padding:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">גיל פרישה</label>
-                        <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
+                <!-- Inputs -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div>
+                        <div class="retire-label">גיל פרישה</div>
+                        <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" class="retire-input" oninput="calcRetirement()">
                     </div>
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">תשואה שנתית צפויה (%)</label>
-                        <input type="text" inputmode="decimal" id="retireReturn" value="6" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
+                    <div>
+                        <div class="retire-label">תשואה שנתית (%)</div>
+                        <input type="text" inputmode="decimal" id="retireReturn" value="6" class="retire-input" oninput="calcRetirement()">
                     </div>
                 </div>
-                <div id="retirementResult" style="display:none;text-align:center;padding:14px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.12);border-radius:10px;">
-                    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:6px;">צפי חיסכון בגיל פרישה:</div>
-                    <div style="font-size:1.8rem;font-weight:700;color:var(--accent-gold);" id="retireAmount">₪0</div>
-                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:6px;" id="retireDetails"></div>
+
+                <!-- No data message -->
+                <div id="retirementNoData" style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;display:none;">הוסף נכסי פנסיה / גמל כדי לראות תחזית</div>
+
+                <!-- Results -->
+                <div id="retirementResult" style="display:none;">
+                    <!-- Main projected amount -->
+                    <div class="retire-main-card">
+                        <div class="retire-main-label">צפי חיסכון בגיל פרישה</div>
+                        <div class="retire-main-amount" id="retireAmount">₪0</div>
+                        <div class="retire-main-sub" id="retireMonthlyIncome"></div>
+                    </div>
+
+                    <!-- 3-stat breakdown -->
+                    <div class="retire-stats-grid">
+                        <div class="retire-stat">
+                            <div class="retire-stat-value" id="retireYears">—</div>
+                            <div class="retire-stat-label">שנים לפרישה</div>
+                        </div>
+                        <div class="retire-stat">
+                            <div class="retire-stat-value retire-stat-gold" id="retireFromSavings">—</div>
+                            <div class="retire-stat-label">מחיסכון קיים</div>
+                        </div>
+                        <div class="retire-stat">
+                            <div class="retire-stat-value retire-stat-blue" id="retireFromDeposits">—</div>
+                            <div class="retire-stat-label">מהפקדות</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div style="margin-top:14px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">
+                            <span>חיסכון נוכחי מתוך יעד</span>
+                            <span id="retireProgressLabel"></span>
+                        </div>
+                        <div class="retire-progress-track">
+                            <div class="retire-progress-fill" id="retireProgressFill" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Details line -->
+                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:10px;text-align:center;" id="retireDetails"></div>
                 </div>
             </div>
 
@@ -3686,29 +3741,61 @@
         function calcRetirement() {
             var retireAge = parseInt(document.getElementById('retireAge').value) || 67;
             var retireReturn = parseFloat(document.getElementById('retireReturn').value) || 6;
-            var display = document.getElementById('retirementResult');
-            
+            var resultDiv = document.getElementById('retirementResult');
+            var noDataDiv = document.getElementById('retirementNoData');
+
+            function showNoData(msg) {
+                resultDiv.style.display = 'none';
+                noDataDiv.style.display = 'block';
+                noDataDiv.textContent = msg;
+            }
+
+            function fmtShort(n) {
+                if (n >= 1000000) return '₪' + (n / 1000000).toFixed(1) + 'M';
+                if (n >= 10000) return '₪' + Math.round(n / 1000) + 'K';
+                return '₪' + Math.round(n).toLocaleString('he-IL');
+            }
+
             var currentAge = 0;
             try { var p = JSON.parse(localStorage.getItem('user-profile') || '{}'); currentAge = parseInt(p.age) || 0; } catch(e) {}
-            if (currentAge <= 0 || currentAge >= retireAge) { display.style.display = 'none'; return; }
-            
+            if (currentAge <= 0) { showNoData('הזן גיל בהגדרות הפרופיל כדי לראות תחזית'); return; }
+            if (currentAge >= retireAge) { showNoData('גיל הפרישה חייב להיות גבוה מהגיל הנוכחי (' + currentAge + ')'); return; }
+
             var yearsToRetire = retireAge - currentAge;
-            // Only pension-type assets
-            var pensionAssets = assets.filter(function(a) { return a.type === 'pension'; });
-            var totalNow = pensionAssets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var monthlyDeposits = pensionAssets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0); }, 0);
-            
-            if (totalNow <= 0 && monthlyDeposits <= 0) { display.style.display = 'none'; return; }
-            
+
+            // Pension + Gemel assets
+            var retireAssets = assets.filter(function(a) { return a.type === 'pension' || a.type === 'gemel'; });
+            var totalNow = retireAssets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
+            var monthlyDeposits = retireAssets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0); }, 0);
+
+            if (totalNow <= 0 && monthlyDeposits <= 0) { showNoData('הוסף נכסי פנסיה / גמל כדי לראות תחזית'); return; }
+
+            noDataDiv.style.display = 'none';
+
             var monthlyRate = retireReturn / 100 / 12;
             var months = yearsToRetire * 12;
             var fvCurrent = totalNow * Math.pow(1 + monthlyRate, months);
-            var fvDeposits = monthlyDeposits > 0 ? monthlyDeposits * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) : 0;
+            var fvDeposits = (monthlyDeposits > 0 && monthlyRate > 0)
+                ? monthlyDeposits * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate)
+                : monthlyDeposits * months;
             var total = fvCurrent + fvDeposits;
-            
-            display.style.display = 'block';
+
+            // Monthly income estimate: total spread over 20 years (240 months)
+            var monthlyIncome = total / 240;
+
+            // Progress: current savings vs projected total
+            var pct = total > 0 ? Math.min(100, Math.round((totalNow / total) * 100)) : 0;
+
+            resultDiv.style.display = 'block';
             document.getElementById('retireAmount').textContent = '₪' + total.toLocaleString('he-IL', {maximumFractionDigits: 0});
-            document.getElementById('retireDetails').textContent = 'בעוד ' + yearsToRetire + ' שנים | תשואה ' + retireReturn + '% | הפקדות ₪' + monthlyDeposits.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '/חודש | פנסיה בלבד';
+            document.getElementById('retireMonthlyIncome').textContent = 'הכנסה חודשית משוערת: ₪' + Math.round(monthlyIncome).toLocaleString('he-IL') + '/חודש (לאורך 20 שנה)';
+            document.getElementById('retireYears').textContent = yearsToRetire;
+            document.getElementById('retireFromSavings').textContent = fmtShort(fvCurrent);
+            document.getElementById('retireFromDeposits').textContent = fmtShort(fvDeposits);
+            document.getElementById('retireProgressFill').style.width = pct + '%';
+            document.getElementById('retireProgressLabel').textContent = fmtShort(totalNow) + ' / ' + fmtShort(total);
+            document.getElementById('retireDetails').textContent =
+                'פנסיה + גמל | תשואה ' + retireReturn + '% | הפקדות ₪' + Math.round(monthlyDeposits).toLocaleString('he-IL') + '/חודש';
         }
 
         function updateGreeting() {
