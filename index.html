@@ -1797,15 +1797,38 @@
             <div class="section-title" style="margin-top:16px;">🧮 מחשבון פרישה</div>
             <div class="chart-card" style="padding:20px;">
                 <!-- Inputs -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div>
+                        <div class="retire-label">גיל נוכחי</div>
+                        <input type="text" inputmode="numeric" id="retireCurrentAge" maxlength="2" class="retire-input" placeholder="מהפרופיל" oninput="calcRetirement()">
+                    </div>
                     <div>
                         <div class="retire-label">גיל פרישה</div>
                         <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" class="retire-input" oninput="calcRetirement()">
                     </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                     <div>
                         <div class="retire-label">תשואה שנתית (%)</div>
                         <input type="text" inputmode="decimal" id="retireReturn" value="6" class="retire-input" oninput="calcRetirement()">
                     </div>
+                    <div>
+                        <div class="retire-label">הפקדה חודשית כוללת (₪)</div>
+                        <input type="text" inputmode="decimal" id="retireMonthly" class="retire-input" placeholder="מנכסים" oninput="formatNumberInput(this); calcRetirement()">
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div>
+                        <div class="retire-label">דמי ניהול מצבירה (%)</div>
+                        <input type="text" inputmode="decimal" id="retireFeeBalance" value="0.5" class="retire-input" oninput="formatNumberInput(this); calcRetirement()">
+                    </div>
+                    <div>
+                        <div class="retire-label">דמי ניהול מהפקדה (%)</div>
+                        <input type="text" inputmode="decimal" id="retireFeeDeposit" value="0" class="retire-input" oninput="formatNumberInput(this); calcRetirement()">
+                    </div>
+                </div>
+                <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:14px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
+                    💡 <strong>לעצמאי:</strong> הזן הפקדה כוללת (כולל חלק "מעסיק"). <strong>לשכיר:</strong> כולל מעסיק + פיצויים (≈18.5% שכר).
                 </div>
 
                 <!-- No data message -->
@@ -1818,6 +1841,7 @@
                         <div class="retire-main-label">צפי חיסכון בגיל פרישה</div>
                         <div class="retire-main-amount" id="retireAmount">₪0</div>
                         <div class="retire-main-sub" id="retireMonthlyIncome"></div>
+                        <div id="retireFeeImpact" style="font-size:0.72rem;color:var(--accent-red);margin-top:6px;display:none;"></div>
                     </div>
 
                     <!-- 3-stat breakdown -->
@@ -3741,6 +3765,8 @@
         function calcRetirement() {
             var retireAge = parseInt(document.getElementById('retireAge').value) || 67;
             var retireReturn = parseFloat(document.getElementById('retireReturn').value) || 6;
+            var feeBalance = parseFloat(document.getElementById('retireFeeBalance').value) || 0;
+            var feeDeposit = parseFloat(document.getElementById('retireFeeDeposit').value) || 0;
             var resultDiv = document.getElementById('retirementResult');
             var noDataDiv = document.getElementById('retirementNoData');
 
@@ -3756,46 +3782,84 @@
                 return '₪' + Math.round(n).toLocaleString('he-IL');
             }
 
-            var currentAge = 0;
-            try { var p = JSON.parse(localStorage.getItem('user-profile') || '{}'); currentAge = parseInt(p.age) || 0; } catch(e) {}
-            if (currentAge <= 0) { showNoData('הזן גיל בהגדרות הפרופיל כדי לראות תחזית'); return; }
+            // Current age: from input OR profile
+            var currentAgeInput = document.getElementById('retireCurrentAge');
+            var currentAge = parseInt(currentAgeInput.value) || 0;
+            if (currentAge <= 0) {
+                try { var p = JSON.parse(localStorage.getItem('user-profile') || '{}'); currentAge = parseInt(p.age) || 0; } catch(e) {}
+                if (currentAge > 0) currentAgeInput.placeholder = currentAge + ' (מהפרופיל)';
+            }
+            if (currentAge <= 0) { showNoData('הזן גיל נוכחי'); return; }
             if (currentAge >= retireAge) { showNoData('גיל הפרישה חייב להיות גבוה מהגיל הנוכחי (' + currentAge + ')'); return; }
 
             var yearsToRetire = retireAge - currentAge;
 
-            // Pension assets only
-            var retireAssets = assets.filter(function(a) { return a.type === 'pension'; });
+            // Pension + gemel assets
+            var retireAssets = assets.filter(function(a) { return a.type === 'pension' || a.type === 'gemel'; });
             var totalNow = retireAssets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var monthlyDeposits = retireAssets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0); }, 0);
+            var assetsMonthly = retireAssets.reduce(function(s, a) { return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0); }, 0);
 
-            if (totalNow <= 0 && monthlyDeposits <= 0) { showNoData('הוסף נכסי פנסיה כדי לראות תחזית'); return; }
+            // Monthly deposits: from manual input OR assets
+            var retireMonthlyInput = document.getElementById('retireMonthly');
+            var monthlyDeposits;
+            if (retireMonthlyInput.value) {
+                monthlyDeposits = parseNum(retireMonthlyInput);
+            } else {
+                monthlyDeposits = assetsMonthly;
+                if (assetsMonthly > 0) retireMonthlyInput.placeholder = '₪' + Math.round(assetsMonthly).toLocaleString('he-IL') + ' (מנכסים)';
+            }
+
+            if (totalNow <= 0 && monthlyDeposits <= 0) { showNoData('הוסף נכסי פנסיה / גמל כדי לראות תחזית'); return; }
 
             noDataDiv.style.display = 'none';
 
-            var monthlyRate = retireReturn / 100 / 12;
             var months = yearsToRetire * 12;
-            var fvCurrent = totalNow * Math.pow(1 + monthlyRate, months);
-            var fvDeposits = (monthlyDeposits > 0 && monthlyRate > 0)
-                ? monthlyDeposits * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate)
-                : monthlyDeposits * months;
+
+            // Without fees (for comparison)
+            var rNoFee = retireReturn / 100 / 12;
+            var factorNoFee = Math.pow(1 + rNoFee, months);
+            var fvNoFees = totalNow * factorNoFee + (monthlyDeposits > 0 && rNoFee > 0
+                ? monthlyDeposits * ((factorNoFee - 1) / rNoFee)
+                : monthlyDeposits * months);
+
+            // With fees
+            var effectiveReturn = retireReturn - feeBalance;
+            var rWithFee = effectiveReturn / 100 / 12;
+            var netMonthly = monthlyDeposits * (1 - feeDeposit / 100);
+            var factorWithFee = rWithFee > 0 ? Math.pow(1 + rWithFee, months) : Math.pow(1, months);
+            var fvCurrent = totalNow * factorWithFee;
+            var fvDeposits = netMonthly > 0 && rWithFee > 0
+                ? netMonthly * ((factorWithFee - 1) / rWithFee)
+                : netMonthly * months;
             var total = fvCurrent + fvDeposits;
 
-            // Monthly income estimate: total spread over 20 years (240 months)
+            var feeCost = fvNoFees - total;
             var monthlyIncome = total / 240;
-
-            // Progress: current savings vs projected total
             var pct = total > 0 ? Math.min(100, Math.round((totalNow / total) * 100)) : 0;
 
             resultDiv.style.display = 'block';
             document.getElementById('retireAmount').textContent = '₪' + total.toLocaleString('he-IL', {maximumFractionDigits: 0});
             document.getElementById('retireMonthlyIncome').textContent = 'הכנסה חודשית משוערת: ₪' + Math.round(monthlyIncome).toLocaleString('he-IL') + '/חודש (לאורך 20 שנה)';
+
+            var feeImpactEl = document.getElementById('retireFeeImpact');
+            if (feeCost > 500 && (feeBalance > 0 || feeDeposit > 0)) {
+                feeImpactEl.style.display = 'block';
+                feeImpactEl.textContent = '⚠️ דמי ניהול יעלו לך ₪' + Math.round(feeCost).toLocaleString('he-IL') + ' לאורך הדרך';
+            } else {
+                feeImpactEl.style.display = 'none';
+            }
+
             document.getElementById('retireYears').textContent = yearsToRetire;
             document.getElementById('retireFromSavings').textContent = fmtShort(fvCurrent);
             document.getElementById('retireFromDeposits').textContent = fmtShort(fvDeposits);
             document.getElementById('retireProgressFill').style.width = pct + '%';
             document.getElementById('retireProgressLabel').textContent = fmtShort(totalNow) + ' / ' + fmtShort(total);
+
+            var feeDesc = (feeBalance > 0 || feeDeposit > 0)
+                ? ' | ד.נ. ' + feeBalance + '% מצבירה' + (feeDeposit > 0 ? ' + ' + feeDeposit + '% מהפקדה' : '')
+                : '';
             document.getElementById('retireDetails').textContent =
-                'פנסיה בלבד | תשואה ' + retireReturn + '% | הפקדות ₪' + Math.round(monthlyDeposits).toLocaleString('he-IL') + '/חודש';
+                'פנסיה + גמל | תשואה ' + retireReturn + '%' + feeDesc + ' | הפקדות ₪' + Math.round(monthlyDeposits).toLocaleString('he-IL') + '/חודש';
         }
 
         function updateGreeting() {
