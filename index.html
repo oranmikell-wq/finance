@@ -11,7 +11,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="פיננסייר">
-    <meta name="theme-color" content="#0a0e27">
     <meta name="color-scheme" content="dark">
     <title>פיננסייר - הסוכן הפיננסי שלך</title>
     <link rel="manifest" href="./manifest.json">
@@ -19,13 +18,9 @@
     <link rel="apple-touch-icon" href="./logo.svg">
 
     <!-- iOS Splash Screens – מסכי טעינה לגדלי אייפון שונים -->
-    <!-- iPhone 16 Pro Max (430×932) -->
+    <!-- iPhone 16 Pro Max / 15 Plus / 14 Pro Max (430×932) -->
     <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1290x2796.png">
-    <!-- iPhone 16 Pro (393×852) -->
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1179x2556.png">
-    <!-- iPhone 15 Plus / 14 Pro Max (430×932) -->
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1290x2796.png">
-    <!-- iPhone 14 Pro (393×852) -->
+    <!-- iPhone 16 Pro / 14 Pro (393×852) -->
     <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1179x2556.png">
     <!-- iPhone 14 / 13 / 12 (390×844) -->
     <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./splash/splash-1170x2532.png">
@@ -59,6 +54,7 @@
             --accent-green: #10b981;
             --accent-red: #ef4444;
             --accent-blue: #3b82f6;
+            --accent-cyan: #00d9ff;
             --border-color: #2d3348;
             --shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
@@ -66,7 +62,6 @@
         body {
             font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #0a0e27 0%, #141829 50%, #0a0e27 100%);
-            background-attachment: fixed;
             color: var(--text-primary);
             min-height: 100vh;
             min-height: -webkit-fill-available;
@@ -415,10 +410,6 @@
             opacity: 0.85;
             transition: all 0.1s ease;
         }
-        .quick-action-btn:active {
-            transform: scale(0.95);
-            opacity: 0.8;
-        }
         .stat-card:active {
             transform: scale(0.97);
         }
@@ -443,12 +434,6 @@
                 gap: 10px; 
             }
             .header h1 { font-size: 1.5rem; letter-spacing: -0.5px; }
-            .header-top .action-button { 
-                padding: 12px 18px; 
-                font-size: 0.85rem;
-                border-radius: 12px;
-                min-height: 44px;
-            }
             .last-update { font-size: 0.72rem; }
             .last-update > span[style*="gap: 15px"],
             .last-update span[style*="gap: 15px"] { 
@@ -487,40 +472,11 @@
                 font-size: 0.82rem !important;
             }
 
-            /* Quick Actions - smooth horizontal scroll */
-            .quick-actions {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                gap: 8px;
-                margin-bottom: 16px;
-                padding-bottom: 2px;
-                margin-left: -14px;
-                margin-right: -14px;
-                padding-left: 14px;
-                padding-right: 14px;
-                scroll-snap-type: x proximity;
-            }
-            .quick-actions::-webkit-scrollbar { display: none; }
-            .quick-action-btn {
-                min-width: auto;
-                white-space: nowrap;
-                padding: 10px 14px;
-                font-size: 0.78rem;
-                gap: 6px;
-                border-radius: 12px;
-                flex-shrink: 0;
-                flex: none;
-                min-height: 44px;
-                scroll-snap-align: start;
-            }
-            .quick-action-btn .btn-icon { font-size: 1rem; }
-
             /* Category Stats */
             .stats-bar {
                 gap: 8px;
                 margin-bottom: 16px;
+                display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             }
             .stat-card {
@@ -683,12 +639,11 @@
             .asset-row-name { font-size: 0.82rem; }
             .asset-row-amount { font-size: 0.95rem; }
             .asset-row-return { font-size: 0.65rem; padding: 3px 8px; }
-            .stats-bar { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .stats-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 8px; }
             .stat-value { font-size: 1rem; }
             .stat-label { font-size: 0.6rem; }
             .stat-icon { font-size: 1.2rem; margin-bottom: 4px; }
-            .quick-action-btn { padding: 8px 12px; font-size: 0.75rem; }
         }
 
         /* ============ IPHONE PRO MAX (428-430px) ============ */
@@ -716,7 +671,7 @@
                 padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));
             }
             /* Disable text selection on interactive elements */
-            .asset-row, .quick-action-btn, .stat-card, .action-button, .secondary-button, .sort-btn {
+            .asset-row, .stat-card, .action-button, .secondary-button, .sort-btn {
                 -webkit-user-select: none;
                 user-select: none;
                 -webkit-touch-callout: none;
@@ -824,7 +779,7 @@
 
         .legend-item:hover {
             background: var(--bg-hover);
-            transform: translateX(-5px);
+            transform: translateX(5px);
         }
 
         .legend-color {
@@ -1359,38 +1314,6 @@
             line-height: 1.5;
         }
 
-        .quick-actions {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            animation: fadeInUp 0.8s ease-out 0.3s both;
-        }
-
-        .quick-action-btn {
-            flex: 1;
-            min-width: 150px;
-            padding: 15px 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: 'Rubik', sans-serif;
-        }
-
-        .quick-action-btn:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent-gold);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
-        }
 
         .progress-ring {
             width: 120px;
@@ -1623,10 +1546,10 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;margin-top:12px;">
             <div class="section-title" style="margin-bottom:0;">הנכסים שלי</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button onclick="sortAssets('value')" class="sort-btn active-sort" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.75rem;cursor:pointer;font-family:inherit;">שווי ↓</button>
-                <button onclick="sortAssets('type')" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">סוג</button>
-                <button onclick="sortAssets('return')" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">תשואה ↓</button>
-                <button onclick="sortAssets('name')" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">שם</button>
+                <button onclick="sortAssets('value', event)" class="sort-btn active-sort" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.75rem;cursor:pointer;font-family:inherit;">שווי ↓</button>
+                <button onclick="sortAssets('type', event)" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">סוג</button>
+                <button onclick="sortAssets('return', event)" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">תשואה ↓</button>
+                <button onclick="sortAssets('name', event)" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">שם</button>
             </div>
         </div>
         <!-- Search bar -->
@@ -2267,72 +2190,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCFhl7yl6Mn+OuLGEPHECFC0EkfR21TvANTn6Gt4Q5SZm04fKF7vEFBCFqMcHTpg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
 
-        // ============================================================
-        // 🔐 SECURE STORAGE – הצפנת AES לנתונים פיננסיים רגישים
-        // ============================================================
-        const SecureStorage = (() => {
-            // מפתח הצפנה ייחודי למכשיר, נגזר מ-fingerprint יציב
-            const _deriveKey = () => {
-                const fp = [
-                    navigator.userAgent,
-                    navigator.language,
-                    screen.colorDepth,
-                    new Date().getTimezoneOffset(),
-                    screen.width,
-                    screen.height
-                ].join('||');
-                return CryptoJS.SHA256(fp).toString();
-            };
-
-            let _key = null;
-            const getKey = () => {
-                if (!_key) _key = _deriveKey();
-                return _key;
-            };
-
-            // מפתחות הדורשים הצפנה (נתונים פיננסיים אישיים)
-            const SENSITIVE = new Set([
-                'user-profile',
-                'portfolio-assets',
-                'portfolio-history',
-                'watchlist',
-                'price-alerts',
-                'finnhub-api-key'
-            ]);
-
-            const ENC_PREFIX = 'πENC:'; // prefix ייחודי שמסמן ערך מוצפן
-
-            return {
-                setItem(key, value) {
-                    try {
-                        if (SENSITIVE.has(key) && typeof CryptoJS !== 'undefined') {
-                            const encrypted = CryptoJS.AES.encrypt(value, getKey()).toString();
-                            localStorage.setItem(key, ENC_PREFIX + encrypted);
-                        } else {
-                            localStorage.setItem(key, value);
-                        }
-                    } catch(e) {
-                        localStorage.setItem(key, value); // fallback ללא הצפנה
-                    }
-                },
-                getItem(key) {
-                    try {
-                        const raw = localStorage.getItem(key);
-                        if (raw && raw.startsWith(ENC_PREFIX) && typeof CryptoJS !== 'undefined') {
-                            const bytes = CryptoJS.AES.decrypt(raw.slice(ENC_PREFIX.length), getKey());
-                            const decoded = bytes.toString(CryptoJS.enc.Utf8);
-                            return decoded || raw; // fallback אם הפענוח נכשל
-                        }
-                        return raw;
-                    } catch(e) {
-                        return localStorage.getItem(key);
-                    }
-                },
-                removeItem(key) { localStorage.removeItem(key); },
-                isSensitive(key) { return SENSITIVE.has(key); }
-            };
-        })();
-
         // Patch localStorage – יירוט שקוף של כל שמירה/קריאה למפתחות רגישים
         (() => {
             const _origSet = Storage.prototype.setItem;
@@ -2909,23 +2766,26 @@
             // No longer needed - SPY is updated via updateAllRates
         }
 
-        // Check if US market is open (EST timezone)
+        // Check if US market is open (Eastern time, handles DST automatically)
         function isMarketOpen() {
             const now = new Date();
-            const utcHours = now.getUTCHours();
-            const utcMinutes = now.getUTCMinutes();
             const utcDay = now.getUTCDay();
-            
-            // Convert to EST (UTC-5 or UTC-4 for DST)
-            const estHours = (utcHours - 5 + 24) % 24;
-            
-            // Market closed on weekends
             if (utcDay === 0 || utcDay === 6) return false;
-            
-            // Market hours: 9:30 AM - 4:00 PM EST
-            if (estHours === 9 && utcMinutes >= 30) return true;
-            if (estHours >= 10 && estHours < 16) return true;
-            
+
+            try {
+                // Use Intl API – handles EST (UTC-5) and EDT (UTC-4) automatically
+                const eastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                const h = eastern.getHours();
+                const m = eastern.getMinutes();
+                if (h === 9 && m >= 30) return true;
+                if (h >= 10 && h < 16) return true;
+            } catch(e) {
+                // Fallback: assume EST UTC-5
+                const estHours = (now.getUTCHours() - 5 + 24) % 24;
+                const utcMinutes = now.getUTCMinutes();
+                if (estHours === 9 && utcMinutes >= 30) return true;
+                if (estHours >= 10 && estHours < 16) return true;
+            }
             return false;
         }
 
@@ -3984,9 +3844,11 @@
             if (currency === 'USD') symbol = '$';
             else if (currency === 'BTC') symbol = '₿';
             else if (currency === 'ETH') symbol = 'Ξ';
-            
+
+            const isNegative = value < 0;
+            const absValue = Math.abs(value);
             const decimals = (currency === 'BTC' || currency === 'ETH') ? 4 : 0;
-            return `${symbol}${value.toLocaleString('he-IL', {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
+            return `${isNegative ? '-' : ''}${symbol}${absValue.toLocaleString('he-IL', {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
         }
 
         const assetTypeIcons = {
@@ -4425,7 +4287,7 @@
 
             if (editingAssetId) {
                 const index = assets.findIndex(a => a.id === editingAssetId);
-                assets[index] = asset;
+                if (index !== -1) assets[index] = asset;
             } else {
                 assets.push(asset);
             }
@@ -4478,8 +4340,7 @@
             const totalILS = assets.reduce((sum, asset) => {
                 return sum + toILS(asset.value, asset.currency || 'ILS');
             }, 0);
-            const totalUSD = totalILS / exchangeRate;
-            
+
             document.getElementById('totalWorth').textContent = `₪${totalILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}`;
             
             // Breakdown by category: pension=only pension, real_estate=only real_estate, liquid=everything else
@@ -4638,7 +4499,7 @@
 
         // ============ SORTING ============
         var currentSort = 'value';
-        function sortAssets(by) {
+        function sortAssets(by, ev) {
             currentSort = by;
             // Update button styles
             document.querySelectorAll('.sort-btn').forEach(function(btn) {
@@ -4646,9 +4507,12 @@
                 btn.style.color = 'var(--text-secondary)';
                 btn.classList.remove('active-sort');
             });
-            event.target.style.background = 'rgba(244,196,48,0.15)';
-            event.target.style.color = 'var(--accent-gold)';
-            event.target.classList.add('active-sort');
+            var clickedBtn = ev && ev.currentTarget ? ev.currentTarget : (ev && ev.target ? ev.target : null);
+            if (clickedBtn) {
+                clickedBtn.style.background = 'rgba(244,196,48,0.15)';
+                clickedBtn.style.color = 'var(--accent-gold)';
+                clickedBtn.classList.add('active-sort');
+            }
 
             if (by === 'value') {
                 assets.sort(function(a, b) { return toILS(b.value, b.currency||'ILS') - toILS(a.value, a.currency||'ILS'); });
@@ -4716,10 +4580,10 @@
             var dpr = window.devicePixelRatio || 1;
             var rect = canvas.getBoundingClientRect();
             canvas.width = rect.width * dpr;
-            canvas.height = 180 * dpr;
+            canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
             var W = rect.width;
-            var H = 180;
+            var H = rect.height;
 
             var values = history.map(function(h) { return h.value; });
             var minV = Math.min.apply(null, values) * 0.95;
@@ -4795,19 +4659,6 @@
             ctx.textAlign = 'right';
             ctx.fillStyle = changePct >= 0 ? '#10b981' : '#ef4444';
             ctx.fillText((changePct >= 0 ? '+' : '') + changePct.toFixed(1) + '%', W - padR, padT + 12);
-        }
-
-        function showInsights() {
-            const section = document.getElementById('insightsSection');
-            const isVisible = section.style.display !== 'none';
-            
-            if (isVisible) {
-                section.style.display = 'none';
-                return;
-            }
-            
-            section.style.display = 'block';
-            generateInsights();
         }
 
         function generateInsights() {
@@ -4906,34 +4757,6 @@
                     </div>
                 </div>
             `).join('');
-        }
-
-        function showDataMenu() {
-            var overlay = document.createElement('div');
-            overlay.id = 'dataMenuOverlay';
-            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;';
-            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-            
-            var menu = document.createElement('div');
-            menu.style.cssText = 'background:var(--bg-card,#1a1f3a);border:1px solid var(--accent-gold,#f4c430);border-radius:20px;padding:30px;max-width:340px;width:90%;text-align:center;';
-            menu.innerHTML = `
-                <div style="font-size:2rem;margin-bottom:12px;">💾</div>
-                <div style="font-size:1.2rem;font-weight:600;margin-bottom:6px;">ניהול נתונים</div>
-                <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:24px;">ייצוא או ייבוא גיבוי של הנכסים שלך</div>
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                    <button onclick="exportData();document.getElementById('dataMenuOverlay').remove();" style="padding:14px;background:linear-gradient(135deg,var(--accent-gold),#ffd700);color:#0a0e27;border:none;border-radius:12px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        📤 ייצוא נתונים
-                    </button>
-                    <button onclick="importData();document.getElementById('dataMenuOverlay').remove();" style="padding:14px;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:12px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        📥 ייבוא נתונים
-                    </button>
-                    <button onclick="document.getElementById('dataMenuOverlay').remove();" style="padding:12px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);border-radius:12px;font-size:0.85rem;cursor:pointer;font-family:inherit;margin-top:4px;">
-                        ביטול
-                    </button>
-                </div>
-            `;
-            overlay.appendChild(menu);
-            document.body.appendChild(overlay);
         }
 
         function exportData() {
@@ -5464,8 +5287,9 @@
                             var newWorker = registration.installing;
                             if (newWorker) {
                                 newWorker.addEventListener('statechange', () => {
-                                    if (newWorker.state === 'activated') {
-                                        console.log('New SW activated, reloading...');
+                                    // Only reload if there was a previous SW (= this is an update, not initial install)
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        console.log('New SW installed, reloading for update...');
                                         window.location.reload();
                                     }
                                 });
@@ -5482,7 +5306,19 @@
             });
         }
 
-        // Install PWA prompt
+        // iOS install hint (beforeinstallprompt not supported on iOS)
+        if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone && !localStorage.getItem('pwa-installed')) {
+            setTimeout(() => {
+                const iosHint = document.createElement('div');
+                iosHint.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent-gold) 0%,#ffd700 100%);color:var(--bg-primary);padding:14px 22px;border-radius:50px;box-shadow:0 10px 30px rgba(244,196,48,0.4);z-index:10000;cursor:pointer;font-weight:600;font-size:0.88rem;max-width:88%;text-align:center;animation:slideUp 0.5s ease-out;';
+                iosHint.innerHTML = '📱 לחץ על <strong>שיתוף ↑</strong> ואז "הוסף למסך הבית"';
+                iosHint.onclick = () => { iosHint.remove(); localStorage.setItem('pwa-installed', 'true'); };
+                document.body.appendChild(iosHint);
+                setTimeout(() => { if (iosHint.parentNode) iosHint.remove(); }, 9000);
+            }, 5000);
+        }
+
+        // Install PWA prompt (Android/Chrome)
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
