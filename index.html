@@ -2923,10 +2923,10 @@
                 var prevRate = exchangeRate;
                 var gotUSD = false;
 
-                // Source 0: Yahoo Finance (real-time market rate)
+                // Source 0: Yahoo Finance (real-time market rate, USDILS=X)
                 if (!gotUSD) {
                     try {
-                        const yUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USD%3DILS');
+                        const yUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USDILS%3DX');
                         const yCtrl = new AbortController();
                         const yTimeout = setTimeout(() => yCtrl.abort(), 10000);
                         const yResp = await fetch(yUrl, { signal: yCtrl.signal });
@@ -2942,6 +2942,30 @@
                             }
                         }
                     } catch(e) { console.warn('[Rate] Yahoo Finance failed:', e.message); }
+                }
+
+                // Source 0b: Bank of Israel (official daily rate, XML)
+                if (!gotUSD) {
+                    try {
+                        const boiUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://edge.boi.gov.il/FusionEdgeServer/sdmx/v2/data/dataflow/BOI.STATISTICS/EXR/1.0/RER_USD_ILS?format=csv&startperiod=' + new Date().toISOString().slice(0,10));
+                        const boiCtrl = new AbortController();
+                        const boiTimeout = setTimeout(() => boiCtrl.abort(), 10000);
+                        const boiResp = await fetch(boiUrl, { signal: boiCtrl.signal });
+                        clearTimeout(boiTimeout);
+                        if (boiResp.ok) {
+                            const boiText = await boiResp.text();
+                            const lines = boiText.trim().split('\n');
+                            // CSV: last line has the latest rate
+                            const lastLine = lines[lines.length - 1];
+                            const parts = lastLine.split(',');
+                            const rate = parseFloat(parts[parts.length - 1]);
+                            if (rate > 0) {
+                                exchangeRate = rate;
+                                gotUSD = true;
+                                console.log('[Rate] Bank of Israel USD/ILS:', exchangeRate);
+                            }
+                        }
+                    } catch(e) { console.warn('[Rate] Bank of Israel failed:', e.message); }
                 }
 
                 // Source 1: Frankfurter API (ECB data, free, no key)
@@ -2974,7 +2998,22 @@
                     } catch(e) { console.warn('[Rate] open.er-api failed:', e.message); }
                 }
 
-                // Source 3: exchangerate-api v4 fallback
+                // Source 3: fawazahmed0 GitHub CDN (no key, no limits, daily)
+                if (!gotUSD) {
+                    try {
+                        var fzResp = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+                        if (fzResp.ok) {
+                            var fzData = await fzResp.json();
+                            if (fzData && fzData.usd && fzData.usd.ils) {
+                                exchangeRate = fzData.usd.ils;
+                                gotUSD = true;
+                                console.log('[Rate] fawazahmed0 USD/ILS:', exchangeRate);
+                            }
+                        }
+                    } catch(e) { console.warn('[Rate] fawazahmed0 failed:', e.message); }
+                }
+
+                // Source 4: exchangerate-api v4 fallback
                 if (!gotUSD) {
                     try {
                         var e2Resp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
