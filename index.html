@@ -1954,8 +1954,67 @@
                 </button>
             </div>
 
-            <div style="text-align:center;margin-top:30px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
+            <!-- About Section -->
+            <div style="margin-top:20px;">
+                <button onclick="showAboutMenu()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);">ℹ️</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">אודות</div>
+                        <div class="settings-row-desc">מידע, תנאי שימוש ופרטיות</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+            </div>
+
+        <!-- About Menu Modal -->
+        <div id="aboutMenuModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutMenu()">
+            <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px 32px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">
+                    <div style="font-size:1.1rem;font-weight:700;">ℹ️ אודות</div>
+                    <button onclick="closeAboutMenu()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <button onclick="closeAboutMenu();showAboutModal('developer')" class="settings-row">
+                        <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);">👨‍💻</div>
+                        <div class="settings-row-info">
+                            <div class="settings-row-title">מי בנה את האפליקציה</div>
+                            <div class="settings-row-desc">מידע על המפתח</div>
+                        </div>
+                        <div class="settings-row-arrow">‹</div>
+                    </button>
+                    <button onclick="closeAboutMenu();showAboutModal('terms')" class="settings-row">
+                        <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">📋</div>
+                        <div class="settings-row-info">
+                            <div class="settings-row-title">תנאי שימוש</div>
+                            <div class="settings-row-desc">תקנון ותנאי השימוש באפליקציה</div>
+                        </div>
+                        <div class="settings-row-arrow">‹</div>
+                    </button>
+                    <button onclick="closeAboutMenu();showAboutModal('privacy')" class="settings-row">
+                        <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);">🔒</div>
+                        <div class="settings-row-info">
+                            <div class="settings-row-title">מדיניות פרטיות</div>
+                            <div class="settings-row-desc">כיצד האפליקציה מטפלת בנתונים שלך</div>
+                        </div>
+                        <div class="settings-row-arrow">‹</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+            <div style="text-align:center;margin-top:24px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
                 פיננסייר v3.0
+            </div>
+        </div>
+
+        <!-- About Modal -->
+        <div id="aboutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutModal()">
+            <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:24px;" id="aboutModalContent">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <div id="aboutModalTitle" style="font-size:1.1rem;font-weight:700;"></div>
+                    <button onclick="closeAboutModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
+                </div>
+                <div id="aboutModalBody" style="font-size:0.85rem;line-height:1.7;color:var(--text-secondary);"></div>
             </div>
         </div>
 
@@ -3672,6 +3731,83 @@
                 html += '</div><button onclick="removeWatchlistItem(' + w.id + ')" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:0.9rem;">✕</button></div>';
             });
             container.innerHTML = html;
+        }
+
+        // ============ About Modal ============
+        var aboutContent = {
+            developer: {
+                title: '👨‍💻 מי בנה את האפליקציה',
+                body: `
+                    <div style="text-align:center;margin-bottom:20px;">
+                        <div style="font-size:3rem;margin-bottom:10px;">👨‍💻</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);margin-bottom:2px;">אורן מיקל</div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary);">מפתח פיננסייר v3.0</div>
+                    </div>
+                    <p>פיננסייר היא אפליקציית ניהול פיננסי אישי שנבנתה כדי לאפשר לך לצפות בכלל הנכסים שלך במקום אחד — בצורה פשוטה, בעברית ובלי עלויות.</p>
+                    <p>האפליקציה פותחה כפרויקט אישי, מונעת מרצון לקבל תמונה פיננסית שלמה ועדכנית בכל זמן.</p>
+                    <div style="background:var(--border-color);border-radius:12px;padding:14px;margin-top:16px;font-size:0.78rem;">
+                        <div style="margin-bottom:6px;">🏠 כל הנתונים שמורים <strong>מקומית על המכשיר שלך בלבד</strong></div>
+                        <div>🔒 לא נשלח מידע לשרתים חיצוניים</div>
+                    </div>
+                `
+            },
+            terms: {
+                title: '📋 תנאי שימוש',
+                body: `
+                    <p><strong>השימוש באפליקציה</strong></p>
+                    <p>פיננסייר היא אפליקציה לניהול פיננסי אישי המיועדת למטרות מידע בלבד. המידע המוצג אינו מהווה ייעוץ השקעות, פיננסי, משפטי או מס מכל סוג שהוא.</p>
+
+                    <p><strong>אחריות</strong></p>
+                    <p>האפליקציה מסופקת "כמות שהיא" ללא אחריות מכל סוג. המפתח אינו אחראי לכל נזק שייגרם משימוש בנתונים המוצגים, לרבות טעויות בשערי חליפין, מחירי ניירות ערך, או חישובים פנסיוניים.</p>
+
+                    <p><strong>מקורות נתונים</strong></p>
+                    <p>נתוני שוק נשלפים ממקורות חיצוניים (Yahoo Finance, בנק ישראל ואחרים) ועלולים שלא להיות מדויקים או עדכניים בכל עת. אין להסתמך עליהם לצורך קבלת החלטות פיננסיות.</p>
+
+                    <p><strong>שינויים</strong></p>
+                    <p>תנאי שימוש אלה עשויים להשתנות מעת לעת. המשך השימוש באפליקציה מהווה הסכמה לתנאים המעודכנים.</p>
+                `
+            },
+            privacy: {
+                title: '🔒 מדיניות פרטיות',
+                body: `
+                    <p><strong>איסוף נתונים</strong></p>
+                    <p>פיננסייר אינה אוספת, שומרת או משדרת כל מידע אישי לשרתים חיצוניים. כלל הנתונים שתזין — נכסים, ערכים, פרטים אישיים — נשמרים <strong>אך ורק על המכשיר שלך</strong> באמצעות localStorage.</p>
+
+                    <p><strong>שערי חליפין ומחירי שוק</strong></p>
+                    <p>לצורך שליפת שערי חליפין ומחירי מניות, האפליקציה פונה לשירותים חיצוניים (Yahoo Finance, בנק ישראל, Frankfurter ואחרים). פניות אלו אינן כוללות כל מידע אישי.</p>
+
+                    <p><strong>הצפנה</strong></p>
+                    <p>נתונים רגישים מוצפנים בטכנולוגיית AES לפני שמירתם במכשיר.</p>
+
+                    <p><strong>מחיקת נתונים</strong></p>
+                    <p>ניתן למחוק את כל הנתונים בכל עת מתפריט ההגדרות תחת "מחיקת כל הנתונים".</p>
+
+                    <p><strong>יצירת קשר</strong></p>
+                    <p>לשאלות בנוגע לפרטיות, ניתן לפנות דרך הגדרות האפליקציה.</p>
+                `
+            }
+        };
+
+        function showAboutMenu() {
+            document.getElementById('aboutMenuModal').style.display = 'flex';
+        }
+
+        function closeAboutMenu() {
+            document.getElementById('aboutMenuModal').style.display = 'none';
+        }
+
+        function showAboutModal(type) {
+            var content = aboutContent[type];
+            if (!content) return;
+            document.getElementById('aboutModalTitle').textContent = content.title;
+            document.getElementById('aboutModalBody').innerHTML = content.body;
+            var modal = document.getElementById('aboutModal');
+            modal.style.display = 'flex';
+            setTimeout(function() { modal.style.opacity = '1'; }, 10);
+        }
+
+        function closeAboutModal() {
+            document.getElementById('aboutModal').style.display = 'none';
         }
 
         // ============ CSV Export ============
