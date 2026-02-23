@@ -917,6 +917,7 @@
             font-size: 1rem;
             font-family: 'Rubik', sans-serif;
             transition: border-color 0.3s ease;
+            box-sizing: border-box;
         }
 
         .form-group input:focus,
@@ -1676,21 +1677,21 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם פרטי</label>
-                        <input type="text" id="profileFirstName" placeholder="ישראל" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
+                        <input type="text" id="profileFirstName" placeholder="ישראל" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
                     </div>
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם משפחה</label>
-                        <input type="text" id="profileLastName" placeholder="ישראלי" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
+                        <input type="text" id="profileLastName" placeholder="ישראלי" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
                     </div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">גיל</label>
-                        <input type="text" inputmode="numeric" id="profileAge" placeholder="30" maxlength="3" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="this.value=this.value.replace(/[^0-9]/g,''); saveProfile()">
+                        <input type="text" inputmode="numeric" id="profileAge" placeholder="30" maxlength="3" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="this.value=this.value.replace(/[^0-9]/g,''); saveProfile()">
                     </div>
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">מין</label>
-                        <select id="profileGender" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;-webkit-appearance:none;" onchange="saveProfile()">
+                        <select id="profileGender" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;-webkit-appearance:none;" onchange="saveProfile()">
                             <option value="">בחר</option>
                             <option value="male">זכר</option>
                             <option value="female">נקבה</option>
@@ -1788,11 +1789,11 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">גיל פרישה</label>
-                        <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
+                        <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
                     </div>
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">תשואה שנתית צפויה (%)</label>
-                        <input type="text" inputmode="decimal" id="retireReturn" value="6" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
+                        <input type="text" inputmode="decimal" id="retireReturn" value="6" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="calcRetirement()">
                     </div>
                 </div>
                 <div id="retirementResult" style="display:none;text-align:center;padding:14px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.12);border-radius:10px;">
@@ -2422,8 +2423,8 @@
         async function fetchFundNAV(fundNumber) {
             try {
                 var bizUrl = 'https://www.bizportal.co.il/mutualfunds/quote/generalview/' + fundNumber;
-                // Use allorigins JSON endpoint for better error handling
-                var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bizUrl);
+                // Cache-busting param forces allorigins.win to fetch fresh content each time
+                var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bizUrl + '?_=' + Date.now());
                 var response = await fetch(proxyUrl, { signal: AbortSignal.timeout(20000) });
                 if (!response.ok) throw new Error('Proxy HTTP ' + response.status);
                 var json = await response.json();
@@ -2662,8 +2663,8 @@
                     </div>
                     <div style="margin-bottom:20px;">
                         <label style="display:block;margin-bottom:8px;font-weight:500;font-size:0.9rem;">מפתח API מ-Finnhub:</label>
-                        <input type="text" id="finnhubKeyInput" value="${existingKey}" placeholder="הדבק כאן... (מתחיל ב-c...)" 
-                            style="width:100%;padding:14px;border:2px solid var(--border-color,#2d3348);border-radius:10px;font-size:1rem;background:rgba(0,0,0,0.3);color:var(--text-primary,#e8eaf6);direction:ltr;text-align:left;font-family:monospace;" dir="ltr">
+                        <input type="text" id="finnhubKeyInput" value="${existingKey}" placeholder="הדבק כאן... (מתחיל ב-c...)"
+                            style="width:100%;box-sizing:border-box;padding:14px;border:2px solid var(--border-color,#2d3348);border-radius:10px;font-size:1rem;background:rgba(0,0,0,0.3);color:var(--text-primary,#e8eaf6);direction:ltr;text-align:left;font-family:monospace;" dir="ltr">
                         <div id="finnhubKeyError" style="color:var(--accent-red,#ef4444);font-size:0.85rem;margin-top:8px;display:none;"></div>
                         <div id="finnhubKeySuccess" style="color:var(--accent-green,#10b981);font-size:0.85rem;margin-top:8px;display:none;"></div>
                     </div>
@@ -3937,6 +3938,12 @@
                 ethRate = 3500;
                 spyPrice = 0;
             }
+
+            // Show rate indicator immediately based on stored date (don't wait for setTimeout)
+            try {
+                const storedRateDate = localStorage.getItem('exchange-rate-date');
+                updateRateIndicator(storedRateDate ? (new Date() - new Date(storedRateDate)) / 3600000 : 999);
+            } catch(e) { updateRateIndicator(999); }
             
             try {
                 const dateData = localStorage.getItem('exchange-rate-date');
@@ -3958,17 +3965,19 @@
             // Check and update rate if needed (after UI loads)
             setTimeout(async () => {
                 checkAndUpdateRate();
-                
+
                 // SPY: always try to fetch (we have default key)
                 const hasSpyAssets = assets.some(a => a.isSpyPension);
-                console.log('[SPY] Init - hasSpyAssets:', hasSpyAssets, 'total assets:', assets.length);
                 if (hasSpyAssets) {
-                    console.log('[SPY] Init - calling fetchSpyPrice...');
                     const success = await fetchSpyPrice();
-                    console.log('[SPY] Init - fetchSpyPrice result:', success, 'spyPrice:', spyPrice);
                     if (!success) retrySpyFetch();
-                } else {
-                    console.log('[SPY] Init - no SPY assets, skipping fetch');
+                }
+
+                // Fund NAVs: auto-update on every startup
+                const hasFundAssets = assets.some(a => a.fundNumber);
+                if (hasFundAssets) {
+                    await updateFundAssets();
+                    updateUI();
                 }
             }, 1000);
         }
