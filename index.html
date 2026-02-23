@@ -1523,8 +1523,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="header-top">
-                <h1><img src="./logo.svg" alt="logo" style="width:36px;height:36px;vertical-align:middle;margin-left:8px;border-radius:8px;"> פיננסייר - הסוכן הפיננסי שלך</h1>
+            <div class="header-top" style="display:flex;direction:ltr;align-items:center;justify-content:flex-start;gap:12px;">
+                <div class="search-wrapper" id="searchWrapper" style="flex:1;max-width:160px;">
+                    <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש..." oninput="filterAssets(this.value)" style="padding:8px 12px;font-size:0.82rem;height:36px;text-align:right;direction:rtl;">
+                </div>
             </div>
             <div class="last-update">
                 עדכון אחרון: <span id="lastUpdate">--</span>
@@ -1581,10 +1583,6 @@
                 <button onclick="sortAssets('return', event)" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">תשואה ↓</button>
                 <button onclick="sortAssets('name', event)" class="sort-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit;">שם</button>
             </div>
-        </div>
-        <!-- Search bar -->
-        <div class="search-wrapper" id="searchWrapper" style="display:none;">
-            <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש נכסים..." oninput="filterAssets(this.value)">
         </div>
         <div class="assets-grid" id="assetsGrid">
             <!-- Assets will be dynamically added here -->
@@ -3665,7 +3663,7 @@
 
             // Show search bar if 4+ assets
             var sw = document.getElementById('searchWrapper');
-            if (sw) sw.style.display = assets.length >= 4 ? 'block' : 'none';
+            if (sw) sw.style.display = 'flex';
         }
 
         // ============ Chart Range Selector ============
