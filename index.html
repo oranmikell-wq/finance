@@ -580,7 +580,7 @@
                 border-radius: 20px 20px 0 0;
                 padding: 16px;
                 padding-top: calc(20px + env(safe-area-inset-top, 0px));
-                padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
             }
             .modal {
                 align-items: flex-end !important;
@@ -2056,9 +2056,9 @@
 
     <div class="modal" id="assetModal">
         <div class="modal-content">
-            <div class="modal-header" style="text-align:center;position:relative;padding-top:8px;">
-                <button class="close-button" onclick="closeModal()" style="position:absolute;left:0;top:0;">×</button>
-                <div id="modalIcon" style="font-size:2.5rem;margin-bottom:8px;margin-top:36px;">💰</div>
+            <div class="modal-header" style="position:relative;text-align:center;margin-bottom:20px;">
+                <button class="close-button" onclick="closeModal()" style="position:absolute;left:0;top:50%;transform:translateY(-50%);">×</button>
+                <div id="modalIcon" style="font-size:2rem;margin-bottom:4px;">💰</div>
                 <h2 class="modal-title" id="modalTitle" style="font-size:1.3rem;">הוסף נכס חדש</h2>
                 <p id="modalSubtitle" style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;">בחר סוג נכס להתחלה</p>
             </div>
