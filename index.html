@@ -6798,63 +6798,6 @@
             gemelLastResults = data;
         }
 
-            document.getElementById('gemelFundNameDisplay').textContent =
-                first.fundName + ' — קופה ' + kupahNum;
-            document.getElementById('gemelCompanyDisplay').textContent =
-                first.company + (fromCache ? ' · ⚠️ מטמון' : '');
-
-            function setReturn(elId, val) {
-                var el = document.getElementById(elId);
-                if (!el) return;
-                if (val != null) {
-                    el.textContent = (val >= 0 ? '+' : '') + val.toFixed(2) + '%';
-                    el.style.color = val >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                } else {
-                    el.textContent = '—'; el.style.color = 'var(--text-secondary)';
-                }
-            }
-
-            setReturn('gemelYearlyReturn', first.yearlyReturn);
-            setReturn('gemel3YearReturn',  first.threeYearReturn);
-
-            var feeEl = document.getElementById('gemelFeeDisplay');
-            if (feeEl) {
-                if (first.fee != null && first.fee > 0) {
-                    feeEl.textContent = first.fee.toFixed(3) + '%';
-                    feeEl.style.color = first.fee < 0.5 ? 'var(--accent-green)' : 'var(--accent-gold)';
-                } else {
-                    feeEl.textContent = '—'; feeEl.style.color = 'var(--text-secondary)';
-                }
-            }
-
-            if (first.period) {
-                var p = String(first.period);
-                if (/^\d{6}$/.test(p)) p = p.slice(4) + '/' + p.slice(0, 4);
-                var dateEl = document.getElementById('gemelDataDate');
-                if (dateEl) dateEl.textContent = 'נתונים לפי: ' + p;
-            }
-
-            // Track selector if multiple distinct tracks returned
-            var hasTracks = data.length > 1 && data.some(function(d) { return d.trackName; });
-            var trackSel = document.getElementById('gemelTrackSelector');
-            if (hasTracks && trackSel) {
-                var sel = document.getElementById('gemelTrackSelect');
-                sel.innerHTML = '';
-                data.forEach(function(d, idx) {
-                    var opt = document.createElement('option');
-                    opt.value = idx;
-                    opt.textContent = d.trackName || d.fundName || ('מסלול ' + (idx + 1));
-                    sel.appendChild(opt);
-                });
-                trackSel.style.display = 'block';
-            } else if (trackSel) {
-                trackSel.style.display = 'none';
-            }
-
-            document.getElementById('gemelSearchResult').style.display = 'block';
-            gemelLastResults = data;
-        }
-
         function applyGemelTrackSelection() {
             var idx = parseInt(document.getElementById('gemelTrackSelect').value);
             var sel = gemelLastResults[idx];
