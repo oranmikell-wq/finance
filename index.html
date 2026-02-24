@@ -2321,6 +2321,92 @@
                         </div>
                     </div>
 
+                    <!-- ===== גמל להשקעה / קרן השתלמות / קופת גמל — גמל-נט ===== -->
+                    <div id="gemelTrackingFields" style="display:none;">
+                        <div style="padding:14px;background:linear-gradient(135deg,rgba(244,196,48,0.08),rgba(0,217,255,0.06));border:1px solid rgba(244,196,48,0.18);border-radius:12px;margin-bottom:14px;">
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--accent-gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                                🏦 מעקב גמל / השתלמות — גמל-נט
+                            </div>
+                            <!-- סוג קופה -->
+                            <div style="display:flex;gap:7px;margin-bottom:12px;">
+                                <button type="button" id="gemelTypeBtnGemel" onclick="selectGemelFundType('gemel')"
+                                    style="flex:1;padding:7px 4px;font-size:0.71rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(244,196,48,0.55);background:rgba(244,196,48,0.15);color:var(--accent-gold);cursor:pointer;transition:all 0.2s;font-family:inherit;">
+                                    💰 גמל להשקעה
+                                </button>
+                                <button type="button" id="gemelTypeBtnHashtalamut" onclick="selectGemelFundType('hashtalamut')"
+                                    style="flex:1;padding:7px 4px;font-size:0.71rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;">
+                                    📚 קרן השתלמות
+                                </button>
+                                <button type="button" id="gemelTypeBtnKupat" onclick="selectGemelFundType('kupat')"
+                                    style="flex:1;padding:7px 4px;font-size:0.71rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;">
+                                    🏛️ גמל קלאסי
+                                </button>
+                            </div>
+                            <input type="hidden" id="gemelFundType" value="gemel">
+                            <!-- מספר קופה -->
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label>מספר קופה באוצר</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="text" inputmode="numeric" id="gemelKupahNumber"
+                                        placeholder="לדוגמה: 1162 / 1017 / 5009"
+                                        maxlength="6" style="flex:1;"
+                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                    <button type="button" id="gemelSearchBtn" onclick="fetchAndShowGemelData()"
+                                        style="padding:8px 14px;background:linear-gradient(135deg,var(--accent-gold),#b8860b);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap;min-width:78px;">
+                                        🔍 חפש
+                                    </button>
+                                </div>
+                                <div style="font-size:0.69rem;color:var(--text-secondary);margin-top:3px;">
+                                    מספר 3–5 ספרות · מצא באתר <strong>גמל-נט</strong> של רשות שוק ההון
+                                </div>
+                            </div>
+                            <!-- טעינה -->
+                            <div id="gemelLoadingIndicator" style="display:none;text-align:center;padding:8px;color:var(--text-secondary);font-size:0.8rem;">
+                                ⏳ מחפש ב-data.gov.il...
+                            </div>
+                            <!-- שגיאה -->
+                            <div id="gemelErrorMsg" style="display:none;padding:8px 12px;background:rgba(255,50,50,0.1);border:1px solid rgba(255,50,50,0.2);border-radius:8px;color:#ff7070;font-size:0.78rem;margin-bottom:8px;"></div>
+                            <!-- תוצאת חיפוש -->
+                            <div id="gemelSearchResult" style="display:none;">
+                                <div style="padding:12px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.15);border-radius:10px;margin-bottom:10px;">
+                                    <div style="font-size:0.9rem;font-weight:700;color:var(--accent-gold);margin-bottom:2px;" id="gemelFundNameDisplay">—</div>
+                                    <div style="font-size:0.73rem;color:var(--text-secondary);margin-bottom:10px;" id="gemelCompanyDisplay">—</div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;">
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">שנה אחרונה</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="gemelYearlyReturn">—</div>
+                                        </div>
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">3 שנים</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="gemel3YearReturn">—</div>
+                                        </div>
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">דמי ניהול</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="gemelFeeDisplay">—</div>
+                                        </div>
+                                    </div>
+                                    <!-- בחירת מסלול -->
+                                    <div id="gemelTrackSelector" style="display:none;margin-bottom:8px;">
+                                        <label style="font-size:0.73rem;color:var(--text-secondary);margin-bottom:4px;display:block;">בחר מסלול:</label>
+                                        <select id="gemelTrackSelect" onchange="applyGemelTrackSelection()"
+                                            style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--text-primary);font-size:0.78rem;font-family:inherit;"></select>
+                                    </div>
+                                    <div style="font-size:0.66rem;color:var(--text-secondary);" id="gemelDataDate"></div>
+                                </div>
+                                <!-- יתרת צבירה -->
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label>💰 יתרת צבירה (₪)</label>
+                                    <input type="text" inputmode="decimal" id="gemelAccumulation"
+                                        placeholder="הכנס את יתרת הצבירה מדוח הקופה"
+                                        oninput="formatNumberInput(this); document.getElementById('assetValue').value=this.value;">
+                                    <div style="font-size:0.69rem;color:var(--text-secondary);margin-top:2px;">
+                                        הסכום הנוכחי בקופה (מדוח הקופה שלך)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="currencyField" style="margin-bottom:14px;">
                         <div class="form-group" style="margin:0;">
                             <label>מטבע</label>
@@ -3223,6 +3309,7 @@
             const currencyField = document.getElementById('currencyField');
             const valueField = document.getElementById('valueField');
             const fundFields = document.getElementById('fundTrackingFields');
+            const gemelFields = document.getElementById('gemelTrackingFields');
             
             // Hide all special fields first
             realEstateFields.style.display = 'none';
@@ -3231,6 +3318,7 @@
             document.getElementById('isSpyPension').checked = false;
             var spyMonthlyEl = document.getElementById('spyMonthlyILS'); if (spyMonthlyEl) spyMonthlyEl.value = '';
             fundFields.style.display = 'none';
+            if (gemelFields) gemelFields.style.display = 'none';
             
             if (assetType === 'real_estate') {
                 realEstateFields.style.display = 'block';
@@ -3247,6 +3335,18 @@
                 currencyField.style.display = 'none';
                 valueField.style.display = 'none';
                 document.getElementById('assetCurrency').value = 'ILS';
+            } else if (assetType === 'gemel') {
+                if (gemelFields) gemelFields.style.display = 'block';
+                currencyField.style.display = 'none';
+                valueField.style.display = 'none';
+                document.getElementById('assetCurrency').value = 'ILS';
+                selectGemelFundType('gemel');
+            } else if (assetType === 'fund') {
+                if (gemelFields) gemelFields.style.display = 'block';
+                currencyField.style.display = 'none';
+                valueField.style.display = 'none';
+                document.getElementById('assetCurrency').value = 'ILS';
+                selectGemelFundType('hashtalamut');
             } else {
                 currencyField.style.display = 'block';
                 valueField.style.display = 'block';
@@ -4318,6 +4418,13 @@
                     await updateFundAssets();
                     updateUI();
                 }
+
+                // Gemel / Hashtalamut: auto-refresh on startup
+                const hasGemelAssets = assets.some(function(a) { return a.gemelKupahNum; });
+                if (hasGemelAssets) {
+                    await updateGemelAssets();
+                    updateUI();
+                }
             }, 200);
         }
 
@@ -4531,6 +4638,33 @@
                         // Also try to fetch fresh data
                         fetchAndShowFundNAV();
                     }
+
+                    // Handle gemel / hashtalamut in edit mode
+                    if ((asset.type === 'gemel' || asset.type === 'fund') && asset.gemelKupahNum) {
+                        var gemelTF = document.getElementById('gemelTrackingFields');
+                        if (gemelTF) gemelTF.style.display = 'block';
+                        document.getElementById('gemelKupahNumber').value = asset.gemelKupahNum;
+                        var ft = asset.gemelFundType || (asset.type === 'fund' ? 'hashtalamut' : 'gemel');
+                        document.getElementById('gemelFundType').value = ft;
+                        selectGemelFundType(ft);
+                        if (asset.gemelFundName) {
+                            var cachedEditData = [{
+                                fundName:        asset.gemelFundName,
+                                company:         asset.gemelCompany || '—',
+                                yearlyReturn:    asset.gemelYearlyReturn != null ? asset.gemelYearlyReturn : null,
+                                threeYearReturn: null,
+                                fee:             asset.gemelFee != null ? asset.gemelFee : null,
+                                period:          null,
+                                trackName:       null,
+                            }];
+                            gemelLastResults = cachedEditData;
+                            gemelDataCache[asset.gemelKupahNum] = cachedEditData;
+                            displayGemelResults(cachedEditData, asset.gemelKupahNum, true);
+                        }
+                        if (asset.value > 0) {
+                            document.getElementById('gemelAccumulation').value = formatNum(asset.value);
+                        }
+                    }
                 }
             } else {
                 title.textContent = 'הוסף נכס חדש';
@@ -4577,6 +4711,17 @@
             var fundBtn = document.getElementById('fundSearchBtn'); if (fundBtn) { fundBtn.textContent = '🔍 חפש'; fundBtn.disabled = false; }
             var costBasisInput = document.getElementById('assetCostBasis'); if (costBasisInput) costBasisInput.value = '';
             var basisDisplay = document.getElementById('basisReturnDisplay'); if (basisDisplay) basisDisplay.style.display = 'none';
+            // Reset gemel tracking fields
+            var gemelTF   = document.getElementById('gemelTrackingFields');    if (gemelTF)   gemelTF.style.display   = 'none';
+            var gemelRes  = document.getElementById('gemelSearchResult');       if (gemelRes)  gemelRes.style.display  = 'none';
+            var gemelErrM = document.getElementById('gemelErrorMsg');           if (gemelErrM) gemelErrM.style.display = 'none';
+            var gemelLd   = document.getElementById('gemelLoadingIndicator');   if (gemelLd)   gemelLd.style.display   = 'none';
+            var gemelKIn  = document.getElementById('gemelKupahNumber');        if (gemelKIn)  gemelKIn.value = '';
+            var gemelAIn  = document.getElementById('gemelAccumulation');       if (gemelAIn)  gemelAIn.value = '';
+            var gemelBt   = document.getElementById('gemelSearchBtn');
+            if (gemelBt) { gemelBt.textContent = '🔍 חפש'; gemelBt.disabled = false; }
+            if (typeof gemelLastResults !== 'undefined') gemelLastResults = [];
+            _gemelFieldsLogged = false;
             editingAssetId = null;
         }
 
@@ -4586,7 +4731,10 @@
             const assetType = document.getElementById('assetType').value;
             const isSpy = assetType === 'pension' && document.getElementById('isSpyPension').checked;
             const isRealEstate = assetType === 'real_estate';
-            const isFundTracked = assetType === 'savings' && document.getElementById('fundNumber').value.trim().length >= 6;
+            const isFundTracked = (assetType === 'savings' && document.getElementById('fundNumber').value.trim().length >= 6) ||
+                ((assetType === 'gemel' || assetType === 'fund') &&
+                  (document.getElementById('gemelKupahNumber') || {value:''}).value.trim().length >= 3 &&
+                  document.getElementById('gemelSearchResult').style.display !== 'none');
 
             // Validate: value is required unless it's SPY pension, real estate, or fund-tracked savings
             if (!isSpy && !isRealEstate && !isFundTracked) {
@@ -4656,6 +4804,27 @@
                         asset.fundYearlyPct = fData.yearlyPct;
                         asset.fundName = fData.name;
                         asset.value = asset.fundUnits * fData.nav;
+                    }
+                    asset.currency = 'ILS';
+                }
+            }
+
+            // Add gemel / hashtalamut specific fields
+            if (assetType === 'gemel' || assetType === 'fund') {
+                var kupahNum = (document.getElementById('gemelKupahNumber') || {value:''}).value.trim();
+                if (kupahNum.length >= 3) {
+                    asset.gemelKupahNum  = kupahNum;
+                    asset.gemelFundType  = document.getElementById('gemelFundType').value;
+                    var accum = parseNum(document.getElementById('gemelAccumulation'));
+                    if (accum > 0) asset.value = accum;
+                    var gd = gemelDataCache[kupahNum];
+                    if (gd && gd.length > 0) {
+                        asset.gemelFundName     = gd[0].fundName;
+                        asset.gemelCompany      = gd[0].company;
+                        asset.gemelYearlyReturn = gd[0].yearlyReturn;
+                        asset.gemelFee          = gd[0].fee;
+                        if (gd[0].yearlyReturn != null) asset.return = gd[0].yearlyReturn;
+                        if (gd[0].fee != null) asset.fee = gd[0].fee;
                     }
                     asset.currency = 'ILS';
                 }
@@ -6157,6 +6326,344 @@
                 }
             }, 5000);
         });
+
+        /* ================================================================
+           גמל להשקעה / קרן השתלמות / קופת גמל — API גמל-נט (data.gov.il)
+           ================================================================ */
+
+        var gemelDataCache   = {};
+        var gemelLastResults = [];
+        var _gemelFieldsLogged = false;
+
+        // Resource IDs from data.gov.il (gemelnet — monthly reporting)
+        var GEMELNET_RESOURCE_IDS = [
+            'a30dcbea-a1d2-482c-ae29-8f781f5025fb',   // 2024
+            '85381d5c-77f7-4071-8f15-33d494722f8c',   // 2018 תיאורי
+        ];
+
+        // sug parameter for gemelnet XML fallback
+        var GEMEL_TYPE_SUG = { gemel: '4', hashtalamut: '3', kupat: '1' };
+
+        function selectGemelFundType(type) {
+            document.getElementById('gemelFundType').value = type;
+            var types = {
+                'Gemel':       'gemel',
+                'Hashtalamut': 'hashtalamut',
+                'Kupat':       'kupat',
+            };
+            Object.keys(types).forEach(function(suffix) {
+                var btn = document.getElementById('gemelTypeBtn' + suffix);
+                if (!btn) return;
+                var isActive = types[suffix] === type;
+                btn.style.borderColor  = isActive ? 'rgba(244,196,48,0.6)' : 'rgba(255,255,255,0.12)';
+                btn.style.background   = isActive ? 'rgba(244,196,48,0.18)' : 'rgba(255,255,255,0.04)';
+                btn.style.color        = isActive ? 'var(--accent-gold)' : 'var(--text-secondary)';
+            });
+            // Clear stale results when type changes
+            var sr = document.getElementById('gemelSearchResult'); if (sr) sr.style.display = 'none';
+            var em = document.getElementById('gemelErrorMsg');     if (em) em.style.display = 'none';
+        }
+
+        function showGemelError(msg) {
+            var el = document.getElementById('gemelErrorMsg');
+            if (el) { el.textContent = msg; el.style.display = 'block'; }
+        }
+
+        async function fetchAndShowGemelData() {
+            var kupahNum = (document.getElementById('gemelKupahNumber').value || '').trim();
+            if (!kupahNum || kupahNum.length < 3) {
+                showGemelError('❌ נא להזין מספר קופה (3–5 ספרות)');
+                return;
+            }
+
+            var btn = document.getElementById('gemelSearchBtn');
+            btn.textContent = '⏳'; btn.disabled = true;
+            document.getElementById('gemelLoadingIndicator').style.display = 'block';
+            document.getElementById('gemelSearchResult').style.display = 'none';
+            var em = document.getElementById('gemelErrorMsg'); if (em) em.style.display = 'none';
+
+            try {
+                // 1. Try localStorage cache (TTL 48h)
+                var cached = _loadGemelCache(kupahNum);
+                if (cached) {
+                    gemelLastResults = cached;
+                    gemelDataCache[kupahNum] = cached;
+                    displayGemelResults(cached, kupahNum, true);
+                    // Refresh in background
+                    fetchGemelFromGovAPI(kupahNum).then(function(fresh) {
+                        if (fresh && fresh.length > 0) {
+                            gemelDataCache[kupahNum] = fresh;
+                            _saveGemelCache(kupahNum, fresh);
+                        }
+                    }).catch(function(){});
+                    return;
+                }
+
+                // 2. data.gov.il CKAN API (no CORS issues)
+                var data = await fetchGemelFromGovAPI(kupahNum);
+
+                // 3. Fallback: gemelnet XML via CORS proxy
+                if (!data || data.length === 0) {
+                    data = await fetchGemelFromGemelnetXML(kupahNum);
+                }
+
+                if (data && data.length > 0) {
+                    gemelLastResults = data;
+                    gemelDataCache[kupahNum] = data;
+                    _saveGemelCache(kupahNum, data);
+                    displayGemelResults(data, kupahNum, false);
+
+                    // Auto-fill form fields
+                    var nameIn = document.getElementById('assetName');
+                    var provIn = document.getElementById('assetProvider');
+                    if (!nameIn.value && data[0].fundName) nameIn.value = data[0].fundName;
+                    if (!provIn.value && data[0].company)  provIn.value = data[0].company;
+                    if (data[0].yearlyReturn != null) document.getElementById('assetReturn').value = formatNum(data[0].yearlyReturn);
+                    if (data[0].fee != null)          document.getElementById('assetFee').value    = formatNum(data[0].fee);
+                } else {
+                    showGemelError('❌ לא נמצאו נתונים לקופה ' + kupahNum + '.\nודא שהמספר נכון (3–5 ספרות) ושסוג הקופה תואם.');
+                }
+            } catch (err) {
+                console.error('[Gemel]', err);
+                showGemelError('❌ שגיאה: ' + err.message);
+            } finally {
+                document.getElementById('gemelLoadingIndicator').style.display = 'none';
+                btn.textContent = '🔍 חפש'; btn.disabled = false;
+            }
+        }
+
+        async function fetchGemelFromGovAPI(kupahNum) {
+            for (var ri = 0; ri < GEMELNET_RESOURCE_IDS.length; ri++) {
+                var resourceId = GEMELNET_RESOURCE_IDS[ri];
+                try {
+                    var url = 'https://data.gov.il/api/3/action/datastore_search' +
+                              '?resource_id=' + resourceId +
+                              '&q=' + encodeURIComponent(kupahNum) +
+                              '&limit=50';
+                    var resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+                    if (!resp.ok) continue;
+                    var json = await resp.json();
+                    if (!json.success || !json.result || !json.result.records || json.result.records.length === 0) continue;
+
+                    var records = json.result.records;
+                    if (!_gemelFieldsLogged) {
+                        console.log('[Gemel] data.gov.il fields:', Object.keys(records[0]));
+                        console.log('[Gemel] first record sample:', JSON.stringify(records[0]).slice(0, 500));
+                        _gemelFieldsLogged = true;
+                    }
+
+                    // Filter to records where kupahNum actually matches a field value
+                    var matched = records.filter(function(r) {
+                        return Object.values(r).some(function(v) { return String(v).trim() === kupahNum; });
+                    });
+                    if (matched.length === 0) matched = records;
+
+                    var parsed = _parseGemelRecords(matched);
+                    if (parsed && parsed.length > 0) return parsed;
+                } catch (e) {
+                    console.warn('[Gemel] CKAN resource ' + ri + ' failed:', e.message);
+                }
+            }
+            return null;
+        }
+
+        function _parseGemelRecords(records) {
+            if (!records || records.length === 0) return null;
+            return records.map(function(r) {
+                var keys = Object.keys(r);
+
+                function findField() {
+                    for (var p = 0; p < arguments.length; p++) {
+                        var pat = arguments[p].toUpperCase();
+                        for (var k = 0; k < keys.length; k++) {
+                            if (keys[k].toUpperCase().indexOf(pat) !== -1) {
+                                var val = r[keys[k]];
+                                if (val !== null && val !== undefined && String(val).trim() !== '') return String(val).trim();
+                            }
+                        }
+                    }
+                    return null;
+                }
+
+                var fundName   = findField('SHEM_KUPAH','SHEM_MASLOL','KUPAH_NAME','FUND_NAME','SHEM');
+                var trackName  = findField('SHEM_MASLOL','MASLUL','TRACK');
+                var company    = findField('SHEM_CHV','COMPANY','MENAHELET','MISHPAHA');
+                var yearRet    = parseFloat(findField('TSUA_SHNATI','TSUA12','TSUA_12M','NOMINAL_SHNATI','BRUTO_SHNATI') || '');
+                var ret3Year   = parseFloat(findField('TSUA_3','TSUA3','SHLOSH','SHALOSH') || '');
+                var fee        = parseFloat(findField('DMEI_NIHUL','DM_NIHUL','FEE','NITZEVET') || '');
+                var period     = findField('TKUFA','HODESH','CHODESH','SHANA','DATE','PERIOD');
+
+                return {
+                    raw:             r,
+                    fundName:        fundName  || (keys.length ? String(r[keys[0]]) : '—'),
+                    trackName:       (trackName && trackName !== fundName) ? trackName : null,
+                    company:         company   || '—',
+                    yearlyReturn:    isNaN(yearRet)  ? null : yearRet,
+                    threeYearReturn: isNaN(ret3Year) ? null : ret3Year,
+                    fee:             isNaN(fee)      ? null : fee,
+                    period:          period          || null,
+                };
+            });
+        }
+
+        function displayGemelResults(data, kupahNum, fromCache) {
+            var first = data[0];
+
+            document.getElementById('gemelFundNameDisplay').textContent =
+                first.fundName + ' — קופה ' + kupahNum;
+            document.getElementById('gemelCompanyDisplay').textContent =
+                first.company + (fromCache ? ' · ⚠️ מטמון' : '');
+
+            function setReturn(elId, val) {
+                var el = document.getElementById(elId);
+                if (!el) return;
+                if (val != null) {
+                    el.textContent = (val >= 0 ? '+' : '') + val.toFixed(2) + '%';
+                    el.style.color = val >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                } else {
+                    el.textContent = '—'; el.style.color = 'var(--text-secondary)';
+                }
+            }
+
+            setReturn('gemelYearlyReturn', first.yearlyReturn);
+            setReturn('gemel3YearReturn',  first.threeYearReturn);
+
+            var feeEl = document.getElementById('gemelFeeDisplay');
+            if (feeEl) {
+                if (first.fee != null && first.fee > 0) {
+                    feeEl.textContent = first.fee.toFixed(3) + '%';
+                    feeEl.style.color = first.fee < 0.5 ? 'var(--accent-green)' : 'var(--accent-gold)';
+                } else {
+                    feeEl.textContent = '—'; feeEl.style.color = 'var(--text-secondary)';
+                }
+            }
+
+            if (first.period) {
+                var p = String(first.period);
+                if (/^\d{6}$/.test(p)) p = p.slice(4) + '/' + p.slice(0, 4);
+                var dateEl = document.getElementById('gemelDataDate');
+                if (dateEl) dateEl.textContent = 'נתונים לפי: ' + p;
+            }
+
+            // Track selector if multiple distinct tracks returned
+            var hasTracks = data.length > 1 && data.some(function(d) { return d.trackName; });
+            var trackSel = document.getElementById('gemelTrackSelector');
+            if (hasTracks && trackSel) {
+                var sel = document.getElementById('gemelTrackSelect');
+                sel.innerHTML = '';
+                data.forEach(function(d, idx) {
+                    var opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.textContent = d.trackName || d.fundName || ('מסלול ' + (idx + 1));
+                    sel.appendChild(opt);
+                });
+                trackSel.style.display = 'block';
+            } else if (trackSel) {
+                trackSel.style.display = 'none';
+            }
+
+            document.getElementById('gemelSearchResult').style.display = 'block';
+            gemelLastResults = data;
+        }
+
+        function applyGemelTrackSelection() {
+            var idx = parseInt(document.getElementById('gemelTrackSelect').value);
+            var sel = gemelLastResults[idx];
+            if (!sel) return;
+            function setR(id, val) {
+                var el = document.getElementById(id); if (!el) return;
+                if (val != null) {
+                    el.textContent = (val >= 0 ? '+' : '') + val.toFixed(2) + '%';
+                    el.style.color = val >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                }
+            }
+            setR('gemelYearlyReturn', sel.yearlyReturn);
+            setR('gemel3YearReturn',  sel.threeYearReturn);
+            if (sel.yearlyReturn != null) document.getElementById('assetReturn').value = formatNum(sel.yearlyReturn);
+        }
+
+        async function fetchGemelFromGemelnetXML(kupahNum) {
+            var sug = GEMEL_TYPE_SUG[document.getElementById('gemelFundType').value] || '4';
+            var prevDate = new Date(); prevDate.setMonth(prevDate.getMonth() - 1);
+            var ym = String(prevDate.getFullYear()) + String(prevDate.getMonth() + 1).padStart(2, '0');
+            var targetUrl = 'http://gemelnet.cma.gov.il/tsuot/ui/tsuotHodXML.aspx' +
+                '?miTkfDivuach=' + ym + '&adTkfDivuach=' + ym +
+                '&kupot=' + kupahNum + '&Dochot=1&sug=' + sug;
+            var proxies = [
+                'https://corsproxy.io/?' + encodeURIComponent(targetUrl),
+                'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl),
+            ];
+            var xml = null;
+            for (var pi = 0; pi < proxies.length; pi++) {
+                try {
+                    var r = await fetch(proxies[pi], { signal: AbortSignal.timeout(14000) });
+                    if (r.ok) { var t = await r.text(); if (t && t.length > 200 && t.includes('<')) { xml = t; break; } }
+                } catch(e) { console.warn('[Gemel] XML proxy ' + pi + ' failed:', e.message); }
+            }
+            if (!xml) return null;
+            try {
+                var doc = new DOMParser().parseFromString(xml, 'text/xml');
+                var rows = Array.from(doc.querySelectorAll('Row, row, TSUAH, Record'));
+                if (rows.length === 0) rows = Array.from(doc.documentElement.children);
+                var results = [];
+                rows.forEach(function(row) {
+                    var g = function(n) {
+                        var el = row.querySelector(n);
+                        return el ? el.textContent.trim() : (row.getAttribute(n) || null);
+                    };
+                    var fn = g('SHEM_KUPAH') || g('ShemKupah');
+                    if (!fn) return;
+                    var yr  = parseFloat(g('TSUA_SHNATI')       || g('TsuaShnati')  || '');
+                    var fee = parseFloat(g('DMEI_NIHUL_NITZEVET') || g('DmeiNihul') || '');
+                    results.push({
+                        fundName: fn,
+                        company:  g('SHEM_CHV_MENAHELET') || '—',
+                        yearlyReturn:    isNaN(yr)  ? null : yr,
+                        threeYearReturn: null,
+                        fee:             isNaN(fee) ? null : fee,
+                        period:          ym,
+                        trackName:       g('SHEM_MASLOL') || null,
+                    });
+                });
+                return results.length ? results : null;
+            } catch(e) { console.error('[Gemel] XML parse:', e); return null; }
+        }
+
+        function _saveGemelCache(kupahNum, data) {
+            try { localStorage.setItem('gemel-kup-' + kupahNum, JSON.stringify({ d: data, ts: Date.now() })); } catch(e){}
+        }
+        function _loadGemelCache(kupahNum) {
+            try {
+                var raw = localStorage.getItem('gemel-kup-' + kupahNum);
+                if (!raw) return null;
+                var obj = JSON.parse(raw);
+                if ((Date.now() - obj.ts) > 48 * 3600000) return null;  // 48h TTL
+                return obj.d;
+            } catch(e) { return null; }
+        }
+
+        async function updateGemelAssets() {
+            var gemelAssets = assets.filter(function(a) { return a.gemelKupahNum; });
+            if (gemelAssets.length === 0) return;
+            var seen = {};
+            for (var i = 0; i < gemelAssets.length; i++) {
+                var a = gemelAssets[i];
+                if (seen[a.gemelKupahNum]) continue;
+                seen[a.gemelKupahNum] = true;
+                try {
+                    var data = await fetchGemelFromGovAPI(a.gemelKupahNum);
+                    if (data && data.length > 0) {
+                        gemelDataCache[a.gemelKupahNum] = data;
+                        _saveGemelCache(a.gemelKupahNum, data);
+                        assets.filter(function(x) { return x.gemelKupahNum === a.gemelKupahNum; }).forEach(function(x) {
+                            if (data[0].yearlyReturn != null) { x.return = data[0].yearlyReturn; x.gemelYearlyReturn = data[0].yearlyReturn; }
+                            if (data[0].fee != null)          { x.fee    = data[0].fee;          x.gemelFee          = data[0].fee; }
+                        });
+                    }
+                } catch(e) { console.warn('[Gemel] Auto-update failed for ' + a.gemelKupahNum, e); }
+            }
+        }
+
     </script>
 </body>
 </html>
