@@ -2371,9 +2371,13 @@
                                 <div style="padding:12px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.15);border-radius:10px;margin-bottom:10px;">
                                     <div style="font-size:0.9rem;font-weight:700;color:var(--accent-gold);margin-bottom:2px;" id="gemelFundNameDisplay">—</div>
                                     <div style="font-size:0.73rem;color:var(--text-secondary);margin-bottom:10px;" id="gemelCompanyDisplay">—</div>
-                                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-bottom:10px;">
                                         <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
-                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;" data-gemel-yearly-label>שנה אחרונה</div>
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">תשואה חודשית</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="gemelMonthlyReturn">—</div>
+                                        </div>
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">תשואה שנתית</div>
                                             <div style="font-size:0.95rem;font-weight:700;" id="gemelYearlyReturn">—</div>
                                         </div>
                                         <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
@@ -6619,20 +6623,8 @@
                 if (period && /^\d{4}-\d{2}-\d{2}T/.test(period)) period = period.slice(0, 10);
                 if (period && /^(200[0-9]|201[0-7])/.test(period)) period = null;
 
-                // ── All numeric fields for debug ──
-                var allNumericFields = {};
-                keys.forEach(function(k) {
-                    if (k === '_id' || k === 'rank') return;
-                    var v = r[k];
-                    if (v !== null && v !== undefined && String(v).trim() !== '') {
-                        var n = parseFloat(String(v).replace(',', '.'));
-                        if (!isNaN(n)) allNumericFields[k] = n;
-                    }
-                });
-
                 return {
                     raw:              r,
-                    allNumericFields: allNumericFields,
                     fundName:         fundName  || '—',
                     trackName:        trackName || null,
                     company:          company   || '—',
@@ -6648,41 +6640,10 @@
         function displayGemelResults(data, kupahNum, fromCache) {
             var first = data[0];
 
-            // Debug logging
-            if (first.raw) {
-                console.log('[Gemel] Raw fields for kupah', kupahNum, ':', first.raw);
-                console.log('[Gemel] Parsed result:', {
-                    fundName:       first.fundName,
-                    company:        first.company,
-                    yearlyReturn:   first.yearlyReturn,
-                    monthlyReturn:  first.monthlyReturn,
-                    threeYearReturn:first.threeYearReturn,
-                    fee:            first.fee,
-                    period:         first.period,
-                });
-                if (first.allNumericFields) {
-                    console.log('[Gemel] ALL NUMERIC FIELDS (send this to Claude if returns are missing):',
-                        JSON.stringify(first.allNumericFields));
-                }
-            }
-
             document.getElementById('gemelFundNameDisplay').textContent =
                 first.fundName + ' — קופה ' + kupahNum;
             document.getElementById('gemelCompanyDisplay').textContent =
                 first.company + (fromCache ? ' · ⚠️ מטמון' : '');
-
-            // Decide what to show for "שנה אחרונה":
-            // If we have yearlyReturn, show it. Otherwise show monthlyReturn as fallback.
-            var displayYearly = first.yearlyReturn;
-            var yearlyLabel   = 'שנה אחרונה';
-            if (displayYearly == null && first.monthlyReturn != null) {
-                displayYearly = first.monthlyReturn;
-                yearlyLabel   = 'תשואה חודשית';
-            }
-
-            // Update label text
-            var yearlyLabelEl = document.querySelector('[data-gemel-yearly-label]');
-            if (yearlyLabelEl) yearlyLabelEl.textContent = yearlyLabel;
 
             function setReturn(elId, val) {
                 var el = document.getElementById(elId);
@@ -6695,7 +6656,8 @@
                 }
             }
 
-            setReturn('gemelYearlyReturn', displayYearly);
+            setReturn('gemelMonthlyReturn', first.monthlyReturn);
+            setReturn('gemelYearlyReturn', first.yearlyReturn);
             setReturn('gemel3YearReturn',  first.threeYearReturn);
 
             var feeEl = document.getElementById('gemelFeeDisplay');
@@ -6712,33 +6674,7 @@
                 var p = String(first.period);
                 if (/^\d{6}$/.test(p)) p = p.slice(4) + '/' + p.slice(0, 4);
                 var dateEl = document.getElementById('gemelDataDate');
-                if (dateEl) {
-                    dateEl.textContent = 'נתונים לפי: ' + p;
-                    // Warn if no returns found
-                    if (displayYearly == null && first.fee != null) {
-                        dateEl.textContent += ' · (תשואות לא זמינות בדאטאסט זה — ראה console)';
-                    }
-                }
-            }
-
-            // Debug panel — shows all numeric fields found
-            var debugPanel = document.getElementById('gemelDebugPanel');
-            if (!debugPanel) {
-                debugPanel = document.createElement('div');
-                debugPanel.id = 'gemelDebugPanel';
-                debugPanel.style.cssText = 'margin-top:8px;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;';
-                var dateEl2 = document.getElementById('gemelDataDate');
-                if (dateEl2 && dateEl2.parentNode) dateEl2.parentNode.appendChild(debugPanel);
-            }
-            if (first.allNumericFields && Object.keys(first.allNumericFields).length > 0) {
-                var rows = Object.keys(first.allNumericFields).map(function(k) {
-                    return '<span style="color:var(--accent-cyan);font-weight:600;">' + k + '</span>=<span style="color:var(--accent-gold);">' + first.allNumericFields[k] + '</span>';
-                }).join('  ·  ');
-                debugPanel.innerHTML = '<div style="font-size:0.58rem;color:var(--text-secondary);margin-bottom:3px;">🔍 שדות מספריים שנמצאו:</div>' +
-                    '<div style="font-size:0.62rem;line-height:1.7;">' + rows + '</div>';
-                debugPanel.style.display = 'block';
-            } else {
-                debugPanel.style.display = 'none';
+                if (dateEl) dateEl.textContent = 'נתונים לפי: ' + p;
             }
 
             // Track selector
