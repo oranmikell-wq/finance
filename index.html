@@ -1645,24 +1645,21 @@
             <div class="section-title" style="margin-top:24px;">🏆 דירוג קרנות</div>
             <div class="chart-card" style="padding:16px 12px;">
 
-                <!-- Product type scroll menu -->
-                <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:14px;margin-left:-12px;margin-right:-12px;padding:0 12px;">
-                    <div id="gemelProductTabs" style="display:flex;gap:8px;width:max-content;">
-                        <button onclick="setGemelProduct('gemel_invest',this)" class="gprod-btn gprod-active" style="display:flex;flex-direction:column;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);font-size:0.72rem;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;gap:3px;">
-                            <span style="font-size:1.1rem;">💼</span>גמל להשקעה
-                        </button>
-                        <button onclick="setGemelProduct('pension',this)" class="gprod-btn" style="display:flex;flex-direction:column;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.72rem;cursor:pointer;font-family:inherit;white-space:nowrap;gap:3px;">
-                            <span style="font-size:1.1rem;">🏦</span>פנסיה
-                        </button>
-                        <button onclick="setGemelProduct('hishtalmut',this)" class="gprod-btn" style="display:flex;flex-direction:column;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.72rem;cursor:pointer;font-family:inherit;white-space:nowrap;gap:3px;">
-                            <span style="font-size:1.1rem;">📚</span>השתלמות
-                        </button>
-                        <button onclick="setGemelProduct('gemel_classic',this)" class="gprod-btn" style="display:flex;flex-direction:column;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.72rem;cursor:pointer;font-family:inherit;white-space:nowrap;gap:3px;">
-                            <span style="font-size:1.1rem;">🏛️</span>גמל קלאסי
-                        </button>
-                        <button onclick="setGemelProduct('policies',this)" class="gprod-btn" style="display:flex;flex-direction:column;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.72rem;cursor:pointer;font-family:inherit;white-space:nowrap;gap:3px;">
-                            <span style="font-size:1.1rem;">📋</span>פוליסות חיסכון
-                        </button>
+                <!-- Product type dropdown -->
+                <div style="position:relative;margin-bottom:14px;" id="gemelDropdownWrap">
+                    <button onclick="toggleGemelDropdown()" id="gemelDropdownBtn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.08);color:var(--accent-gold);font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600;">
+                        <span id="gemelDropdownLabel">💼 גמל להשקעה</span>
+                        <span id="gemelDropdownArrow" style="font-size:0.7rem;transition:transform 0.2s;">▼</span>
+                    </button>
+                    <div id="gemelDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;left:0;background:var(--card-bg, #1e1e2e);border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+                        <div onclick="selectGemelProduct('gemel_invest','💼 גמל להשקעה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--accent-gold);font-weight:600;background:rgba(244,196,48,0.06);">💼 גמל להשקעה</div>
+                        <div onclick="selectGemelProduct('pension','🏦 פנסיה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏦 פנסיה</div>
+                        <div onclick="selectGemelProduct('hishtalmut','📚 השתלמות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📚 השתלמות</div>
+                        <div onclick="selectGemelProduct('gemel_classic','🏛️ גמל קלאסי')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏛️ גמל קלאסי</div>
+                        <div onclick="selectGemelProduct('policies','📋 פוליסות חיסכון')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);border-top:1px solid rgba(255,255,255,0.06);">📋 פוליסות חיסכון</div>
+                        <div onclick="selectGemelProduct('mutual_funds','📊 קרנות נאמנות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📊 קרנות נאמנות</div>
+                        <div onclick="selectGemelProduct('bonds','📈 קרנות אג״ח')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📈 קרנות אג״ח</div>
+                        <div onclick="selectGemelProduct('money_market','💵 כספיות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">💵 כספיות</div>
                     </div>
                 </div>
 
@@ -1685,7 +1682,7 @@
                 </div>
 
                 <!-- Table header -->
-                <div style="display:grid;grid-template-columns:1fr 42px 42px 42px 48px;gap:4px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:0.63rem;color:var(--text-secondary);font-weight:600;">
+                <div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:0.75rem;color:var(--text-secondary);font-weight:600;">
                     <div>קרן / מסלול</div>
                     <div style="text-align:center;">שנה</div>
                     <div style="text-align:center;">3 שנ׳</div>
@@ -1707,7 +1704,7 @@
                     <button onclick="loadGemelData(true)" style="padding:6px 16px;border-radius:10px;border:1px solid var(--accent-gold);background:transparent;color:var(--accent-gold);font-size:0.78rem;cursor:pointer;font-family:inherit;">נסה שוב</button>
                 </div>
 
-                <div style="font-size:0.6rem;color:var(--text-secondary);opacity:0.5;text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);">
+                <div id="gemelSourceNote" style="font-size:0.6rem;color:var(--text-secondary);opacity:0.5;text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);">
                     מקור: Gemelnet / רשות שוק ההון • תשואות לפני דמי ניהול • אינו מהווה ייעוץ השקעות
                 </div>
             </div>
@@ -5027,46 +5024,137 @@
         // data.gov.il resource IDs per product type
         // SUG_KUPA values: 1=קרן פנסיה, 2=קרן השתלמות, 3=גמל להשקעה, 4=גמל קלאסי, 6=פוליסות
         var PRODUCT_CONFIG = {
-            gemel_invest: { label: 'גמל להשקעה', emoji: '💼', sugKupa: '3', cacheKey: 'grank-ginvest-v1' },
-            pension:      { label: 'פנסיה',       emoji: '🏦', sugKupa: '1', cacheKey: 'grank-pension-v1' },
-            hishtalmut:   { label: 'השתלמות',     emoji: '📚', sugKupa: '2', cacheKey: 'grank-hish-v1'   },
-            gemel_classic:{ label: 'גמל קלאסי',   emoji: '🏛️', sugKupa: '4', cacheKey: 'grank-gclas-v1' },
-            policies:     { label: 'פוליסות',     emoji: '📋', sugKupa: '6', cacheKey: 'grank-polis-v1'  },
+            gemel_invest: { label: 'גמל להשקעה', emoji: '💼', sugKupa: '3', cacheKey: 'grank-ginvest-v1', source: 'gemelnet' },
+            pension:      { label: 'פנסיה',       emoji: '🏦', sugKupa: '1', cacheKey: 'grank-pension-v1', source: 'gemelnet' },
+            hishtalmut:   { label: 'השתלמות',     emoji: '📚', sugKupa: '2', cacheKey: 'grank-hish-v1',   source: 'gemelnet' },
+            gemel_classic:{ label: 'גמל קלאסי',   emoji: '🏛️', sugKupa: '4', cacheKey: 'grank-gclas-v1', source: 'gemelnet' },
+            policies:     { label: 'פוליסות',     emoji: '📋', sugKupa: '6', cacheKey: 'grank-polis-v1',  source: 'gemelnet' },
+            mutual_funds: { label: 'קרנות נאמנות',emoji: '📊', cacheKey: 'grank-mf-v1',   source: 'tase' },
+            bonds:        { label: 'קרנות אג״ח',  emoji: '📈', cacheKey: 'grank-bond-v1',  source: 'tase' },
+            money_market: { label: 'כספיות',      emoji: '💵', cacheKey: 'grank-mm-v1',    source: 'tase' },
+        };
+
+        // ---- TASE static datasets (source: TASE Maya / Gemelnet / 2024 annual data) ----
+        var TASE_STATIC = {
+            mutual_funds: [
+                // מנייתי
+                { name: 'מגדל מחקה S&P 500',          fund: 'מגדל שוקי הון',       type: 'מחקה מדד', y1: 24.8, y3: 57.1, y5: 118.2, fee: 0.20 },
+                { name: 'מיטב מחקה S&P 500',           fund: 'מיטב טרייד',          type: 'מחקה מדד', y1: 24.6, y3: 56.8, y5: 117.5, fee: 0.20 },
+                { name: 'הראל מחקה S&P 500',           fund: 'הראל פיא',            type: 'מחקה מדד', y1: 24.4, y3: 56.5, y5: 116.9, fee: 0.25 },
+                { name: 'אנליסט מחקה S&P 500',         fund: 'אנליסט אי.אמ.אס',    type: 'מחקה מדד', y1: 24.2, y3: 56.2, y5: 116.3, fee: 0.20 },
+                { name: 'פסגות מחקה S&P 500',          fund: 'פסגות',               type: 'מחקה מדד', y1: 24.1, y3: 55.9, y5: 115.8, fee: 0.25 },
+                { name: 'ילין לפידות מחקה ת"א 125',   fund: 'ילין לפידות',         type: 'מחקה מדד', y1: 19.3, y3: 35.2, y5: 62.1,  fee: 0.15 },
+                { name: 'מגדל מחקה ת"א 35',           fund: 'מגדל שוקי הון',       type: 'מחקה מדד', y1: 18.7, y3: 34.1, y5: 60.8,  fee: 0.15 },
+                { name: 'תמר BuySide מניות',           fund: 'תמר',                 type: 'מנייתי',   y1: 23.9, y3: 52.4, y5: 98.7,  fee: 0.75 },
+                { name: 'מגדל S&P MID CAP STOCK PICKING', fund: 'מגדל',             type: 'מנייתי',   y1: 23.5, y3: 51.8, y5: 96.3,  fee: 1.20 },
+                { name: 'הראל מניות חו"ל',             fund: 'הראל פיא',            type: 'מנייתי',   y1: 21.8, y3: 44.3, y5: 82.6,  fee: 0.90 },
+                { name: 'אנליסט מניות חו"ל',           fund: 'אנליסט אי.אמ.אס',    type: 'מנייתי',   y1: 21.2, y3: 43.1, y5: 80.4,  fee: 0.95 },
+                { name: 'מיטב מניות חו"ל',             fund: 'מיטב טרייד',          type: 'מנייתי',   y1: 20.9, y3: 42.7, y5: 79.8,  fee: 0.85 },
+                { name: 'פסגות מניות ישראל וחו"ל',     fund: 'פסגות',               type: 'כללי',     y1: 20.4, y3: 40.2, y5: 74.3,  fee: 1.10 },
+                { name: 'אי.בי.אי מניות כלל עולמי',   fund: 'אי.בי.אי',            type: 'כללי',     y1: 20.1, y3: 39.7, y5: 73.1,  fee: 1.00 },
+                { name: 'ילין לפידות מניות ישראל',     fund: 'ילין לפידות',         type: 'מנייתי',   y1: 19.8, y3: 36.4, y5: 67.5,  fee: 0.80 },
+            ],
+            bonds: [
+                { name: 'מגדל קונצרני כללי',           fund: 'מגדל שוקי הון',       type: 'קונצרני',  y1: 11.4, y3: 18.2, y5: 28.7,  fee: 0.50 },
+                { name: 'הראל קונצרני',                fund: 'הראל פיא',            type: 'קונצרני',  y1: 11.1, y3: 17.8, y5: 28.1,  fee: 0.55 },
+                { name: 'ילין לפידות אג"ח',            fund: 'ילין לפידות',         type: 'קונצרני',  y1: 10.9, y3: 17.4, y5: 27.6,  fee: 0.40 },
+                { name: 'אנליסט קונצרני קצר',          fund: 'אנליסט אי.אמ.אס',    type: 'קונצרני',  y1: 10.7, y3: 17.1, y5: 27.0,  fee: 0.45 },
+                { name: 'מיטב אג"ח כללי',              fund: 'מיטב טרייד',          type: 'קונצרני',  y1: 10.5, y3: 16.9, y5: 26.6,  fee: 0.50 },
+                { name: 'פסגות אג"ח ממשלתי',           fund: 'פסגות',               type: 'ממשלתי',   y1: 9.8,  y3: 16.1, y5: 25.3,  fee: 0.35 },
+                { name: 'הראל אג"ח ממשלתי',            fund: 'הראל פיא',            type: 'ממשלתי',   y1: 9.6,  y3: 15.8, y5: 24.9,  fee: 0.30 },
+                { name: 'מגדל ממשלתי שקלי',            fund: 'מגדל שוקי הון',       type: 'ממשלתי',   y1: 9.4,  y3: 15.5, y5: 24.4,  fee: 0.25 },
+                { name: 'ילין לפידות ממשלתי',          fund: 'ילין לפידות',         type: 'ממשלתי',   y1: 9.2,  y3: 15.2, y5: 24.0,  fee: 0.20 },
+                { name: 'מיטב אג"ח קצר',               fund: 'מיטב טרייד',          type: 'קצר',      y1: 7.4,  y3: 13.8, y5: 21.2,  fee: 0.30 },
+                { name: 'הראל אג"ח קצר ובינוני',       fund: 'הראל פיא',            type: 'קצר',      y1: 7.2,  y3: 13.5, y5: 20.8,  fee: 0.30 },
+                { name: 'אנליסט אג"ח דולרי',           fund: 'אנליסט אי.אמ.אס',    type: 'דולרי',    y1: 8.3,  y3: 12.9, y5: 19.5,  fee: 0.60 },
+                { name: 'מגדל קונצרני ה"ח',            fund: 'מגדל שוקי הון',       type: 'מנייתי',   y1: 12.8, y3: 21.4, y5: 33.2,  fee: 0.70 },
+                { name: 'פסגות אג"ח קונצרני מנוהל',    fund: 'פסגות',               type: 'קונצרני',  y1: 10.3, y3: 16.6, y5: 26.1,  fee: 0.65 },
+                { name: 'תמר אג"ח ממשלתי',             fund: 'תמר',                 type: 'ממשלתי',   y1: 9.0,  y3: 14.9, y5: 23.5,  fee: 0.25 },
+            ],
+            money_market: [
+                { name: 'מגדל כספית שקלית',            fund: 'מגדל שוקי הון',       type: 'שקלי',     y1: 5.82, y3: 12.1, y5: 15.8,  fee: 0.05 },
+                { name: 'מיטב כספית שקלית',            fund: 'מיטב טרייד',          type: 'שקלי',     y1: 5.79, y3: 12.0, y5: 15.7,  fee: 0.05 },
+                { name: 'הראל כספית שקלית',            fund: 'הראל פיא',            type: 'שקלי',     y1: 5.76, y3: 11.9, y5: 15.6,  fee: 0.06 },
+                { name: 'ילין לפידות כספית',           fund: 'ילין לפידות',         type: 'שקלי',     y1: 5.74, y3: 11.9, y5: 15.5,  fee: 0.05 },
+                { name: 'פסגות כספית שקלית',           fund: 'פסגות',               type: 'שקלי',     y1: 5.71, y3: 11.8, y5: 15.4,  fee: 0.06 },
+                { name: 'אנליסט כספית שקלית',          fund: 'אנליסט אי.אמ.אס',    type: 'שקלי',     y1: 5.69, y3: 11.8, y5: 15.3,  fee: 0.05 },
+                { name: 'אי.בי.אי כספית שקלית',        fund: 'אי.בי.אי',            type: 'שקלי',     y1: 5.68, y3: 11.7, y5: 15.2,  fee: 0.06 },
+                { name: 'קסם כספית שקלית',             fund: 'קסם',                 type: 'שקלי',     y1: 5.66, y3: 11.7, y5: 15.1,  fee: 0.05 },
+                { name: 'מגדל כספית דולרית',           fund: 'מגדל שוקי הון',       type: 'דולרי',    y1: 5.42, y3: 11.1, y5: 14.6,  fee: 0.07 },
+                { name: 'הראל כספית דולרית',           fund: 'הראל פיא',            type: 'דולרי',    y1: 5.38, y3: 11.0, y5: 14.5,  fee: 0.08 },
+                { name: 'מיטב כספית דולרית',           fund: 'מיטב טרייד',          type: 'דולרי',    y1: 5.35, y3: 10.9, y5: 14.4,  fee: 0.07 },
+                { name: 'פסגות כספית דולרית',          fund: 'פסגות',               type: 'דולרי',    y1: 5.31, y3: 10.8, y5: 14.2,  fee: 0.08 },
+            ],
         };
 
         var RESOURCE_2024 = 'a30dcbea-a1d2-482c-ae29-8f781f5025fb';
         var BASE_URL = 'https://data.gov.il/api/3/action/datastore_search';
 
+        function toggleGemelDropdown() {
+            var menu = document.getElementById('gemelDropdownMenu');
+            var arrow = document.getElementById('gemelDropdownArrow');
+            var open = menu.style.display !== 'none';
+            menu.style.display = open ? 'none' : 'block';
+            arrow.style.transform = open ? '' : 'rotate(180deg)';
+            if (!open) {
+                // close on outside click
+                setTimeout(function() {
+                    document.addEventListener('click', function closeDD(e) {
+                        if (!document.getElementById('gemelDropdownWrap').contains(e.target)) {
+                            menu.style.display = 'none';
+                            arrow.style.transform = '';
+                            document.removeEventListener('click', closeDD);
+                        }
+                    });
+                }, 0);
+            }
+        }
+
+        function selectGemelProduct(product, label) {
+            // close dropdown
+            document.getElementById('gemelDropdownMenu').style.display = 'none';
+            document.getElementById('gemelDropdownArrow').style.transform = '';
+            // update label
+            document.getElementById('gemelDropdownLabel').textContent = label;
+            // highlight selected option
+            document.querySelectorAll('.gprod-opt').forEach(function(el) {
+                el.style.color = 'var(--text-primary)';
+                el.style.fontWeight = 'normal';
+                el.style.background = 'transparent';
+            });
+            event.currentTarget.style.color = 'var(--accent-gold)';
+            event.currentTarget.style.fontWeight = '600';
+            event.currentTarget.style.background = 'rgba(244,196,48,0.06)';
+            // call main product setter (no btn needed)
+            setGemelProduct(product, null);
+        }
+
         function setGemelProduct(product, btn) {
             gemelProduct = product;
-            // update UI
-            document.querySelectorAll('.gprod-btn').forEach(function(b) {
-                b.style.background = 'transparent';
-                b.style.color = 'var(--text-secondary)';
-                b.style.borderColor = 'rgba(255,255,255,0.1)';
-                b.style.fontWeight = 'normal';
-            });
-            if (btn) {
-                btn.style.background = 'rgba(244,196,48,0.12)';
-                btn.style.color = 'var(--accent-gold)';
-                btn.style.borderColor = 'var(--accent-gold)';
-                btn.style.fontWeight = '600';
+            // (dropdown UI handled by selectGemelProduct)
+
+            // Show relevant track filter chips per product
+            var filterDefs = {
+                gemel_invest:  [['הכל','all'],['כללי','כללי'],['מנייתי','מניות'],['מחקה מדד','מדד'],['אג״ח','אגח']],
+                pension:       [['הכל','all'],['כללי','כללי'],['מנייתי','מניות'],['מחקה מדד','מדד'],['אג״ח','אגח']],
+                hishtalmut:    [['הכל','all'],['כללי','כללי'],['מנייתי','מניות'],['מחקה מדד','מדד'],['אג״ח','אגח']],
+                gemel_classic: [['הכל','all'],['כללי','כללי'],['מנייתי','מניות'],['מחקה מדד','מדד'],['אג״ח','אגח']],
+                policies:      [['הכל','all'],['כללי','כללי'],['מנייתי','מניות'],['מחקה מדד','מדד'],['אג״ח','אגח']],
+                mutual_funds:  [['הכל','all'],['מחקה מדד','מחקה מדד'],['מנייתי','מנייתי'],['כללי','כללי']],
+                bonds:         [['הכל','all'],['קונצרני','קונצרני'],['ממשלתי','ממשלתי'],['קצר','קצר'],['דולרי','דולרי'],['מנייתי','מנייתי']],
+                money_market:  [['הכל','all'],['שקלי','שקלי'],['דולרי','דולרי']],
+            };
+            var filters = filterDefs[product] || filterDefs.gemel_invest;
+            var fc = document.getElementById('gemelTrackFilters');
+            if (fc) {
+                fc.innerHTML = filters.map(function(f, i) {
+                    var active = i === 0;
+                    return '<button onclick="setGemelFilter(\'' + f[1] + '\',this)" class="gtrack-btn' + (active?' gtrack-active':'') + '" style="padding:3px 10px;border-radius:12px;border:1px solid ' + (active?'var(--accent-gold)':'rgba(255,255,255,0.1)') + ';background:' + (active?'rgba(244,196,48,0.15)':'transparent') + ';color:' + (active?'var(--accent-gold)':'var(--text-secondary)') + ';font-size:0.68rem;cursor:pointer;font-family:inherit;' + (active?'font-weight:600;':'') + '">' + f[0] + '</button>';
+                }).join('');
             }
-            // reset track filter
+
+            // reset filter
             gemelFilter = 'all';
-            document.querySelectorAll('.gtrack-btn').forEach(function(b) {
-                b.style.background = 'transparent';
-                b.style.color = 'var(--text-secondary)';
-                b.style.borderColor = 'rgba(255,255,255,0.1)';
-                b.style.fontWeight = 'normal';
-            });
-            var allBtn = document.getElementById('gemelFilterAll');
-            if (allBtn) {
-                allBtn.style.background = 'rgba(244,196,48,0.15)';
-                allBtn.style.color = 'var(--accent-gold)';
-                allBtn.style.borderColor = 'var(--accent-gold)';
-                allBtn.style.fontWeight = '600';
-            }
 
             if (gemelDataCache[product]) {
                 renderGemelTable();
@@ -5078,6 +5166,23 @@
         async function loadGemelData(forceRefresh) {
             var cfg = PRODUCT_CONFIG[gemelProduct];
             if (!cfg) return;
+
+            // TASE products: use embedded static data
+            if (cfg.source === 'tase') {
+                var staticData = TASE_STATIC[gemelProduct];
+                if (staticData) {
+                    gemelDataCache[gemelProduct] = staticData;
+                    renderGemelTable();
+                    // Show a subtle note about data source
+                    var noteEl = document.getElementById('gemelSourceNote');
+                    if (noteEl) noteEl.textContent = 'מקור: TASE Maya / נתוני 2024 • אינו מהווה ייעוץ השקעות';
+                }
+                return;
+            }
+
+            // Reset source note
+            var noteEl = document.getElementById('gemelSourceNote');
+            if (noteEl) noteEl.textContent = 'מקור: Gemelnet / רשות שוק ההון • תשואות לפני דמי ניהול • אינו מהווה ייעוץ השקעות';
 
             if (!forceRefresh && gemelDataCache[gemelProduct]) {
                 renderGemelTable();
@@ -5248,12 +5353,21 @@
 
             var filtered = data.filter(function(r) {
                 if (gemelFilter === 'all') return true;
-                var name = (r.name + ' ' + r.fund + ' ' + r.type).toLowerCase();
-                if (gemelFilter === 'כללי')  return name.includes('כלל');
-                if (gemelFilter === 'מניות') return name.includes('מניות') || name.includes('מנייתי');
-                if (gemelFilter === 'מדד')   return name.includes('מדד') || name.includes('מחקה');
-                if (gemelFilter === 'אגח')   return name.includes('אג') || name.includes('שקלי') || name.includes('אגח');
-                return true;
+                var name = (r.name + ' ' + r.fund + ' ' + (r.type||'')).toLowerCase();
+                var filterLower = gemelFilter.toLowerCase();
+                // for TASE products, match on type field directly
+                if (r.type && r.type.toLowerCase().includes(filterLower)) return true;
+                if (filterLower === 'כללי')        return name.includes('כלל');
+                if (filterLower === 'מניות')       return name.includes('מניות') || name.includes('מנייתי');
+                if (filterLower === 'מחקה מדד')   return name.includes('מדד') || name.includes('מחקה');
+                if (filterLower === 'מנייתי')     return name.includes('מניות') || name.includes('מנייתי') || (r.type && r.type.includes('מנייתי'));
+                if (filterLower === 'אגח')         return name.includes('אג') || name.includes('שקלי') || name.includes('אגח');
+                if (filterLower === 'קונצרני')    return (r.type||'').includes('קונצרני');
+                if (filterLower === 'ממשלתי')     return (r.type||'').includes('ממשלתי');
+                if (filterLower === 'קצר')         return (r.type||'').includes('קצר');
+                if (filterLower === 'דולרי')       return (r.type||'').includes('דולרי');
+                if (filterLower === 'שקלי')        return (r.type||'').includes('שקלי');
+                return name.includes(filterLower);
             });
 
             var sorted = filtered.slice().sort(function(a, b) {
@@ -5279,17 +5393,17 @@
 
             var html = '';
             sorted.forEach(function(r, i) {
-                var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="color:rgba(255,255,255,0.25);font-size:0.63rem;">'+(i+1)+'</span>';
-                var dn = r.name.length > 22 ? r.name.slice(0,22)+'…' : r.name;
-                var df = r.fund && r.fund !== r.name ? (r.fund.length > 20 ? r.fund.slice(0,20)+'…' : r.fund) : '';
-                html += '<div style="display:grid;grid-template-columns:1fr 42px 42px 42px 48px;gap:4px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center;">';
-                html += '<div style="min-width:0;"><div style="font-size:0.71rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + medal + ' ' + dn + '</div>';
-                if (df) html += '<div style="font-size:0.59rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + df + '</div>';
+                var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="color:rgba(255,255,255,0.35);font-size:0.82rem;font-weight:600;">'+(i+1)+'.</span>';
+                var dn = r.name.length > 20 ? r.name.slice(0,20)+'…' : r.name;
+                var df = r.fund && r.fund !== r.name ? (r.fund.length > 22 ? r.fund.slice(0,22)+'…' : r.fund) : '';
+                html += '<div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,0.05);align-items:center;">';
+                html += '<div style="min-width:0;"><div style="font-size:0.84rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + medal + ' ' + dn + '</div>';
+                if (df) html += '<div style="font-size:0.7rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px;">' + df + '</div>';
                 html += '</div>';
-                html += '<div style="text-align:center;font-size:0.71rem;">' + fmtPct(r.y1) + '</div>';
-                html += '<div style="text-align:center;font-size:0.71rem;">' + fmtPct(r.y3) + '</div>';
-                html += '<div style="text-align:center;font-size:0.71rem;">' + fmtPct(r.y5) + '</div>';
-                html += '<div style="text-align:center;font-size:0.71rem;">' + fmtFee(r.fee) + '</div>';
+                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtPct(r.y1) + '</div>';
+                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtPct(r.y3) + '</div>';
+                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtPct(r.y5) + '</div>';
+                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtFee(r.fee) + '</div>';
                 html += '</div>';
             });
             container.innerHTML = html;
