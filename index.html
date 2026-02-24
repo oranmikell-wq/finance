@@ -2373,7 +2373,7 @@
                                     <div style="font-size:0.73rem;color:var(--text-secondary);margin-bottom:10px;" id="gemelCompanyDisplay">—</div>
                                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;">
                                         <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
-                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">שנה אחרונה</div>
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;" data-gemel-yearly-label>שנה אחרונה</div>
                                             <div style="font-size:0.95rem;font-weight:700;" id="gemelYearlyReturn">—</div>
                                         </div>
                                         <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
@@ -6441,48 +6441,36 @@
             }
         }
 
-        // Dynamically get all resource IDs from data.gov.il gemelnet package
-        async function _getGemelResourceIds() {
-            if (_gemelResourceCache && _gemelResourceCache.length > 0) return _gemelResourceCache;
+        // Cache of field names per resource id
+        var _resourceFieldsCache = {};
+
+        async function _getResourceFields(resourceId) {
+            if (_resourceFieldsCache[resourceId]) return _resourceFieldsCache[resourceId];
             try {
                 var resp = await fetch(
-                    'https://data.gov.il/api/3/action/package_show?id=gemelnet',
+                    'https://data.gov.il/api/3/action/datastore_info?id=' + resourceId,
                     { signal: AbortSignal.timeout(8000) }
                 );
-                if (!resp.ok) throw new Error('package_show failed');
+                if (!resp.ok) return null;
                 var json = await resp.json();
-                if (!json.success || !json.result || !json.result.resources) throw new Error('no resources');
-                // Sort by last_modified descending (newest first)
-                var resources = json.result.resources.slice().sort(function(a, b) {
-                    return (b.last_modified || b.created || '').localeCompare(
-                           a.last_modified || a.created || '');
-                });
-                _gemelResourceCache = resources.map(function(r) { return r.id; });
-                console.log('[Gemel] Discovered', _gemelResourceCache.length, 'resources from package');
-                return _gemelResourceCache;
+                if (!json.success || !json.result || !json.result.fields) return null;
+                var fields = json.result.fields.map(function(f) { return f.id; });
+                _resourceFieldsCache[resourceId] = fields;
+                console.log('[Gemel] datastore_info fields for', resourceId, ':', fields);
+                return fields;
             } catch(e) {
-                console.warn('[Gemel] package_show failed, using hardcoded IDs:', e.message);
-                return GEMELNET_KNOWN_IDS;
+                console.warn('[Gemel] datastore_info failed:', e.message);
+                return null;
             }
         }
 
         async function fetchGemelFromGovAPI(kupahNum) {
             var resourceIds = await _getGemelResourceIds();
-            // Try at most 8 resources (newest first)
             var toTry = resourceIds.slice(0, 8);
 
             for (var ri = 0; ri < toTry.length; ri++) {
                 var resourceId = toTry[ri];
                 try {
-                    // Use SQL search with ORDER BY to always get the LATEST records
-                    var sqlUrl = 'https://data.gov.il/api/3/action/datastore_search_sql?sql=' +
-                        encodeURIComponent(
-                            'SELECT * FROM "' + resourceId + '" WHERE ' +
-                            '"_id"::text LIKE \'%\' ' +   // match all — filter client side
-                            'ORDER BY "_id" DESC LIMIT 200'
-                        );
-
-                    // First try a simple q-based search (faster)
                     var qUrl = 'https://data.gov.il/api/3/action/datastore_search' +
                                '?resource_id=' + resourceId +
                                '&q=' + encodeURIComponent(kupahNum) +
@@ -6496,38 +6484,40 @@
                     var records = json.result.records;
                     if (records.length === 0) continue;
 
-                    // Log fields from EVERY new resource on first call
-                    if (!_gemelFieldsLogged) {
-                        console.log('[Gemel] resource', resourceId, 'fields:', Object.keys(records[0]));
-                        console.log('[Gemel] sample record:', JSON.stringify(records[0]).slice(0, 600));
-                        _gemelFieldsLogged = true;
-                    }
+                    // Always log fields for debugging
+                    var allKeys = Object.keys(records[0]);
+                    var numericFields = allKeys.filter(function(k) {
+                        var v = records[0][k];
+                        return v !== null && v !== '' && !isNaN(parseFloat(String(v)));
+                    });
+                    console.log('[Gemel] resource', ri, '(' + resourceId + ')');
+                    console.log('[Gemel] ALL fields:', allKeys);
+                    console.log('[Gemel] NUMERIC fields:', numericFields.map(function(k) {
+                        return k + '=' + records[0][k];
+                    }));
+                    console.log('[Gemel] Full record:', records[0]);
 
-                    // Filter: only rows where kupahNum actually appears
+                    // Filter to matching kupah rows
                     var matched = records.filter(function(r) {
                         return Object.values(r).some(function(v) {
-                            var s = String(v).trim();
-                            return s === kupahNum || s.startsWith(kupahNum + '-') || s.endsWith('-' + kupahNum);
+                            var s = String(v || '').trim();
+                            return s === kupahNum || s === String(parseInt(kupahNum));
                         });
                     });
                     if (matched.length === 0) matched = records;
 
-                    // Skip resources that only have very old data (before 2019)
-                    var hasDateKey = matched[0] && Object.keys(matched[0]).some(function(k) {
-                        var v = String(matched[0][k]);
-                        return /20(19|2[0-9])/.test(v);
+                    // Skip obviously old data
+                    var hasRecentDate = matched[0] && Object.values(matched[0]).some(function(v) {
+                        return /20(19|2[0-9])/.test(String(v));
                     });
-                    // If resource has no recent-ish date and we have more to try, skip
-                    if (!hasDateKey && toTry.length - ri > 2) {
-                        console.log('[Gemel] resource ' + ri + ' looks old, trying next');
+                    if (!hasRecentDate && toTry.length - ri > 2) {
+                        console.log('[Gemel] resource', ri, 'seems old, skipping');
                         continue;
                     }
 
                     var parsed = _parseGemelRecords(matched);
-                    // Only accept if we got at least fee OR returns
-                    if (parsed && parsed.length > 0 &&
-                        (parsed[0].fee != null || parsed[0].yearlyReturn != null || parsed[0].fundName !== '—')) {
-                        console.log('[Gemel] Success from resource', ri, 'id:', resourceId);
+                    if (parsed && parsed.length > 0 && parsed[0].fundName !== '—') {
+                        console.log('[Gemel] Using resource', ri, '- parsed:', parsed[0]);
                         return parsed;
                     }
                 } catch (e) {
@@ -6542,7 +6532,7 @@
             return records.map(function(r) {
                 var keys = Object.keys(r);
 
-                // Smart field finder — searches for any key containing ANY of the patterns (case-insensitive)
+                // Smart field finder — searches for any key containing ANY of the patterns
                 function ff(patterns) {
                     var pats = Array.isArray(patterns) ? patterns : [patterns];
                     for (var p = 0; p < pats.length; p++) {
@@ -6551,7 +6541,7 @@
                             var ku = keys[k].toUpperCase();
                             if (ku === pat || ku.indexOf(pat) !== -1) {
                                 var val = r[keys[k]];
-                                if (val !== null && val !== undefined && String(val).trim() !== '' && String(val) !== '0') {
+                                if (val !== null && val !== undefined && String(val).trim() !== '') {
                                     return String(val).trim();
                                 }
                             }
@@ -6560,7 +6550,7 @@
                     return null;
                 }
 
-                // Also allow zero values (e.g. 0% return is valid)
+                // Numeric finder — also allows 0
                 function ffNum(patterns) {
                     var pats = Array.isArray(patterns) ? patterns : [patterns];
                     for (var p = 0; p < pats.length; p++) {
@@ -6585,20 +6575,22 @@
                 var trackName = ff(['SHEM_MASLUL','MASLUL','TRACK','SHEM_MASLULIT']);
                 if (trackName === fundName) trackName = null;
 
-                // ── Company (managing org) ──
+                // ── Company ──
                 var company = ff(['SHEM_CHV','SHEM_YATZRAN','YATZRAN','MENAHELET','COMPANY',
-                                  'MISHPAHA','SHEM_HEVRA','HEVRA','MISPAR_YATZRAN']);
+                                  'MISHPAHA','SHEM_HEVRA','HEVRA']);
 
-                // ── Yearly return ──
-                // gemelnet uses: TSUA_NOMINALI_BRUTO, TSUA_NETO, TSUA_RBIIT_BRUTO_12, etc.
+                // ── Annual return (12 months) ──
+                // Try explicit annual fields first
                 var yearlyReturn = ffNum([
                     'TSUA_NOMINALI_BRUTO_12',
                     'TSUA_NOMINALI_NETO_12',
                     'TSUA_RBIIT_BRUTO_12',
                     'TSUA_RBIIT_NETO_12',
-                    'TSUA_SHNATI_NOMINALI',
-                    'TSUA_SHNATI_NETO',
+                    'TSUA_SHNATI_NOMINALI_BRUTO',
+                    'TSUA_SHNATI_NOMINALI_NETO',
                     'TSUA_SHNATI_BRUTO',
+                    'TSUA_SHNATI_NETO',
+                    'TSUA_SHNATI_NOMINALI',
                     'TSUA_SHNATI',
                     'TSUA_12_HODESH',
                     'TSUA12',
@@ -6610,12 +6602,21 @@
                     'ACHUZ_TSUA_SHNATIT',
                     'TSUA_REALI_12',
                     'TSHUAT_SHNATI',
-                    // Fallback: any field with "TSUA" + "12"
-                    'TSUA',  // last resort
                 ]);
+                if (yearlyReturn != null && Math.abs(yearlyReturn) > 200) yearlyReturn = null;
 
-                // If last resort "TSUA" matched something, double-check it's numeric
-                if (yearlyReturn != null && Math.abs(yearlyReturn) > 200) yearlyReturn = null; // sanity
+                // ── Monthly return (fallback if no annual) ──
+                var monthlyReturn = ffNum([
+                    'TSUA_HODSHIT_NOMINALI',
+                    'TSUA_HODSHIT_BRUTO',
+                    'TSUA_HODSHIT_NETO',
+                    'TSUA_HODSHIT',
+                    'TSUA_HOD',
+                    'TSUA_CHODESH',
+                    'TSUA_HODESH',
+                    'TSUA_NOMINALI_BRUTO_1',
+                    'TSUA_RBIIT_BRUTO_1',
+                ]);
 
                 // ── 3-year return ──
                 var threeYearReturn = ffNum([
@@ -6624,6 +6625,7 @@
                     'TSUA_RBIIT_BRUTO_36',
                     'TSUA_RBIIT_NETO_36',
                     'TSUA_SHNATI_3_SHANA',
+                    'TSUA_3_SHANIM',
                     'TSUA_36',
                     'TSUA3_SHNATI',
                     'TSUA_3Y',
@@ -6641,31 +6643,40 @@
                     'NITZEVET',
                     'FEE',
                 ]);
-                if (fee != null && fee > 10) fee = null; // sanity (fee > 10% not realistic)
+                if (fee != null && fee > 10) fee = null;
 
                 // ── Period / date ──
                 var period = ff([
                     'TKUFA','HODESH_IVRI','HODESH','SHNAT_DIVUACH','SHANA',
                     'CHODESH','PERIOD','DATE_PERIOD','YM','YYYYMM','TAARICH',
                 ]);
-                // Filter out system timestamps that look like full datetimes
-                if (period && /^\d{4}-\d{2}-\d{2}T/.test(period)) {
-                    period = period.slice(0, 10); // keep only YYYY-MM-DD
-                }
-                // Hide dates older than 2018
-                if (period && /^(200[0-9]|201[0-7])/.test(period)) {
-                    period = null;
-                }
+                if (period && /^\d{4}-\d{2}-\d{2}T/.test(period)) period = period.slice(0, 10);
+                if (period && /^(200[0-9]|201[0-7])/.test(period)) period = null;
+
+                // ── Collect all numeric fields for debug ──
+                var allNumericFields = {};
+                keys.forEach(function(k) {
+                    if (k === '_id') return;
+                    var v = r[k];
+                    if (v !== null && v !== undefined && String(v).trim() !== '') {
+                        var n = parseFloat(String(v).replace(',', '.'));
+                        if (!isNaN(n) && Math.abs(n) < 1000) {
+                            allNumericFields[k] = n;
+                        }
+                    }
+                });
 
                 return {
-                    raw:             r,
-                    fundName:        fundName  || '—',
-                    trackName:       trackName || null,
-                    company:         company   || '—',
-                    yearlyReturn:    yearlyReturn,
-                    threeYearReturn: threeYearReturn,
-                    fee:             fee,
-                    period:          period || null,
+                    raw:              r,
+                    allNumericFields: allNumericFields,
+                    fundName:         fundName  || '—',
+                    trackName:        trackName || null,
+                    company:          company   || '—',
+                    yearlyReturn:     yearlyReturn,
+                    monthlyReturn:    monthlyReturn,   // fallback
+                    threeYearReturn:  threeYearReturn,
+                    fee:              fee,
+                    period:           period || null,
                 };
             });
         }
@@ -6673,18 +6684,119 @@
         function displayGemelResults(data, kupahNum, fromCache) {
             var first = data[0];
 
-            // Debug: log all raw fields so user can identify field names
+            // Debug logging
             if (first.raw) {
                 console.log('[Gemel] Raw fields for kupah', kupahNum, ':', first.raw);
-                console.log('[Gemel] Parsed:', {
-                    fundName:    first.fundName,
-                    company:     first.company,
-                    yearlyRet:   first.yearlyReturn,
-                    threeYearRet:first.threeYearReturn,
-                    fee:         first.fee,
-                    period:      first.period,
+                console.log('[Gemel] Parsed result:', {
+                    fundName:       first.fundName,
+                    company:        first.company,
+                    yearlyReturn:   first.yearlyReturn,
+                    monthlyReturn:  first.monthlyReturn,
+                    threeYearReturn:first.threeYearReturn,
+                    fee:            first.fee,
+                    period:         first.period,
                 });
+                if (first.allNumericFields) {
+                    console.log('[Gemel] ALL NUMERIC FIELDS (send this to Claude if returns are missing):',
+                        JSON.stringify(first.allNumericFields));
+                }
             }
+
+            document.getElementById('gemelFundNameDisplay').textContent =
+                first.fundName + ' — קופה ' + kupahNum;
+            document.getElementById('gemelCompanyDisplay').textContent =
+                first.company + (fromCache ? ' · ⚠️ מטמון' : '');
+
+            // Decide what to show for "שנה אחרונה":
+            // If we have yearlyReturn, show it. Otherwise show monthlyReturn as fallback.
+            var displayYearly = first.yearlyReturn;
+            var yearlyLabel   = 'שנה אחרונה';
+            if (displayYearly == null && first.monthlyReturn != null) {
+                displayYearly = first.monthlyReturn;
+                yearlyLabel   = 'תשואה חודשית';
+            }
+
+            // Update label text
+            var yearlyLabelEl = document.querySelector('[data-gemel-yearly-label]');
+            if (yearlyLabelEl) yearlyLabelEl.textContent = yearlyLabel;
+
+            function setReturn(elId, val) {
+                var el = document.getElementById(elId);
+                if (!el) return;
+                if (val != null) {
+                    el.textContent = (val >= 0 ? '+' : '') + val.toFixed(2) + '%';
+                    el.style.color = val >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                } else {
+                    el.textContent = '—'; el.style.color = 'var(--text-secondary)';
+                }
+            }
+
+            setReturn('gemelYearlyReturn', displayYearly);
+            setReturn('gemel3YearReturn',  first.threeYearReturn);
+
+            var feeEl = document.getElementById('gemelFeeDisplay');
+            if (feeEl) {
+                if (first.fee != null && first.fee > 0) {
+                    feeEl.textContent = first.fee.toFixed(3) + '%';
+                    feeEl.style.color = first.fee < 0.5 ? 'var(--accent-green)' : 'var(--accent-gold)';
+                } else {
+                    feeEl.textContent = '—'; feeEl.style.color = 'var(--text-secondary)';
+                }
+            }
+
+            if (first.period) {
+                var p = String(first.period);
+                if (/^\d{6}$/.test(p)) p = p.slice(4) + '/' + p.slice(0, 4);
+                var dateEl = document.getElementById('gemelDataDate');
+                if (dateEl) {
+                    dateEl.textContent = 'נתונים לפי: ' + p;
+                    // Warn if no returns found
+                    if (displayYearly == null && first.fee != null) {
+                        dateEl.textContent += ' · (תשואות לא זמינות בדאטאסט זה — ראה console)';
+                    }
+                }
+            }
+
+            // Debug panel — shows all numeric fields found
+            var debugPanel = document.getElementById('gemelDebugPanel');
+            if (!debugPanel) {
+                debugPanel = document.createElement('div');
+                debugPanel.id = 'gemelDebugPanel';
+                debugPanel.style.cssText = 'margin-top:8px;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;';
+                var dateEl2 = document.getElementById('gemelDataDate');
+                if (dateEl2 && dateEl2.parentNode) dateEl2.parentNode.appendChild(debugPanel);
+            }
+            if (first.allNumericFields && Object.keys(first.allNumericFields).length > 0) {
+                var rows = Object.keys(first.allNumericFields).map(function(k) {
+                    return '<span style="color:var(--accent-cyan);font-weight:600;">' + k + '</span>=<span style="color:var(--accent-gold);">' + first.allNumericFields[k] + '</span>';
+                }).join('  ·  ');
+                debugPanel.innerHTML = '<div style="font-size:0.58rem;color:var(--text-secondary);margin-bottom:3px;">🔍 שדות מספריים שנמצאו:</div>' +
+                    '<div style="font-size:0.62rem;line-height:1.7;">' + rows + '</div>';
+                debugPanel.style.display = 'block';
+            } else {
+                debugPanel.style.display = 'none';
+            }
+
+            // Track selector
+            var hasTracks = data.length > 1 && data.some(function(d) { return d.trackName; });
+            var trackSel = document.getElementById('gemelTrackSelector');
+            if (hasTracks && trackSel) {
+                var sel = document.getElementById('gemelTrackSelect');
+                sel.innerHTML = '';
+                data.forEach(function(d, idx) {
+                    var opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.textContent = d.trackName || d.fundName || ('מסלול ' + (idx + 1));
+                    sel.appendChild(opt);
+                });
+                trackSel.style.display = 'block';
+            } else if (trackSel) {
+                trackSel.style.display = 'none';
+            }
+
+            document.getElementById('gemelSearchResult').style.display = 'block';
+            gemelLastResults = data;
+        }
 
             document.getElementById('gemelFundNameDisplay').textContent =
                 first.fundName + ' — קופה ' + kupahNum;
