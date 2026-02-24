@@ -631,7 +631,6 @@
             .exposure-item { gap: 6px; }
             .exposure-flag { font-size: 1rem; width: 24px; }
             .watchlist-item { padding: 8px 10px; }
-            .rule-bar-segment { font-size: 0.55rem; }
             .alert-item { padding: 6px 10px; font-size: 0.75rem; }
         }
 
@@ -1476,9 +1475,6 @@
             line-height: 1;
         }
 
-        /* 50/30/20 visual */
-        .rule-bar { display:flex; height:28px; border-radius:10px; overflow:hidden; margin:8px 0; }
-        .rule-bar-segment { display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:600; color:#fff; transition:width 0.4s ease; }
         /* Chart range buttons */
         .range-btn { padding:4px 12px; border-radius:16px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); font-size:0.7rem; cursor:pointer; font-family:inherit; }
         .range-btn.active { background:rgba(244,196,48,0.15); color:var(--accent-gold); border-color:var(--accent-gold); }
@@ -1526,7 +1522,7 @@
     <div class="container">
         <div class="header">
             <div class="header-top" style="display:flex;direction:ltr;align-items:center;justify-content:flex-start;gap:12px;">
-                <div class="search-wrapper" id="searchWrapper" style="flex:1;max-width:160px;">
+                <div class="search-wrapper" id="searchWrapper" style="flex:1;max-width:90px;">
                     <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש..." oninput="filterAssets(this.value)" style="padding:8px 12px;font-size:0.82rem;height:36px;text-align:right;direction:rtl;">
                 </div>
             </div>
@@ -1628,13 +1624,7 @@
                         <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
                     </div>
                 </div>
-                <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
-                    <span style="font-size:0.7rem;color:var(--text-secondary);flex-shrink:0;">השווה:</span>
-                    <button id="btnBmSpy" onclick="toggleBenchmark('spy',this)" style="padding:3px 11px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.7rem;cursor:pointer;font-family:inherit;transition:all 0.2s;">S&amp;P 500</button>
-                    <button id="btnBmTa" onclick="toggleBenchmark('ta125',this)" style="padding:3px 11px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.7rem;cursor:pointer;font-family:inherit;transition:all 0.2s;">ת"א 125</button>
-                </div>
                 <canvas id="historyChart" style="width:100%;height:220px;"></canvas>
-                <div id="chartLegend" style="display:none;gap:12px;margin-top:8px;font-size:0.73rem;justify-content:center;flex-wrap:wrap;"></div>
                 <div id="historyEmpty" style="text-align:center;color:var(--text-secondary);padding:30px;display:none;">
                     📊 נתונים היסטוריים יתחילו להצטבר מהיום. חזור מחר!
                 </div>
@@ -1775,14 +1765,6 @@
                 </div>
             </div>
 
-            <!-- 50/30/20 Rule -->
-            <div class="section-title" style="margin-top:16px;">📐 כלל 50/30/20</div>
-            <div class="chart-card" style="padding:20px;" id="ruleCard">
-                <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px;">המלצה: 50% צרכים, 30% רצונות, 20% חיסכון</div>
-                <div id="ruleContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הזן שכר חודשי כדי לראות ניתוח</div>
-            </div>
-
-            <!-- Savings Goal -->
 
             <!-- Fee Analysis -->
             <div class="section-title" style="margin-top:16px;">💸 ניתוח דמי ניהול</div>
@@ -1916,16 +1898,6 @@
                     <div class="settings-row-arrow">‹</div>
                 </button>
 
-                <!-- Widget Setup -->
-                <button onclick="openWidgetSetup()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(244,196,44,0.1);">📱</div>
-                    <div class="settings-row-info">
-                        <div class="settings-row-title">Widget ל-iOS</div>
-                        <div class="settings-row-desc">הצג שווי פורטפוליו על מסך הבית</div>
-                    </div>
-                    <div class="settings-row-arrow">‹</div>
-                </button>
-
                 <!-- Clear data -->
                 <button onclick="if(confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים? פעולה זו בלתי הפיכה!')){assets=[];saveAssets();updateUI();alert('✅ כל הנתונים נמחקו.');}" class="settings-row" style="border-color:rgba(239,68,68,0.15);">
                     <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);">🗑️</div>
@@ -2054,54 +2026,6 @@
             <span class="tab-label">הגדרות</span>
         </button>
     </nav>
-
-    <!-- Widget Setup Modal -->
-    <div class="modal" id="widgetModal">
-        <div class="modal-content" style="max-height:88vh;overflow-y:auto;">
-            <div class="modal-header" style="text-align:center;position:relative;">
-                <button class="close-button" onclick="document.getElementById('widgetModal').style.display='none'" style="position:absolute;left:0;top:0;">×</button>
-                <div style="font-size:2.5rem;margin-bottom:8px;">📱</div>
-                <h2 class="modal-title" style="font-size:1.2rem;">Widget ל-iOS</h2>
-            </div>
-            <div style="padding:4px 4px 20px;">
-                <div style="background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.2);border-radius:12px;padding:14px;margin-bottom:16px;font-size:0.78rem;line-height:1.7;color:var(--text-secondary);">
-                    <strong style="color:var(--accent-gold);">איך עובד:</strong><br>
-                    האפליקציה שומרת את נתוני הפורטפוליו ב-GitHub Gist (שלך). אפליקציית Scriptable קוראת את הנתונים ומציגה Widget על מסך הבית של האייפון.
-                </div>
-                <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
-                    <div>
-                        <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:6px;">
-                            🔑 GitHub Personal Access Token
-                            <a href="https://github.com/settings/tokens/new?scopes=gist&description=finanseer-widget" target="_blank" style="color:var(--accent-blue);font-size:0.7rem;margin-right:6px;">← צור Token</a>
-                        </label>
-                        <input type="password" id="widgetGhToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"
-                            style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:white;font-size:0.75rem;font-family:monospace;direction:ltr;box-sizing:border-box;">
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:6px;">
-                            📋 Gist ID
-                            <a href="https://gist.github.com/new" target="_blank" style="color:var(--accent-blue);font-size:0.7rem;margin-right:6px;">← צור Gist ציבורי</a>
-                        </label>
-                        <input type="text" id="widgetGistId" placeholder="abc123def456..." autocomplete="off"
-                            style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:white;font-size:0.75rem;font-family:monospace;direction:ltr;box-sizing:border-box;">
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:6px;">שם המשתמש ב-GitHub</label>
-                        <input type="text" id="widgetGhUser" placeholder="username"
-                            style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:white;font-size:0.75rem;font-family:monospace;direction:ltr;box-sizing:border-box;">
-                    </div>
-                </div>
-                <button onclick="saveWidgetConfig()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent-gold);color:#0a0e27;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:inherit;margin-bottom:10px;">💾 שמור וסנכרן עכשיו</button>
-                <button onclick="showScriptableCode()" style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(244,196,48,0.3);background:rgba(244,196,48,0.06);color:var(--accent-gold);font-weight:600;font-size:0.85rem;cursor:pointer;font-family:inherit;margin-bottom:10px;">📋 הצג קוד Scriptable</button>
-                <div id="widgetStatusMsg" style="text-align:center;font-size:0.75rem;min-height:20px;"></div>
-                <div id="scriptableCodeSection" style="display:none;margin-top:14px;">
-                    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px;">העתק לתוך Scriptable → New Script:</div>
-                    <div style="background:rgba(0,0,0,0.35);border-radius:10px;padding:12px;font-family:monospace;font-size:0.65rem;direction:ltr;text-align:left;white-space:pre;overflow-x:auto;color:#a8e6cf;max-height:260px;overflow-y:auto;border:1px solid rgba(255,255,255,0.08);" id="scriptableCodeBlock"></div>
-                    <button onclick="copyScriptableCode()" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;border:none;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;font-weight:600;cursor:pointer;font-family:inherit;">📋 העתק קוד</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="modal" id="assetModal">
         <div class="modal-content">
@@ -3557,7 +3481,6 @@
             var salary = parseNum(document.getElementById('profileSalary'));
             var expenses = parseNum(document.getElementById('profileExpenses'));
             calcDisposable(salary, expenses);
-            calcRule503020(salary, expenses);
             calcActualSavings(salary, expenses);
         }
 
@@ -3594,48 +3517,6 @@
             display.style.display = 'block';
             document.getElementById('actualSavingsAmount').textContent = '₪' + actual.toLocaleString('he-IL', {maximumFractionDigits: 0});
             document.getElementById('actualSavingsAmount').style.color = isPos ? 'var(--accent-blue)' : 'var(--accent-red)';
-        }
-
-        function calcRule503020(salary, expenses) {
-            var container = document.getElementById('ruleContent');
-            if (salary <= 0) { container.innerHTML = '<span style="color:var(--text-secondary);font-size:0.8rem;">הזן שכר חודשי כדי לראות ניתוח</span>'; return; }
-            var ideal50 = salary * 0.5, ideal30 = salary * 0.3, ideal20 = salary * 0.2;
-            var totalDeposits = assets.reduce(function(s, a) {
-                return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0);
-            }, 0);
-            var actualNeeds = expenses;
-            var actualSavings = totalDeposits;
-            var actualWants = Math.max(0, salary - expenses - totalDeposits);
-            var needsPct = salary > 0 ? (actualNeeds / salary * 100) : 0;
-            var savingsPct = salary > 0 ? (actualSavings / salary * 100) : 0;
-            var wantsPct = salary > 0 ? (actualWants / salary * 100) : 0;
-
-            var html = '<div style="margin-bottom:12px;">' +
-                '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">חלוקה מומלצת:</div>' +
-                '<div class="rule-bar">' +
-                '<div class="rule-bar-segment" style="width:50%;background:#3b82f6;">50% צרכים</div>' +
-                '<div class="rule-bar-segment" style="width:30%;background:#8b5cf6;">30% רצונות</div>' +
-                '<div class="rule-bar-segment" style="width:20%;background:#10b981;">20% חיסכון</div>' +
-                '</div></div>';
-
-            html += '<div>' +
-                '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">החלוקה שלך:</div>' +
-                '<div class="rule-bar">' +
-                '<div class="rule-bar-segment" style="width:' + Math.min(needsPct, 100) + '%;background:#3b82f6;">' + needsPct.toFixed(0) + '%</div>' +
-                '<div class="rule-bar-segment" style="width:' + Math.min(wantsPct, 100 - needsPct) + '%;background:#8b5cf6;">' + wantsPct.toFixed(0) + '%</div>' +
-                '<div class="rule-bar-segment" style="width:' + Math.min(savingsPct, 100 - needsPct - wantsPct) + '%;background:#10b981;">' + savingsPct.toFixed(0) + '%</div>' +
-                '</div></div>';
-
-            // Tips
-            html += '<div style="margin-top:10px;font-size:0.7rem;">';
-            if (needsPct > 50) html += '<div style="color:var(--accent-red);margin-bottom:3px;">⚠️ ההוצאות הקבועות (' + needsPct.toFixed(0) + '%) חורגות מההמלצה (50%)</div>';
-            else html += '<div style="color:var(--accent-green);margin-bottom:3px;">✅ הוצאות קבועות תקינות (' + needsPct.toFixed(0) + '%)</div>';
-            if (savingsPct >= 20) html += '<div style="color:var(--accent-green);">✅ חיסכון מצוין! (' + savingsPct.toFixed(0) + '%)</div>';
-            else if (savingsPct > 0) html += '<div style="color:var(--accent-gold);">💡 חיסכון ' + savingsPct.toFixed(0) + '% — מומלץ להגיע ל-20%</div>';
-            else html += '<div style="color:var(--text-secondary);">💡 הוסף הפקדות חודשיות לנכסים כדי לראות חיסכון</div>';
-            html += '</div>';
-
-            container.innerHTML = html;
         }
 
         // ============ Search / Filter ============
@@ -4956,73 +4837,12 @@
                 // Keep last 365 days
                 if (history.length > 365) history = history.slice(-365);
                 localStorage.setItem('portfolio-history', JSON.stringify(history));
-                // Push to widget (async, fire-and-forget)
-                pushWidgetData();
             } catch(e) {}
         }
 
-        // ============ BENCHMARK COMPARISON ============
-        var showBenchmarks = { spy: false, ta125: false };
-
-        async function fetchBenchmarkData(symbol, range) {
-            var cacheKey = 'bm-' + symbol.replace('^','') + '-' + range;
-            var cachedDate = null;
-            try { cachedDate = localStorage.getItem(cacheKey + '-dt'); } catch(e) {}
-            if (cachedDate) {
-                var hoursOld = (Date.now() - new Date(cachedDate)) / 3600000;
-                if (hoursOld < 6) {
-                    try {
-                        var cached = localStorage.getItem(cacheKey);
-                        if (cached) return JSON.parse(cached);
-                    } catch(e) {}
-                }
-            }
-            var rangeParam = range === 'week' ? '7d' : range === 'month' ? '1mo' : range === '3month' ? '3mo' : '1y';
-            var encodedSym = encodeURIComponent(symbol);
-            var urls = [
-                'https://query1.finance.yahoo.com/v8/finance/chart/' + encodedSym + '?range=' + rangeParam + '&interval=1d',
-                'https://query2.finance.yahoo.com/v8/finance/chart/' + encodedSym + '?range=' + rangeParam + '&interval=1d'
-            ];
-            for (var i = 0; i < urls.length; i++) {
-                try {
-                    var res = await fetch(urls[i]);
-                    var data = await res.json();
-                    var result = data && data.chart && data.chart.result && data.chart.result[0];
-                    if (!result) continue;
-                    var ts = result.timestamp;
-                    var closes = (result.indicators && result.indicators.adjclose && result.indicators.adjclose[0] && result.indicators.adjclose[0].adjclose) ||
-                                 (result.indicators && result.indicators.quote && result.indicators.quote[0] && result.indicators.quote[0].close);
-                    if (!ts || !closes) continue;
-                    var points = ts.map(function(t, idx) {
-                        return { date: new Date(t * 1000).toISOString().slice(0, 10), value: closes[idx] };
-                    }).filter(function(p) { return p.value != null; });
-                    try {
-                        localStorage.setItem(cacheKey, JSON.stringify(points));
-                        localStorage.setItem(cacheKey + '-dt', new Date().toISOString());
-                    } catch(e) {}
-                    return points;
-                } catch(e) {}
-            }
-            return null;
-        }
-
-        function toggleBenchmark(key, btn) {
-            showBenchmarks[key] = !showBenchmarks[key];
-            if (btn) {
-                var isOn = showBenchmarks[key];
-                var rgb = key === 'spy' ? '59,130,246' : '16,185,129';
-                var color = key === 'spy' ? '#3b82f6' : '#10b981';
-                btn.style.background = isOn ? 'rgba(' + rgb + ',0.15)' : 'transparent';
-                btn.style.color = isOn ? color : 'var(--text-secondary)';
-                btn.style.borderColor = isOn ? color : 'rgba(255,255,255,0.12)';
-            }
-            renderHistoryChart();
-        }
-
-        async function renderHistoryChart() {
+        function renderHistoryChart() {
             var canvas = document.getElementById('historyChart');
             var emptyMsg = document.getElementById('historyEmpty');
-            var legendEl = document.getElementById('chartLegend');
             if (!canvas) return;
 
             var history = [];
@@ -5039,21 +4859,9 @@
                 history = history.filter(function(h) { return h.date >= cutStr; });
             }
 
-            var anyBenchmark = showBenchmarks.spy || showBenchmarks.ta125;
-
-            var spyData = null, taData = null;
-            var bmRange = (chartRange === 'all') ? 'year' : chartRange;
-            if (showBenchmarks.spy) spyData = await fetchBenchmarkData('SPY', bmRange);
-            if (showBenchmarks.ta125) taData = await fetchBenchmarkData('^TA125.TA', bmRange);
-
-            var startDate = history.length > 0 ? history[0].date : null;
-            if (startDate && spyData) spyData = spyData.filter(function(p) { return p.date >= startDate; });
-            if (startDate && taData) taData = taData.filter(function(p) { return p.date >= startDate; });
-
             if (history.length < 2) {
                 canvas.style.display = 'none';
                 if (emptyMsg) emptyMsg.style.display = 'block';
-                if (legendEl) legendEl.style.display = 'none';
                 return;
             }
 
@@ -5068,291 +4876,74 @@
             ctx.scale(dpr, dpr);
             var W = rect.width;
             var H = rect.height;
-            var padL = anyBenchmark ? 52 : 70;
-            var padR = 15, padT = 20, padB = 35;
+
+            var values = history.map(function(h) { return h.value; });
+            var minV = Math.min.apply(null, values) * 0.95;
+            var maxV = Math.max.apply(null, values) * 1.05;
+            if (maxV === minV) maxV = minV + 1;
+
+            var padL = 70, padR = 15, padT = 15, padB = 35;
             var chartW = W - padL - padR;
             var chartH = H - padT - padB;
 
             ctx.clearRect(0, 0, W, H);
 
-            if (anyBenchmark) {
-                // ── NORMALIZED % RETURN MODE ──
-                var basePort = history[0].value;
-                var portfolioSeries = history.map(function(h) {
-                    return { date: h.date, value: (h.value / basePort - 1) * 100 };
-                });
-                var spySeries = null, taSeries = null;
-                if (spyData && spyData.length > 1) {
-                    var baseSpy = spyData[0].value;
-                    spySeries = spyData.map(function(p) { return { date: p.date, value: (p.value / baseSpy - 1) * 100 }; });
-                }
-                if (taData && taData.length > 1) {
-                    var baseTa = taData[0].value;
-                    taSeries = taData.map(function(p) { return { date: p.date, value: (p.value / baseTa - 1) * 100 }; });
-                }
-
-                var allVals = portfolioSeries.map(function(p) { return p.value; });
-                if (spySeries) spySeries.forEach(function(p) { allVals.push(p.value); });
-                if (taSeries) taSeries.forEach(function(p) { allVals.push(p.value); });
-                var minV = Math.min.apply(null, allVals) - 3;
-                var maxV = Math.max.apply(null, allVals) + 3;
-                if (maxV === minV) { maxV += 5; minV -= 5; }
-
-                // Grid
-                ctx.lineWidth = 1;
-                for (var g = 0; g <= 4; g++) {
-                    var gy = padT + (chartH / 4) * g;
-                    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-                    ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
-                    var gv = maxV - (maxV - minV) * (g / 4);
-                    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-                    ctx.font = '10px sans-serif';
-                    ctx.textAlign = 'right';
-                    ctx.fillText((gv >= 0 ? '+' : '') + gv.toFixed(0) + '%', padL - 4, gy + 4);
-                }
-
-                // Zero line
-                var zeroY = padT + (maxV / (maxV - minV)) * chartH;
-                if (zeroY > padT && zeroY < padT + chartH) {
-                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                    ctx.setLineDash([4, 4]);
-                    ctx.beginPath(); ctx.moveTo(padL, zeroY); ctx.lineTo(W - padR, zeroY); ctx.stroke();
-                    ctx.setLineDash([]);
-                }
-
-                function drawBmLine(series, color, lw) {
-                    if (!series || series.length < 2) return;
-                    ctx.beginPath();
-                    series.forEach(function(p, i) {
-                        var x = padL + (i / (series.length - 1)) * chartW;
-                        var y = padT + (1 - (p.value - minV) / (maxV - minV)) * chartH;
-                        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                    });
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = lw;
-                    ctx.stroke();
-                    var last = series[series.length - 1];
-                    var lx = padL + chartW;
-                    var ly = padT + (1 - (last.value - minV) / (maxV - minV)) * chartH;
-                    ctx.beginPath(); ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
-                    ctx.fillStyle = color; ctx.fill();
-                }
-
-                if (spySeries) drawBmLine(spySeries, '#3b82f6', 1.5);
-                if (taSeries) drawBmLine(taSeries, '#10b981', 1.5);
-                drawBmLine(portfolioSeries, '#f4c430', 2.5);
-
-                // Date labels
-                ctx.fillStyle = 'rgba(255,255,255,0.35)';
-                ctx.font = '10px sans-serif';
-                ctx.textAlign = 'center';
-                var fd = history[0].date.split('-');
-                var ld = history[history.length-1].date.split('-');
-                ctx.fillText(fd[2]+'/'+fd[1], padL, H - 8);
-                ctx.fillText(ld[2]+'/'+ld[1], W - padR, H - 8);
-
-                // Legend
-                if (legendEl) {
-                    var lastPort = portfolioSeries[portfolioSeries.length - 1].value;
-                    var items = ['<span style="color:#f4c430;font-weight:600;">● פורטפוליו <span style="opacity:0.8;">' + (lastPort >= 0 ? '+' : '') + lastPort.toFixed(1) + '%</span></span>'];
-                    if (spySeries && spySeries.length > 0) {
-                        var lastSpy = spySeries[spySeries.length-1].value;
-                        items.push('<span style="color:#3b82f6;font-weight:600;">● S&P 500 <span style="opacity:0.8;">' + (lastSpy >= 0 ? '+' : '') + lastSpy.toFixed(1) + '%</span></span>');
-                    }
-                    if (taSeries && taSeries.length > 0) {
-                        var lastTa = taSeries[taSeries.length-1].value;
-                        items.push('<span style="color:#10b981;font-weight:600;">● ת"א 125 <span style="opacity:0.8;">' + (lastTa >= 0 ? '+' : '') + lastTa.toFixed(1) + '%</span></span>');
-                    }
-                    legendEl.innerHTML = items.join('');
-                    legendEl.style.display = 'flex';
-                }
-
-            } else {
-                // ── ABSOLUTE VALUE MODE (original) ──
-                if (legendEl) legendEl.style.display = 'none';
-
-                var values = history.map(function(h) { return h.value; });
-                var minV = Math.min.apply(null, values) * 0.95;
-                var maxV = Math.max.apply(null, values) * 1.05;
-                if (maxV === minV) maxV = minV + 1;
-
-                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-                ctx.lineWidth = 1;
-                for (var g = 0; g < 4; g++) {
-                    var gy = padT + (chartH / 3) * g;
-                    ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
-                    var gv = maxV - (maxV - minV) * (g / 3);
-                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                    ctx.font = '11px sans-serif';
-                    ctx.textAlign = 'right';
-                    ctx.fillText('₪' + Math.round(gv).toLocaleString('he-IL'), padL - 8, gy + 4);
-                }
-
-                var gradient = ctx.createLinearGradient(0, padT, 0, H - padB);
-                gradient.addColorStop(0, 'rgba(244,196,48,0.3)');
-                gradient.addColorStop(1, 'rgba(244,196,48,0)');
-
-                ctx.beginPath();
-                var points = [];
-                for (var i = 0; i < values.length; i++) {
-                    var x = padL + (i / (values.length - 1)) * chartW;
-                    var y = padT + (1 - (values[i] - minV) / (maxV - minV)) * chartH;
-                    points.push({x: x, y: y});
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = '#f4c430';
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
-
-                ctx.lineTo(points[points.length-1].x, H - padB);
-                ctx.lineTo(points[0].x, H - padB);
-                ctx.closePath();
-                ctx.fillStyle = gradient;
-                ctx.fill();
-
-                [points[0], points[points.length-1]].forEach(function(p) {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-                    ctx.fillStyle = '#f4c430';
-                    ctx.fill();
-                });
-
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctx.lineWidth = 1;
+            for (var g = 0; g < 4; g++) {
+                var gy = padT + (chartH / 3) * g;
+                ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
+                var gv = maxV - (maxV - minV) * (g / 3);
                 ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.font = '10px sans-serif';
-                ctx.textAlign = 'center';
-                var firstDate = history[0].date.split('-');
-                var lastDate = history[history.length-1].date.split('-');
-                ctx.fillText(firstDate[2]+'/'+firstDate[1], points[0].x, H - 8);
-                ctx.fillText(lastDate[2]+'/'+lastDate[1], points[points.length-1].x, H - 8);
-
-                var firstVal = values[0];
-                var lastVal = values[values.length - 1];
-                var changePct = firstVal > 0 ? ((lastVal - firstVal) / firstVal * 100) : 0;
-                ctx.font = 'bold 12px sans-serif';
+                ctx.font = '11px sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillStyle = changePct >= 0 ? '#10b981' : '#ef4444';
-                ctx.fillText((changePct >= 0 ? '+' : '') + changePct.toFixed(1) + '%', W - padR, padT + 12);
+                ctx.fillText('₪' + Math.round(gv).toLocaleString('he-IL'), padL - 8, gy + 4);
             }
-        }
 
-        // ============ WIDGET (iOS Scriptable) ============
-        var widgetPushInProgress = false;
+            var gradient = ctx.createLinearGradient(0, padT, 0, H - padB);
+            gradient.addColorStop(0, 'rgba(244,196,48,0.3)');
+            gradient.addColorStop(1, 'rgba(244,196,48,0)');
 
-        async function pushWidgetData() {
-            if (widgetPushInProgress) return;
-            var config = null;
-            try { config = JSON.parse(localStorage.getItem('widget-github-config') || 'null'); } catch(e) {}
-            if (!config || !config.token || !config.gistId || !config.user) return;
-
-            var total = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            if (total <= 0) return;
-
-            var pensionILS = assets.filter(function(a) { return a.type === 'pension'; }).reduce(function(s,a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var realEstateILS = assets.filter(function(a) { return a.type === 'real_estate'; }).reduce(function(s,a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-            var liquidILS = total - pensionILS - realEstateILS;
-
-            var monthlyChange = assets.reduce(function(sum, asset) {
-                var v = toILS(asset.value, asset.currency || 'ILS');
-                return sum + (v * (asset.return / 100) / 12) + toILS(asset.monthly || 0, asset.monthlyCurrency || 'ILS');
-            }, 0);
-            var changePct = total > 0 ? (monthlyChange / total * 100) : 0;
-
-            var breakdown = [];
-            if (liquidILS > 0) breakdown.push({ label: '💼 נזיל', value: '₪' + Math.round(liquidILS).toLocaleString('he-IL') });
-            if (pensionILS > 0) breakdown.push({ label: '🏦 פנסיה', value: '₪' + Math.round(pensionILS).toLocaleString('he-IL') });
-            if (realEstateILS > 0) breakdown.push({ label: '🏠 נדל"ן', value: '₪' + Math.round(realEstateILS).toLocaleString('he-IL') });
-
-            var payload = {
-                total: '₪' + Math.round(total).toLocaleString('he-IL'),
-                totalNum: Math.round(total),
-                change: (monthlyChange >= 0 ? '+' : '') + '₪' + Math.abs(Math.round(monthlyChange)).toLocaleString('he-IL') + ' (' + (monthlyChange >= 0 ? '+' : '') + changePct.toFixed(1) + '%) החודש',
-                changePositive: monthlyChange >= 0,
-                breakdown: breakdown,
-                updatedAt: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-                updatedDate: new Date().toLocaleDateString('he-IL')
-            };
-
-            widgetPushInProgress = true;
-            try {
-                await fetch('https://api.github.com/gists/' + config.gistId, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': 'token ' + config.token,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        files: { 'finanseer.json': { content: JSON.stringify(payload, null, 2) } }
-                    })
-                });
-            } catch(e) { console.warn('Widget push failed:', e); }
-            widgetPushInProgress = false;
-        }
-
-        function openWidgetSetup() {
-            var config = null;
-            try { config = JSON.parse(localStorage.getItem('widget-github-config') || 'null'); } catch(e) {}
-            if (config) {
-                var ti = document.getElementById('widgetGhToken');
-                var gi = document.getElementById('widgetGistId');
-                var ui = document.getElementById('widgetGhUser');
-                if (ti && config.token) ti.value = config.token;
-                if (gi && config.gistId) gi.value = config.gistId;
-                if (ui && config.user) ui.value = config.user;
+            ctx.beginPath();
+            var points = [];
+            for (var i = 0; i < values.length; i++) {
+                var x = padL + (i / (values.length - 1)) * chartW;
+                var y = padT + (1 - (values[i] - minV) / (maxV - minV)) * chartH;
+                points.push({x: x, y: y});
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
             }
-            document.getElementById('scriptableCodeSection').style.display = 'none';
-            document.getElementById('widgetStatusMsg').textContent = '';
-            document.getElementById('widgetModal').style.display = 'flex';
-        }
+            ctx.strokeStyle = '#f4c430';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
 
-        async function saveWidgetConfig() {
-            var token = (document.getElementById('widgetGhToken').value || '').trim();
-            var gistId = (document.getElementById('widgetGistId').value || '').trim();
-            var user = (document.getElementById('widgetGhUser').value || '').trim();
-            var statusEl = document.getElementById('widgetStatusMsg');
+            ctx.lineTo(points[points.length-1].x, H - padB);
+            ctx.lineTo(points[0].x, H - padB);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
 
-            if (!token || !gistId || !user) {
-                statusEl.style.color = '#ef4444';
-                statusEl.textContent = '❌ נא למלא את כל השדות';
-                return;
-            }
-            statusEl.style.color = 'var(--text-secondary)';
-            statusEl.textContent = '⏳ מסנכרן...';
-            try { localStorage.setItem('widget-github-config', JSON.stringify({ token, gistId, user })); } catch(e) {}
-            widgetPushInProgress = false;
-            await pushWidgetData();
-            var rawUrl = 'https://gist.githubusercontent.com/' + user + '/' + gistId + '/raw/finanseer.json';
-            statusEl.style.color = '#10b981';
-            statusEl.innerHTML = '✅ Widget מוגדר ומסונכרן! <a href="' + rawUrl + '" target="_blank" style="color:var(--accent-blue);font-size:0.7rem;">בדוק URL ›</a>';
-        }
+            [points[0], points[points.length-1]].forEach(function(p) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#f4c430';
+                ctx.fill();
+            });
 
-        function showScriptableCode() {
-            var config = null;
-            try { config = JSON.parse(localStorage.getItem('widget-github-config') || 'null'); } catch(e) {}
-            var user = (config && config.user) ? config.user : 'YOUR_USERNAME';
-            var gistId = (config && config.gistId) ? config.gistId : 'YOUR_GIST_ID';
-            var rawUrl = 'https://gist.githubusercontent.com/' + user + '/' + gistId + '/raw/finanseer.json';
-            var code = '// פיננסייר Widget for iOS\n// העתק לתוך Scriptable → New Script\n\nconst DATA_URL = "' + rawUrl + '";\n\nasync function getData() {\n  const req = new Request(DATA_URL + "?t=" + Date.now());\n  req.timeoutInterval = 10;\n  return await req.loadJSON();\n}\n\nconst widgetFamily = config.widgetFamily || "small";\nconst widget = new ListWidget();\nwidget.backgroundColor = new Color("#0a0e27");\nwidget.url = "https://oranmikell-wq.github.io/finance/";\nwidget.setPadding(14, 14, 10, 14);\n\ntry {\n  const d = await getData();\n\n  const header = widget.addStack();\n  header.layoutHorizontally();\n  header.centerAlignContent();\n  const logo = header.addText("💰");\n  logo.font = Font.systemFont(12);\n  header.addSpacer();\n  const title = header.addText("פיננסייר");\n  title.font = Font.boldSystemFont(13);\n  title.textColor = new Color("#f4c430");\n\n  widget.addSpacer(6);\n\n  const total = widget.addText(d.total);\n  total.font = Font.boldSystemFont(24);\n  total.textColor = Color.white();\n  total.minimumScaleFactor = 0.6;\n\n  widget.addSpacer(3);\n\n  const change = widget.addText(d.change);\n  change.font = Font.systemFont(10);\n  change.textColor = new Color(d.changePositive ? "#10b981" : "#ef4444");\n  change.minimumScaleFactor = 0.7;\n\n  if (widgetFamily !== "small" && d.breakdown) {\n    widget.addSpacer(10);\n    for (const item of d.breakdown) {\n      const row = widget.addStack();\n      row.layoutHorizontally();\n      const lbl = row.addText(item.label);\n      lbl.font = Font.systemFont(9);\n      lbl.textColor = new Color("#94a3b8");\n      row.addSpacer();\n      const val = row.addText(item.value);\n      val.font = Font.mediumSystemFont(9);\n      val.textColor = Color.white();\n      widget.addSpacer(2);\n    }\n  }\n\n  widget.addSpacer();\n\n  const upd = widget.addText("עודכן " + d.updatedAt + " · " + d.updatedDate);\n  upd.font = Font.systemFont(7);\n  upd.textColor = new Color("#475569");\n\n} catch(e) {\n  const err = widget.addText("⚠️ " + (e.message || "שגיאה"));\n  err.font = Font.boldSystemFont(11);\n  err.textColor = new Color("#ef4444");\n}\n\nScript.setWidget(widget);\nif (config.runsInApp) widget.presentSmall();\nScript.complete();';
-            var block = document.getElementById('scriptableCodeBlock');
-            if (block) block.textContent = code;
-            document.getElementById('scriptableCodeSection').style.display = 'block';
-        }
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            var firstDate = history[0].date.split('-');
+            var lastDate = history[history.length-1].date.split('-');
+            ctx.fillText(firstDate[2]+'/'+firstDate[1], points[0].x, H - 8);
+            ctx.fillText(lastDate[2]+'/'+lastDate[1], points[points.length-1].x, H - 8);
 
-        function copyScriptableCode() {
-            var code = document.getElementById('scriptableCodeBlock').textContent;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(code).then(function() {
-                    alert('✅ הקוד הועתק! הדבק ב-Scriptable → New Script');
-                }).catch(function() { fallbackCopy(code); });
-            } else { fallbackCopy(code); }
-        }
-
-        function fallbackCopy(text) {
-            var ta = document.createElement('textarea');
-            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-            document.body.appendChild(ta); ta.focus(); ta.select();
-            document.execCommand('copy'); document.body.removeChild(ta);
-            alert('✅ הקוד הועתק!');
+            var firstVal = values[0];
+            var lastVal = values[values.length - 1];
+            var changePct = firstVal > 0 ? ((lastVal - firstVal) / firstVal * 100) : 0;
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillStyle = changePct >= 0 ? '#10b981' : '#ef4444';
+            ctx.fillText((changePct >= 0 ? '+' : '') + changePct.toFixed(1) + '%', W - padR, padT + 12);
         }
 
         function generateInsights() {
