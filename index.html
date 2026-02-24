@@ -6441,87 +6441,122 @@
             }
         }
 
-        // Cache of field names per resource id
-        var _resourceFieldsCache = {};
+        // Fetch multiple months from data.gov.il and compute annual return from monthly data
+        async function fetchGemelFromGovAPI(kupahNum) {
+            var RESOURCE_ID = 'a30dcbea-a1d2-482c-ae29-8f781f5025fb';
 
-        async function _getResourceFields(resourceId) {
-            if (_resourceFieldsCache[resourceId]) return _resourceFieldsCache[resourceId];
+            // Step 1: get latest record for fund info (name, fee, monthly return)
+            var baseUrl = 'https://data.gov.il/api/3/action/datastore_search' +
+                          '?resource_id=' + RESOURCE_ID +
+                          '&q=' + encodeURIComponent(kupahNum) +
+                          '&limit=100';
             try {
-                var resp = await fetch(
-                    'https://data.gov.il/api/3/action/datastore_info?id=' + resourceId,
-                    { signal: AbortSignal.timeout(8000) }
-                );
+                var resp = await fetch(baseUrl, { signal: AbortSignal.timeout(14000) });
                 if (!resp.ok) return null;
                 var json = await resp.json();
-                if (!json.success || !json.result || !json.result.fields) return null;
-                var fields = json.result.fields.map(function(f) { return f.id; });
-                _resourceFieldsCache[resourceId] = fields;
-                console.log('[Gemel] datastore_info fields for', resourceId, ':', fields);
-                return fields;
-            } catch(e) {
-                console.warn('[Gemel] datastore_info failed:', e.message);
-                return null;
+                if (!json.success || !json.result || !json.result.records || json.result.records.length === 0) return null;
+
+                var allRecords = json.result.records;
+                console.log('[Gemel] Got', allRecords.length, 'records, fields:', Object.keys(allRecords[0]));
+                console.log('[Gemel] First record:', allRecords[0]);
+
+                // Filter to this kupah's records only
+                var kupahRecords = allRecords.filter(function(r) {
+                    return Object.values(r).some(function(v) {
+                        var s = String(v || '').trim();
+                        return s === kupahNum || s === String(parseInt(kupahNum, 10));
+                    });
+                });
+                if (kupahRecords.length === 0) kupahRecords = allRecords;
+
+                // Sort by period descending (newest first)
+                kupahRecords.sort(function(a, b) {
+                    var pa = _extractPeriod(a), pb = _extractPeriod(b);
+                    return (pb || '').localeCompare(pa || '');
+                });
+
+                var latestRecord = kupahRecords[0];
+                var keys = Object.keys(latestRecord);
+
+                // Find the monthly return field name dynamically
+                var monthlyReturnField = _findMonthlyReturnField(keys, latestRecord);
+                console.log('[Gemel] Monthly return field:', monthlyReturnField,
+                    '=', monthlyReturnField ? latestRecord[monthlyReturnField] : 'not found');
+
+                // Compute annual return from up to 12 monthly values
+                var annualReturn = null;
+                if (monthlyReturnField && kupahRecords.length >= 2) {
+                    var monthlyVals = [];
+                    // Take last 12 records (already sorted newest first → reverse for oldest first)
+                    var last12 = kupahRecords.slice(0, 12).reverse();
+                    last12.forEach(function(r) {
+                        var v = parseFloat(String(r[monthlyReturnField] || '').replace(',', '.'));
+                        if (!isNaN(v)) monthlyVals.push(v);
+                    });
+                    if (monthlyVals.length >= 6) {
+                        // Compound: ∏(1 + r_i/100) - 1
+                        var compound = 1;
+                        monthlyVals.forEach(function(m) { compound *= (1 + m / 100); });
+                        annualReturn = (compound - 1) * 100;
+                        // If only partial year, annualize
+                        if (monthlyVals.length < 12) {
+                            annualReturn = (Math.pow(compound, 12 / monthlyVals.length) - 1) * 100;
+                        }
+                        console.log('[Gemel] Computed annual from', monthlyVals.length, 'months:',
+                            annualReturn.toFixed(2) + '%', 'monthly values:', monthlyVals);
+                    }
+                }
+
+                var parsed = _parseGemelRecords([latestRecord]);
+                if (parsed && parsed.length > 0) {
+                    // Override yearlyReturn with computed value
+                    if (annualReturn !== null) parsed[0].yearlyReturn = Math.round(annualReturn * 100) / 100;
+                    return parsed;
+                }
+            } catch (e) {
+                console.warn('[Gemel] GovAPI failed:', e.message);
             }
+            return null;
         }
 
-        async function fetchGemelFromGovAPI(kupahNum) {
-            var resourceIds = await _getGemelResourceIds();
-            var toTry = resourceIds.slice(0, 8);
-
-            for (var ri = 0; ri < toTry.length; ri++) {
-                var resourceId = toTry[ri];
-                try {
-                    var qUrl = 'https://data.gov.il/api/3/action/datastore_search' +
-                               '?resource_id=' + resourceId +
-                               '&q=' + encodeURIComponent(kupahNum) +
-                               '&limit=50';
-
-                    var resp = await fetch(qUrl, { signal: AbortSignal.timeout(10000) });
-                    if (!resp.ok) continue;
-                    var json = await resp.json();
-                    if (!json.success || !json.result || !json.result.records) continue;
-
-                    var records = json.result.records;
-                    if (records.length === 0) continue;
-
-                    // Always log fields for debugging
-                    var allKeys = Object.keys(records[0]);
-                    var numericFields = allKeys.filter(function(k) {
-                        var v = records[0][k];
-                        return v !== null && v !== '' && !isNaN(parseFloat(String(v)));
-                    });
-                    console.log('[Gemel] resource', ri, '(' + resourceId + ')');
-                    console.log('[Gemel] ALL fields:', allKeys);
-                    console.log('[Gemel] NUMERIC fields:', numericFields.map(function(k) {
-                        return k + '=' + records[0][k];
-                    }));
-                    console.log('[Gemel] Full record:', records[0]);
-
-                    // Filter to matching kupah rows
-                    var matched = records.filter(function(r) {
-                        return Object.values(r).some(function(v) {
-                            var s = String(v || '').trim();
-                            return s === kupahNum || s === String(parseInt(kupahNum));
-                        });
-                    });
-                    if (matched.length === 0) matched = records;
-
-                    // Skip obviously old data
-                    var hasRecentDate = matched[0] && Object.values(matched[0]).some(function(v) {
-                        return /20(19|2[0-9])/.test(String(v));
-                    });
-                    if (!hasRecentDate && toTry.length - ri > 2) {
-                        console.log('[Gemel] resource', ri, 'seems old, skipping');
-                        continue;
+        // Find the field that holds monthly return percentage
+        function _findMonthlyReturnField(keys, record) {
+            // Exact matches first (most specific)
+            var exactPatterns = [
+                'TSUA_HODSHIT_NOMINALI_BRUTO', 'TSUA_HODSHIT_NOMINALI',
+                'TSUA_HODSHIT_BRUTO', 'TSUA_HODSHIT_NETO', 'TSUA_HODSHIT',
+                'TSUA_NOMINALI_BRUTO_1', 'TSUA_RBIIT_BRUTO_1',
+                'TSUA_HOD_NOMINALI', 'TSUA_HOD',
+                'TSUA_CHODESH', 'TSUA_HODESH',
+            ];
+            for (var p = 0; p < exactPatterns.length; p++) {
+                var pat = exactPatterns[p].toUpperCase();
+                for (var k = 0; k < keys.length; k++) {
+                    if (keys[k].toUpperCase() === pat) {
+                        var v = parseFloat(String(record[keys[k]] || '').replace(',', '.'));
+                        if (!isNaN(v) && Math.abs(v) < 50) return keys[k]; // sanity: monthly < 50%
                     }
+                }
+            }
+            // Partial match — find key containing 'TSUA' with small numeric value
+            for (var k2 = 0; k2 < keys.length; k2++) {
+                if (keys[k2].toUpperCase().indexOf('TSUA') !== -1) {
+                    var v2 = parseFloat(String(record[keys[k2]] || '').replace(',', '.'));
+                    if (!isNaN(v2) && Math.abs(v2) < 30) return keys[k2];
+                }
+            }
+            return null;
+        }
 
-                    var parsed = _parseGemelRecords(matched);
-                    if (parsed && parsed.length > 0 && parsed[0].fundName !== '—') {
-                        console.log('[Gemel] Using resource', ri, '- parsed:', parsed[0]);
-                        return parsed;
+        function _extractPeriod(record) {
+            var keys = Object.keys(record);
+            var periodKeys = ['TKUFA','HODESH','CHODESH','PERIOD','YM','TAARICH'];
+            for (var p = 0; p < periodKeys.length; p++) {
+                for (var k = 0; k < keys.length; k++) {
+                    if (keys[k].toUpperCase().indexOf(periodKeys[p]) !== -1) {
+                        var v = String(record[keys[k]] || '').trim();
+                        if (/^\d{6}$/.test(v) || /^\d{4}-\d{2}/.test(v)) return v;
                     }
-                } catch (e) {
-                    console.warn('[Gemel] resource ' + ri + ' error:', e.message);
                 }
             }
             return null;
