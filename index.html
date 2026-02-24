@@ -4428,6 +4428,19 @@
             if (mode === 'edit' && assetId !== null) {
                 const asset = assets.find(a => a.id === assetId);
                 if (asset) {
+                    // CRITICAL: reset form first so fields from previous edit don't bleed through
+                    form.reset();
+                    // Reset all conditional fields to default hidden state
+                    document.getElementById('realEstateFields').style.display = 'none';
+                    document.getElementById('spyPensionCheckbox').style.display = 'none';
+                    document.getElementById('spyFields').style.display = 'none';
+                    var fundFields = document.getElementById('fundTrackingFields'); if (fundFields) fundFields.style.display = 'none';
+                    var fundResult = document.getElementById('fundSearchResult'); if (fundResult) fundResult.style.display = 'none';
+                    var fundErr = document.getElementById('fundError'); if (fundErr) fundErr.style.display = 'none';
+                    var basisDisplay = document.getElementById('basisReturnDisplay'); if (basisDisplay) basisDisplay.style.display = 'none';
+                    var cf = document.getElementById('currencyField'); if (cf) cf.style.display = 'block';
+                    var vf = document.getElementById('valueField'); if (vf) vf.style.display = 'block';
+
                     title.textContent = 'ערוך נכס';
                     if (subtitle) subtitle.textContent = '';
                     if (iconEl) iconEl.textContent = typeIcons[asset.type] || '📋';
@@ -5024,11 +5037,11 @@
         // data.gov.il resource IDs per product type
         // SUG_KUPA values: 1=קרן פנסיה, 2=קרן השתלמות, 3=גמל להשקעה, 4=גמל קלאסי, 6=פוליסות
         var PRODUCT_CONFIG = {
-            gemel_invest: { label: 'גמל להשקעה', emoji: '💼', sugKupa: '3', cacheKey: 'grank-ginvest-v1', source: 'gemelnet' },
-            pension:      { label: 'פנסיה',       emoji: '🏦', sugKupa: '1', cacheKey: 'grank-pension-v1', source: 'gemelnet' },
-            hishtalmut:   { label: 'השתלמות',     emoji: '📚', sugKupa: '2', cacheKey: 'grank-hish-v1',   source: 'gemelnet' },
-            gemel_classic:{ label: 'גמל קלאסי',   emoji: '🏛️', sugKupa: '4', cacheKey: 'grank-gclas-v1', source: 'gemelnet' },
-            policies:     { label: 'פוליסות',     emoji: '📋', sugKupa: '6', cacheKey: 'grank-polis-v1',  source: 'gemelnet' },
+            gemel_invest: { label: 'גמל להשקעה', emoji: '💼', sugKupa: '3', cacheKey: 'grank-ginvest-v2', source: 'gemelnet' },
+            pension:      { label: 'פנסיה',       emoji: '🏦', sugKupa: '1', cacheKey: 'grank-pension-v2', source: 'gemelnet' },
+            hishtalmut:   { label: 'השתלמות',     emoji: '📚', sugKupa: '2', cacheKey: 'grank-hish-v2',   source: 'gemelnet' },
+            gemel_classic:{ label: 'גמל קלאסי',   emoji: '🏛️', sugKupa: '4', cacheKey: 'grank-gclas-v2', source: 'gemelnet' },
+            policies:     { label: 'פוליסות',     emoji: '📋', sugKupa: '6', cacheKey: 'grank-polis-v2',  source: 'gemelnet' },
             mutual_funds: { label: 'קרנות נאמנות',emoji: '📊', cacheKey: 'grank-mf-v1',   source: 'tase' },
             bonds:        { label: 'קרנות אג״ח',  emoji: '📈', cacheKey: 'grank-bond-v1',  source: 'tase' },
             money_market: { label: 'כספיות',      emoji: '💵', cacheKey: 'grank-mm-v1',    source: 'tase' },
@@ -5248,16 +5261,20 @@
                     if (offset > 15000) break;
                 }
 
-                // Fallback: fetch without filter
-                if (allRecords.length === 0) {
-                    var res2 = await fetch(BASE_URL + '?resource_id=' + RESOURCE_2024 + '&limit=1000');
-                    var json2 = await res2.json();
-                    if (json2.success) allRecords = json2.result.records;
+                // Double-check: filter records client-side by type to prevent mixing
+                if (fType && cfg.sugKupa) {
+                    allRecords = allRecords.filter(function(r) {
+                        return String(r[fType]).trim() === String(cfg.sugKupa).trim();
+                    });
                 }
 
+                // NO unfiltered fallback - if we got nothing we'd rather show an error than mix types
                 if (!allRecords.length) throw new Error('לא נמצאו רשומות ל' + cfg.label);
 
                 // Group by fund+track, aggregate monthly returns
+                // Also track date field to sort and pick only latest 12 months
+                var fDate = findField(['TKUFA','HODESH','DATE','MONTH','YM','YYYYMM','PERIOD']);
+
                 var groups = {};
                 allRecords.forEach(function(r) {
                     var name = fName ? (r[fName] || '').trim() : '';
@@ -5266,7 +5283,11 @@
                     if (!key || key === '||') return;
                     if (!groups[key]) groups[key] = { name: name || fund, fund: fund, type: fType ? (r[fType]||'') : '', fee: 0, months: [] };
                     var ret = parseFloat(r[fRet]);
-                    if (!isNaN(ret)) groups[key].months.push(ret);
+                    // sanity: skip clearly bad values (>100% per month or <-50%)
+                    if (!isNaN(ret) && ret < 100 && ret > -50) {
+                        var dt = fDate ? (r[fDate] || '') : '';
+                        groups[key].months.push({ ret: ret, dt: dt });
+                    }
                     if (fFee) { var f = parseFloat(r[fFee]); if (f > 0) groups[key].fee = f; }
                 });
 
@@ -5276,11 +5297,35 @@
                 };
 
                 var results = Object.values(groups).map(function(g) {
-                    var y1 = compound(g.months);
+                    if (!g.months.length) return null;
+
+                    // Sort by date desc, take only latest 12 months
+                    var sorted12 = g.months.slice().sort(function(a,b) {
+                        return (b.dt || '').localeCompare(a.dt || '');
+                    }).slice(0, 12);
+
+                    // Detect if data is already annual (avg monthly > 5% is suspicious)
+                    var avg = sorted12.reduce(function(s,m){ return s + m.ret; }, 0) / sorted12.length;
+                    var isAnnualData = Math.abs(avg) > 5;  // monthly returns are typically <5%
+
+                    var y1;
+                    if (isAnnualData) {
+                        // Data is probably already annual returns — use average of available years
+                        y1 = avg;
+                    } else {
+                        // True monthly data — compound exactly 12 months
+                        y1 = compound(sorted12.map(function(m){ return m.ret; }));
+                    }
+
                     if (y1 === null || Math.abs(y1) < 0.01) return null;
-                    // Estimate multi-year from annual (will improve when we have multi-year data)
+
+                    // Cap y1 sanity: no fund returns >150% in a year realistically
+                    if (Math.abs(y1) > 150) return null;
+
+                    // Multi-year: geometric projection from y1
                     var y3 = (Math.pow(1 + y1/100, 3) - 1) * 100;
                     var y5 = (Math.pow(1 + y1/100, 5) - 1) * 100;
+
                     return { name: g.name, fund: g.fund, type: g.type, y1: y1, y3: y3, y5: y5, fee: g.fee };
                 }).filter(Boolean);
 
@@ -5381,7 +5426,7 @@
             }
 
             var fmtPct = function(v) {
-                if (v === null || v === undefined || isNaN(v)) return '<span style="color:rgba(255,255,255,0.2);">—</span>';
+                if (v === null || v === undefined || isNaN(v) || Math.abs(v) > 999) return '<span style="color:rgba(255,255,255,0.2);">—</span>';
                 var c = v >= 0 ? '#10b981' : '#ef4444';
                 return '<span style="color:' + c + ';font-weight:600;">' + (v>=0?'+':'') + v.toFixed(1) + '%</span>';
             };
