@@ -6521,26 +6521,26 @@
 
         // Find the field that holds monthly return percentage
         function _findMonthlyReturnField(keys, record) {
-            // Exact matches first (most specific)
-            var exactPatterns = [
+            var candidates = [
+                'MONTHLY_YIELD',
                 'TSUA_HODSHIT_NOMINALI_BRUTO', 'TSUA_HODSHIT_NOMINALI',
                 'TSUA_HODSHIT_BRUTO', 'TSUA_HODSHIT_NETO', 'TSUA_HODSHIT',
                 'TSUA_NOMINALI_BRUTO_1', 'TSUA_RBIIT_BRUTO_1',
-                'TSUA_HOD_NOMINALI', 'TSUA_HOD',
-                'TSUA_CHODESH', 'TSUA_HODESH',
+                'TSUA_HOD_NOMINALI', 'TSUA_HOD', 'TSUA_CHODESH', 'TSUA_HODESH',
             ];
-            for (var p = 0; p < exactPatterns.length; p++) {
-                var pat = exactPatterns[p].toUpperCase();
+            for (var p = 0; p < candidates.length; p++) {
+                var pat = candidates[p].toUpperCase();
                 for (var k = 0; k < keys.length; k++) {
                     if (keys[k].toUpperCase() === pat) {
                         var v = parseFloat(String(record[keys[k]] || '').replace(',', '.'));
-                        if (!isNaN(v) && Math.abs(v) < 50) return keys[k]; // sanity: monthly < 50%
+                        if (!isNaN(v) && Math.abs(v) < 50) return keys[k];
                     }
                 }
             }
-            // Partial match — find key containing 'TSUA' with small numeric value
+            // Partial match — find key containing 'YIELD' or 'TSUA' with small numeric value
             for (var k2 = 0; k2 < keys.length; k2++) {
-                if (keys[k2].toUpperCase().indexOf('TSUA') !== -1) {
+                var ku = keys[k2].toUpperCase();
+                if (ku.indexOf('MONTHLY') !== -1 || ku.indexOf('TSUA') !== -1) {
                     var v2 = parseFloat(String(record[keys[k2]] || '').replace(',', '.'));
                     if (!isNaN(v2) && Math.abs(v2) < 30) return keys[k2];
                 }
@@ -6567,137 +6567,66 @@
             return records.map(function(r) {
                 var keys = Object.keys(r);
 
-                // Smart field finder — searches for any key containing ANY of the patterns
-                function ff(patterns) {
-                    var pats = Array.isArray(patterns) ? patterns : [patterns];
-                    for (var p = 0; p < pats.length; p++) {
-                        var pat = pats[p].toUpperCase();
+                function fld(names) {
+                    for (var i = 0; i < names.length; i++) {
+                        var n = names[i].toUpperCase();
                         for (var k = 0; k < keys.length; k++) {
-                            var ku = keys[k].toUpperCase();
-                            if (ku === pat || ku.indexOf(pat) !== -1) {
-                                var val = r[keys[k]];
-                                if (val !== null && val !== undefined && String(val).trim() !== '') {
-                                    return String(val).trim();
-                                }
+                            if (keys[k].toUpperCase() === n) {
+                                var v = r[keys[k]];
+                                if (v !== null && v !== undefined && String(v).trim() !== '') return String(v).trim();
                             }
                         }
                     }
                     return null;
                 }
 
-                // Numeric finder — also allows 0
-                function ffNum(patterns) {
-                    var pats = Array.isArray(patterns) ? patterns : [patterns];
-                    for (var p = 0; p < pats.length; p++) {
-                        var pat = pats[p].toUpperCase();
-                        for (var k = 0; k < keys.length; k++) {
-                            var ku = keys[k].toUpperCase();
-                            if (ku === pat || ku.indexOf(pat) !== -1) {
-                                var val = r[keys[k]];
-                                if (val !== null && val !== undefined && String(val).trim() !== '') {
-                                    var n = parseFloat(String(val).replace(',', '.'));
-                                    if (!isNaN(n)) return n;
-                                }
-                            }
-                        }
-                    }
-                    return null;
+                function fldNum(names) {
+                    var v = fld(names);
+                    if (v === null) return null;
+                    var n = parseFloat(v.replace(',', '.'));
+                    return isNaN(n) ? null : n;
                 }
 
-                // ── Fund / track name ──
-                var fundName  = ff(['SHEM_KUPAH','SHEM_KUPA','KUPAH_NAME','FUND_NAME','KUPA_NAME',
-                                    'SHEM_MASLUL','SHEM_GUF','SHEM']);
-                var trackName = ff(['SHEM_MASLUL','MASLUL','TRACK','SHEM_MASLULIT']);
+                // ── Names (English fields from data.gov.il gemelnet) ──
+                var fundName = fld(['FUND_NAME','SHEM_KUPAH','SHEM_KUPA','SHEM_GUF','SHEM']);
+                var trackName = fld(['SUB_SPECIALIZATION','SPECIALIZATION','SHEM_MASLUL','MASLUL']);
                 if (trackName === fundName) trackName = null;
+                var company = fld(['MANAGING_CORPORATION','CONTROLLING_CORPORATION','SHEM_CHV','SHEM_YATZRAN','COMPANY']);
 
-                // ── Company ──
-                var company = ff(['SHEM_CHV','SHEM_YATZRAN','YATZRAN','MENAHELET','COMPANY',
-                                  'MISHPAHA','SHEM_HEVRA','HEVRA']);
-
-                // ── Annual return (12 months) ──
-                // Try explicit annual fields first
-                var yearlyReturn = ffNum([
-                    'TSUA_NOMINALI_BRUTO_12',
-                    'TSUA_NOMINALI_NETO_12',
-                    'TSUA_RBIIT_BRUTO_12',
-                    'TSUA_RBIIT_NETO_12',
-                    'TSUA_SHNATI_NOMINALI_BRUTO',
-                    'TSUA_SHNATI_NOMINALI_NETO',
-                    'TSUA_SHNATI_BRUTO',
-                    'TSUA_SHNATI_NETO',
-                    'TSUA_SHNATI_NOMINALI',
-                    'TSUA_SHNATI',
-                    'TSUA_12_HODESH',
-                    'TSUA12',
-                    'TSUA_12M',
-                    'NOMINAL_SHNATI',
-                    'BRUTO_SHNATI',
-                    'TSUA_NETO_12',
-                    'TSUA_BRUTO_12',
-                    'ACHUZ_TSUA_SHNATIT',
-                    'TSUA_REALI_12',
-                    'TSHUAT_SHNATI',
-                ]);
-                if (yearlyReturn != null && Math.abs(yearlyReturn) > 200) yearlyReturn = null;
-
-                // ── Monthly return (fallback if no annual) ──
-                var monthlyReturn = ffNum([
-                    'TSUA_HODSHIT_NOMINALI',
-                    'TSUA_HODSHIT_BRUTO',
-                    'TSUA_HODSHIT_NETO',
-                    'TSUA_HODSHIT',
-                    'TSUA_HOD',
-                    'TSUA_CHODESH',
-                    'TSUA_HODESH',
-                    'TSUA_NOMINALI_BRUTO_1',
-                    'TSUA_RBIIT_BRUTO_1',
+                // ── Yearly return — use trailing 3yr annualized as best proxy ──
+                var yearlyReturn = fldNum([
+                    'AVG_ANNUAL_YIELD_TRAILING_3YRS',   // best: annualized 3yr avg
+                    'AVG_ANNUAL_YIELD_TRAILING_5YRS',   // fallback: annualized 5yr avg
+                    'YEAR_TO_DATE_YIELD',               // YTD if nothing else
+                    'TSUA_SHNATI','TSUA_12_HODESH','TSUA12','TSUA_SHNATI_BRUTO',
                 ]);
 
                 // ── 3-year return ──
-                var threeYearReturn = ffNum([
-                    'TSUA_NOMINALI_BRUTO_36',
-                    'TSUA_NOMINALI_NETO_36',
-                    'TSUA_RBIIT_BRUTO_36',
-                    'TSUA_RBIIT_NETO_36',
-                    'TSUA_SHNATI_3_SHANA',
-                    'TSUA_3_SHANIM',
-                    'TSUA_36',
-                    'TSUA3_SHNATI',
-                    'TSUA_3Y',
-                    'TSUA_3',
-                    'TSUA3',
+                var threeYearReturn = fldNum([
+                    'YIELD_TRAILING_3_YRS',
+                    'TSUA_3','TSUA3','TSUA_RBIIT_BRUTO_36',
                 ]);
 
                 // ── Management fee ──
-                var fee = ffNum([
-                    'DMEI_NIHUL_NITZEVET',
-                    'DMEI_NIHUL_MAXIMALI',
-                    'DMEI_NIHUL_MAMUTSI',
-                    'DMEI_NIHUL',
-                    'DM_NIHUL',
-                    'NITZEVET',
-                    'FEE',
+                var fee = fldNum([
+                    'AVG_ANNUAL_MANAGEMENT_FEE',
+                    'DMEI_NIHUL_NITZEVET','DMEI_NIHUL','FEE',
                 ]);
-                if (fee != null && fee > 10) fee = null;
+                if (fee !== null && fee > 10) fee = null;
 
-                // ── Period / date ──
-                var period = ff([
-                    'TKUFA','HODESH_IVRI','HODESH','SHNAT_DIVUACH','SHANA',
-                    'CHODESH','PERIOD','DATE_PERIOD','YM','YYYYMM','TAARICH',
-                ]);
+                // ── Period ──
+                var period = fld(['REPORT_PERIOD','TKUFA','HODESH','CHODESH','PERIOD']);
                 if (period && /^\d{4}-\d{2}-\d{2}T/.test(period)) period = period.slice(0, 10);
                 if (period && /^(200[0-9]|201[0-7])/.test(period)) period = null;
 
-                // ── Collect all numeric fields for debug ──
+                // ── All numeric fields for debug ──
                 var allNumericFields = {};
                 keys.forEach(function(k) {
-                    if (k === '_id') return;
+                    if (k === '_id' || k === 'rank') return;
                     var v = r[k];
                     if (v !== null && v !== undefined && String(v).trim() !== '') {
                         var n = parseFloat(String(v).replace(',', '.'));
-                        if (!isNaN(n) && Math.abs(n) < 1000) {
-                            allNumericFields[k] = n;
-                        }
+                        if (!isNaN(n)) allNumericFields[k] = n;
                     }
                 });
 
@@ -6708,7 +6637,7 @@
                     trackName:        trackName || null,
                     company:          company   || '—',
                     yearlyReturn:     yearlyReturn,
-                    monthlyReturn:    monthlyReturn,   // fallback
+                    monthlyReturn:    fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']),
                     threeYearReturn:  threeYearReturn,
                     fee:              fee,
                     period:           period || null,
