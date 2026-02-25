@@ -2919,11 +2919,15 @@
                 if (reportDateMatch) {
                     reportDate = reportDateMatch[3] + '-' + reportDateMatch[2].padStart(2,'0') + '-' + reportDateMatch[1].padStart(2,'0');
                 }
-                // Fallback: look for standalone date pattern near the NAV
+                // Fallback: look for a recent date (2024+) — skip old policy-change dates
                 if (!reportDate) {
-                    var dateMatch2 = text.match(/(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})/);
-                    if (dateMatch2) {
-                        reportDate = dateMatch2[3] + '-' + dateMatch2[2].padStart(2,'0') + '-' + dateMatch2[1].padStart(2,'0');
+                    var allDates = [...text.matchAll(/(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})/g)];
+                    for (var dm of allDates) {
+                        var yr = parseInt(dm[3]);
+                        if (yr >= 2024) {
+                            reportDate = dm[3] + '-' + dm[2].padStart(2,'0') + '-' + dm[1].padStart(2,'0');
+                            break;
+                        }
                     }
                 }
 
@@ -2949,6 +2953,11 @@
                     var cached = localStorage.getItem('fund-cache-' + fundNumber);
                     if (cached) {
                         var c = JSON.parse(cached);
+                        // Invalidate cache with old policy-change dates (pre-2024)
+                        if (c.reportDate && parseInt(c.reportDate.slice(0,4)) < 2024) {
+                            try { localStorage.removeItem('fund-cache-' + fundNumber); } catch(e){}
+                            return null;
+                        }
                         var cacheAgeHours = c.date ? (new Date() - new Date(c.date)) / 3600000 : 9999;
                         // Always return cache (even if stale) — better than null
                         c._fromCache = true;
