@@ -5218,6 +5218,8 @@
                         asset.gemelFee             = gd[0].fee;
                         if (gd[0].yearlyReturn != null) asset.return = gd[0].yearlyReturn;
                         if (gd[0].fee != null) asset.fee = gd[0].fee;
+                        // Mark current period as already applied — prevents double-counting on refresh
+                        if (gd[0].period) asset.gemelLastAppliedPeriod = gd[0].period;
                     }
                     asset.currency = 'ILS';
                 }
