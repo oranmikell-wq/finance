@@ -6295,7 +6295,8 @@
                 const icon = assetTypeIcons[asset.type] || '📋';
                 const typeName = assetTypeNames[asset.type] || asset.type;
                 const delay = Math.min(idx * 0.05, 0.4);
-                const editBtn = `<button class="asset-row-edit-btn" data-edit-id="${asset.id}" type="button">✏️ עריכה</button>`;
+                const assetIdForEdit = asset.id;
+                const editBtn = `<button class="asset-row-edit-btn" type="button" onclick="openModal('edit', ${assetIdForEdit});">✏️ עריכה</button>`;
                 
                 // ===== REAL ESTATE =====
                 if (asset.type === 'real_estate') {
@@ -6608,27 +6609,14 @@
                 grid.removeEventListener('touchend', grid._delegationTouchHandler);
             }
             grid._delegationHandler = function(e) {
-                var editBtn = e.target.closest('[data-edit-id]');
-                if (editBtn) {
-                    e.stopPropagation();
-                    openModal('edit', parseInt(editBtn.getAttribute('data-edit-id')));
-                    return;
-                }
+                // Only toggle expand when clicking on the main row area (not inside expand)
+                if (e.target.closest('button')) return; // let buttons handle themselves
                 var row = e.target.closest('.asset-row');
                 if (row && !e.target.closest('.asset-row-expand')) {
                     toggleAssetExpand(parseInt(row.getAttribute('data-asset-id')));
                 }
             };
-            grid._delegationTouchHandler = function(e) {
-                var editBtn = e.target.closest('[data-edit-id]');
-                if (editBtn) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openModal('edit', parseInt(editBtn.getAttribute('data-edit-id')));
-                }
-            };
             grid.addEventListener('click', grid._delegationHandler);
-            grid.addEventListener('touchend', grid._delegationTouchHandler, { passive: false });
             grid._delegationAttached = true;
         }
 
