@@ -2266,10 +2266,17 @@
                             </div>
 
                             <div class="form-group" style="margin-top:12px;margin-bottom:0;">
-                                <label>💰 יתרת צבירה (₪)</label>
-                                <input type="text" inputmode="decimal" id="pensiaAccumulation"
-                                    placeholder="הכנס את יתרת הצבירה מדוח הקרן"
-                                    oninput="formatNumberInput(this); document.getElementById('assetValue').value=this.value;">
+                                <label>📅 שווי צבירה לתחילת <span id="pensiaBaseYearLabel">2025</span> (₪)</label>
+                                <input type="text" inputmode="decimal" id="pensiaBaseValueInput"
+                                    placeholder="לדוגמה: 250,000"
+                                    oninput="formatNumberInput(this);">
+                                <div style="font-size:0.69rem;color:var(--text-secondary);margin-top:3px;">
+                                    הזן את שווי הצבירה נכון ל-01/01/<span id="pensiaBaseYearLabel2">2025</span> — האפליקציה תחשב אוטומטית את השווי הנוכחי לפי תשואות חודשיות
+                                </div>
+                                <div id="pensiaComputedPreview" style="display:none;margin-top:6px;padding:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;font-size:0.75rem;">
+                                    💡 שווי מחושב: <span id="pensiaComputedValue" style="color:var(--accent-green);font-weight:700;"></span>
+                                    <span id="pensiaComputedDetail" style="color:var(--text-secondary);"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4934,6 +4941,10 @@
                     if (asset.type === 'pension' && asset.pensiaKupahNum) {
                         document.getElementById('isPensiaTracked').checked = true;
                         document.getElementById('pensiaKupahNumber').value = asset.pensiaKupahNum;
+                        if (asset.pensiaBaseValue > 0) {
+                            var bvEl = document.getElementById('pensiaBaseValueInput');
+                            if (bvEl) bvEl.value = asset.pensiaBaseValue.toLocaleString('he-IL', {maximumFractionDigits:0});
+                        }
                         document.getElementById('pensiaAccumulation').value = formatNum(asset.value || 0);
                         togglePensiaFields();
                         if (asset.pensiaFundName) {
@@ -5148,8 +5159,13 @@
                 var pensiaNum = (document.getElementById('pensiaKupahNumber').value || '').trim();
                 if (pensiaNum.length >= 4) {
                     asset.pensiaKupahNum = pensiaNum;
-                    var accum = parseNum(document.getElementById('pensiaAccumulation'));
-                    if (accum > 0) asset.value = accum;
+                    var baseVal = parseNum(document.getElementById('pensiaBaseValueInput'));
+                    if (baseVal > 0) {
+                        asset.pensiaBaseValue = baseVal;
+                        asset.pensiaBaseYear = new Date().getFullYear();
+                        // Set value to base initially; will be computed on first update
+                        if (!asset.value || asset.value === 0) asset.value = baseVal;
+                    }
                     var pd = pensiaDataCache[pensiaNum];
                     if (pd) {
                         asset.pensiaFundName      = pd.fundName;
@@ -6543,7 +6559,15 @@
                                 <span class="asset-row-detail-label">תשואה חודשית</span>
                                 <span class="asset-row-detail-value" style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span>
                             </div>` : ''}
-                            ${asset.type === 'pension' && asset.pensiaLastAppliedPeriod ? (() => {
+                            ${asset.pensiaBaseValue > 0 ? `<div class="asset-row-detail" style="grid-column:1/-1;background:rgba(16,185,129,0.06);border-radius:8px;padding:6px 10px;">
+                                <span class="asset-row-detail-label">📊 מחושב מבסיס</span>
+                                <span class="asset-row-detail-value" style="color:var(--accent-green);">
+                                    ₪${asset.pensiaBaseValue.toLocaleString('he-IL', {maximumFractionDigits:0})} (01/01/${asset.pensiaBaseYear || new Date().getFullYear()})
+                                    ${asset.pensiaComputedMonths ? `· ${asset.pensiaComputedMonths} חודשים` : ''}
+                                    ${asset.pensiaComputedPeriod ? `· עד ${asset.pensiaComputedPeriod.slice(4)}/${asset.pensiaComputedPeriod.slice(0,4)}` : ''}
+                                </span>
+                            </div>` : ''}
+                            ${!asset.pensiaBaseValue && asset.type === 'pension' && asset.pensiaLastAppliedPeriod ? (() => {
                                 var p = String(asset.pensiaLastAppliedPeriod);
                                 var pDisp = p.length === 6 ? p.slice(4) + '/' + p.slice(0,4) : p;
                                 return `<div class="asset-row-detail" style="grid-column:1/-1;">
@@ -7280,19 +7304,30 @@
                             if (data.fundName)              { x.pensiaFundName = data.fundName; }
                             if (data.company)               { x.pensiaCompany  = data.company; }
 
-                            // ── Auto-update accumulation value using monthly yield ──
-                            // Only apply if this is a NEW period we haven't applied yet
-                            var newPeriod = data.periodRaw; // e.g. "202601"
-                            var lastPeriod = x.pensiaLastAppliedPeriod || null;
-                            if (newPeriod && data.monthlyReturn != null && x.value > 0) {
-                                if (!lastPeriod || newPeriod > lastPeriod) {
-                                    var oldValue = x.value;
-                                    x.value = Math.round(x.value * (1 + data.monthlyReturn / 100));
-                                    x.pensiaLastAppliedPeriod = newPeriod;
-                                    console.log('[Pensia] 💰 Auto-applied monthly ' + data.monthlyReturn + '% for period ' + newPeriod
-                                        + ': ₪' + oldValue.toLocaleString('he-IL') + ' → ₪' + x.value.toLocaleString('he-IL'));
-                                } else {
-                                    console.log('[Pensia] Period ' + newPeriod + ' already applied (last: ' + lastPeriod + '), skipping accumulation update');
+                            // ── Compute current value from base (start-of-year) value ──
+                            if (x.pensiaBaseValue > 0 && data.currentYearMonthly && data.currentYearMonthly.length > 0) {
+                                var compound = 1;
+                                data.currentYearMonthly.forEach(function(m) { compound *= (1 + m.yield / 100); });
+                                var computed = Math.round(x.pensiaBaseValue * compound);
+                                var lastPeriod = data.currentYearMonthly[data.currentYearMonthly.length - 1].period;
+                                var lastPeriodDisp = lastPeriod.length === 6 ? lastPeriod.slice(4) + '/' + lastPeriod.slice(0,4) : lastPeriod;
+                                x.value = computed;
+                                x.pensiaComputedPeriod = lastPeriod;
+                                x.pensiaComputedMonths = data.currentYearMonthly.length;
+                                console.log('[Pensia] 📊 Computed from base ₪' + x.pensiaBaseValue.toLocaleString('he-IL')
+                                    + ' × ' + compound.toFixed(4) + ' (' + data.currentYearMonthly.length + ' months) = ₪' + computed.toLocaleString('he-IL'));
+                            } else if (!x.pensiaBaseValue) {
+                                // Legacy: single-month auto-apply
+                                var newPeriod = data.periodRaw;
+                                var lastPeriod = x.pensiaLastAppliedPeriod || null;
+                                if (newPeriod && data.monthlyReturn != null && x.value > 0) {
+                                    if (!lastPeriod || newPeriod > lastPeriod) {
+                                        var oldValue = x.value;
+                                        x.value = Math.round(x.value * (1 + data.monthlyReturn / 100));
+                                        x.pensiaLastAppliedPeriod = newPeriod;
+                                        console.log('[Pensia] 💰 Auto-applied monthly ' + data.monthlyReturn + '% for period ' + newPeriod
+                                            + ': ₪' + oldValue.toLocaleString('he-IL') + ' → ₪' + x.value.toLocaleString('he-IL'));
+                                    }
                                 }
                             }
                         });
@@ -7312,6 +7347,12 @@
         function togglePensiaFields() {
             var isChecked = document.getElementById('isPensiaTracked').checked;
             document.getElementById('pensiaFields').style.display = isChecked ? 'block' : 'none';
+            // Set dynamic year label
+            var curYear = new Date().getFullYear();
+            var el1 = document.getElementById('pensiaBaseYearLabel');
+            var el2 = document.getElementById('pensiaBaseYearLabel2');
+            if (el1) el1.textContent = curYear;
+            if (el2) el2.textContent = curYear;
             if (isChecked) {
                 // Uncheck SPY if enabled
                 var spy = document.getElementById('isSpyPension');
@@ -7523,17 +7564,30 @@
 
             var monthlyReturn = fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']);
 
+            // Build current-year monthly array (sorted Jan→latest)
+            var currentYear = new Date().getFullYear().toString(); // e.g. "2026"
+            var currentYearMonthly = filtered.filter(function(rec) {
+                var p = String(rec.REPORT_PERIOD || rec.TKUFA || '');
+                return p.startsWith(currentYear);
+            }).map(function(rec) {
+                var p = String(rec.REPORT_PERIOD || rec.TKUFA || '');
+                var my = parseFloat(String(rec.MONTHLY_YIELD || rec.TSUA_HODSHIT || rec.TSUA_HOD || '').replace(',', '.'));
+                return { period: p, yield: isNaN(my) ? null : my };
+            }).filter(function(x) { return x.yield !== null; })
+            .sort(function(a, b) { return a.period.localeCompare(b.period); }); // Jan first
+
             return {
                 fundName:        fld(['FUND_NAME','SHEM_KUPA','SHEM_KUPAH']) || '—',
                 company:         fld(['MANAGING_CORPORATION','CONTROLLING_CORPORATION','SHEM_CHV']) || '—',
                 monthlyReturn:   monthlyReturn,
-                yearlyReturn:    trailing12,                                          // computed from monthly compounds
-                yearlyReturnSource: trailing12Source,                                 // e.g. "12 חודשים"
+                yearlyReturn:    trailing12,
+                yearlyReturnSource: trailing12Source,
                 threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
                 fee:             fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
                 period:          periodDisplay || null,
-                periodRaw:       periodStr || null,                                   // e.g. "202601"
+                periodRaw:       periodStr || null,
                 recordsAvailable: filtered.length,
+                currentYearMonthly: currentYearMonthly, // [{period:'202601', yield:1.5}, ...]
             };
         }
 
