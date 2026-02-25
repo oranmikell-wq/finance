@@ -6304,7 +6304,7 @@
                     const eq = asset.value;
                     const pctOwned = pv > 0 ? ((eq / pv) * 100) : 0;
                     return `
-                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s" onclick="toggleAssetExpand(${asset.id})">
+                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
                         <div class="asset-row-main">
                             <div class="asset-row-icon" style="background:rgba(16,185,129,0.1);">${icon}</div>
                             <div class="asset-row-info">
@@ -6361,7 +6361,7 @@
                     const profitILS = profitUSD * exchangeRate;
 
                     return `
-                    <div class="asset-row spy-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s" onclick="toggleAssetExpand(${asset.id})">
+                    <div class="asset-row spy-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
                         <div class="asset-row-main">
                             <div class="asset-row-icon" style="background:rgba(244,196,48,0.12);">${icon}</div>
                             <div class="asset-row-info">
@@ -6444,7 +6444,7 @@
                     const fs = function(v) { return v >= 0 ? '+' : ''; };
                     
                     return `
-                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s;border-right:3px solid var(--accent-cyan);" onclick="toggleAssetExpand(${asset.id})">
+                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s;border-right:3px solid var(--accent-cyan);">
                         <div class="asset-row-main">
                             <div class="asset-row-icon" style="background:rgba(0,217,255,0.1);">${icon}</div>
                             <div class="asset-row-info">
@@ -6514,7 +6514,7 @@
                 const currencyName = currency === 'USD' ? 'דולר' : currency === 'BTC' ? 'ביטקוין' : currency === 'ETH' ? 'איתריום' : 'שקל';
                 
                 return `
-                <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s" onclick="toggleAssetExpand(${asset.id})">
+                <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
                     <div class="asset-row-main">
                         <div class="asset-row-icon" style="background:${iconBg};">${icon}</div>
                         <div class="asset-row-info">
@@ -6601,18 +6601,35 @@
                 </div>`;
             }).join('');
 
-            // Attach edit button handlers directly — avoids iOS stopPropagation issues
-            grid.querySelectorAll('[data-edit-id]').forEach(function(btn) {
-                btn.addEventListener('touchend', function(e) {
+            // Event delegation on grid — handles both expand and edit
+            // Runs fresh after each render
+            if (grid._delegationAttached) {
+                grid.removeEventListener('click', grid._delegationHandler);
+                grid.removeEventListener('touchend', grid._delegationTouchHandler);
+            }
+            grid._delegationHandler = function(e) {
+                var editBtn = e.target.closest('[data-edit-id]');
+                if (editBtn) {
+                    e.stopPropagation();
+                    openModal('edit', parseInt(editBtn.getAttribute('data-edit-id')));
+                    return;
+                }
+                var row = e.target.closest('.asset-row');
+                if (row && !e.target.closest('.asset-row-expand')) {
+                    toggleAssetExpand(parseInt(row.getAttribute('data-asset-id')));
+                }
+            };
+            grid._delegationTouchHandler = function(e) {
+                var editBtn = e.target.closest('[data-edit-id]');
+                if (editBtn) {
                     e.preventDefault();
                     e.stopPropagation();
-                    openModal('edit', parseInt(btn.getAttribute('data-edit-id')));
-                }, { passive: false });
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    openModal('edit', parseInt(btn.getAttribute('data-edit-id')));
-                });
-            });
+                    openModal('edit', parseInt(editBtn.getAttribute('data-edit-id')));
+                }
+            };
+            grid.addEventListener('click', grid._delegationHandler);
+            grid.addEventListener('touchend', grid._delegationTouchHandler, { passive: false });
+            grid._delegationAttached = true;
         }
 
         function updateChart() {
