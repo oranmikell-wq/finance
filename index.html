@@ -6295,7 +6295,7 @@
                 const icon = assetTypeIcons[asset.type] || '📋';
                 const typeName = assetTypeNames[asset.type] || asset.type;
                 const delay = Math.min(idx * 0.05, 0.4);
-                const editBtn = `<button class="asset-row-edit-btn" onclick="event.stopPropagation(); openModal('edit', ${asset.id});">✏️ עריכה</button>`;
+                const editBtn = `<button class="asset-row-edit-btn" data-edit-id="${asset.id}" type="button">✏️ עריכה</button>`;
                 
                 // ===== REAL ESTATE =====
                 if (asset.type === 'real_estate') {
@@ -6600,6 +6600,19 @@
                     </div>
                 </div>`;
             }).join('');
+
+            // Attach edit button handlers directly — avoids iOS stopPropagation issues
+            grid.querySelectorAll('[data-edit-id]').forEach(function(btn) {
+                btn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openModal('edit', parseInt(btn.getAttribute('data-edit-id')));
+                }, { passive: false });
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openModal('edit', parseInt(btn.getAttribute('data-edit-id')));
+                });
+            });
         }
 
         function updateChart() {
