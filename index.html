@@ -4771,6 +4771,7 @@
                                 fundName:        asset.gemelFundName,
                                 company:         asset.gemelCompany || '—',
                                 yearlyReturn:    asset.gemelYearlyReturn != null ? asset.gemelYearlyReturn : null,
+                                monthlyReturn:   asset.gemelMonthlyReturn != null ? asset.gemelMonthlyReturn : null,
                                 threeYearReturn: null,
                                 fee:             asset.gemelFee != null ? asset.gemelFee : null,
                                 period:          null,
@@ -6624,24 +6625,48 @@
                 function(u) { return u; },
                 function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
                 function(u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
-                function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
             ];
             var json = null;
 
+            // Use exact FUND_ID filter + sort by REPORT_PERIOD descending
+            var filters = JSON.stringify({ 'FUND_ID': parseInt(kupahNum, 10) });
+            var sortParam = '&sort=REPORT_PERIOD+desc';
+
             for (var ri = 0; ri < GEMELNET_KNOWN_IDS.length && !json; ri++) {
-                var fullUrl = BASE + '?resource_id=' + GEMELNET_KNOWN_IDS[ri] + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
-                console.log('[Gemel] Trying resource ID:', GEMELNET_KNOWN_IDS[ri]);
+                var baseUrl = BASE + '?resource_id=' + GEMELNET_KNOWN_IDS[ri]
+                    + '&filters=' + encodeURIComponent(filters)
+                    + sortParam + '&limit=24';
+                console.log('[Gemel] Trying exact filter for FUND_ID:', kupahNum, 'resource:', GEMELNET_KNOWN_IDS[ri]);
+
                 for (var pi = 0; pi < PROXIES.length && !json; pi++) {
                     try {
-                        var resp = await _fetchWithTimeout(PROXIES[pi](fullUrl), { headers: { 'Accept': 'application/json' } }, 15000);
+                        var resp = await _fetchWithTimeout(PROXIES[pi](baseUrl), { headers: { 'Accept': 'application/json' } }, 15000);
                         if (!resp.ok) continue;
                         var rawJ = await resp.json();
                         var candidate = (rawJ && rawJ.contents) ? JSON.parse(rawJ.contents) : rawJ;
                         if (candidate && candidate.success && candidate.result && candidate.result.records && candidate.result.records.length > 0) {
                             json = candidate;
-                            console.log('[Gemel] Got data via proxy', pi, 'resource', ri, 'records:', candidate.result.records.length);
+                            console.log('[Gemel] ✅ exact filter worked — proxy', pi, 'resource', ri, 'records:', candidate.result.records.length);
                         }
-                    } catch(e) { console.warn('[Gemel] proxy', pi, 'resource', ri, 'failed:', e.message); }
+                    } catch(e) { console.warn('[Gemel] exact filter proxy', pi, 'resource', ri, 'failed:', e.message); }
+                }
+
+                // Fallback: free-text search if exact filter returned nothing
+                if (!json) {
+                    var fallbackUrl = BASE + '?resource_id=' + GEMELNET_KNOWN_IDS[ri]
+                        + '&q=' + encodeURIComponent(kupahNum) + '&limit=24';
+                    for (var pi2 = 0; pi2 < PROXIES.length && !json; pi2++) {
+                        try {
+                            var r2 = await _fetchWithTimeout(PROXIES[pi2](fallbackUrl), { headers: { 'Accept': 'application/json' } }, 15000);
+                            if (!r2.ok) continue;
+                            var rj2 = await r2.json();
+                            var c2 = (rj2 && rj2.contents) ? JSON.parse(rj2.contents) : rj2;
+                            if (c2 && c2.success && c2.result && c2.result.records && c2.result.records.length > 0) {
+                                json = c2;
+                                console.log('[Gemel] ✅ free-text fallback worked — proxy', pi2, 'resource', ri);
+                            }
+                        } catch(e2) {}
+                    }
                 }
             }
 
@@ -6720,7 +6745,7 @@
 
         function _extractPeriod(record) {
             var keys = Object.keys(record);
-            var periodKeys = ['TKUFA','HODESH','CHODESH','PERIOD','YM','TAARICH'];
+            var periodKeys = ['REPORT_PERIOD','TKUFA','HODESH','CHODESH','PERIOD','YM','TAARICH'];
             for (var p = 0; p < periodKeys.length; p++) {
                 for (var k = 0; k < keys.length; k++) {
                     if (keys[k].toUpperCase().indexOf(periodKeys[p]) !== -1) {
@@ -7059,31 +7084,53 @@
             // pensia-net dataset on data.gov.il
             var PENSIA_RESOURCE_IDS = [
                 '6d47d6b5-cb08-488b-b333-f1e717b1e1bd',
-                '1f4dacc1-301e-4e3b-881a-e8b8a7f4f7e1'
             ];
             var BASE = 'https://data.gov.il/api/3/action/datastore_search';
             var PROXIES = [
                 function(u) { return u; },
                 function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
                 function(u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
-                function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
             ];
 
             var json = null;
+            var filters = JSON.stringify({ 'FUND_ID': parseInt(kupahNum, 10) });
+            var sortParam = '&sort=REPORT_PERIOD+desc';
+
             for (var ri = 0; ri < PENSIA_RESOURCE_IDS.length && !json; ri++) {
-                var fullUrl = BASE + '?resource_id=' + PENSIA_RESOURCE_IDS[ri] + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
-                console.log('[Pensia] Trying resource ID:', PENSIA_RESOURCE_IDS[ri]);
+                var exactUrl = BASE + '?resource_id=' + PENSIA_RESOURCE_IDS[ri]
+                    + '&filters=' + encodeURIComponent(filters)
+                    + sortParam + '&limit=24';
+                console.log('[Pensia] Trying exact filter for FUND_ID:', kupahNum);
+
                 for (var pi = 0; pi < PROXIES.length && !json; pi++) {
                     try {
-                        var resp = await _fetchWithTimeout(PROXIES[pi](fullUrl), { headers: {'Accept':'application/json'} }, 15000);
+                        var resp = await _fetchWithTimeout(PROXIES[pi](exactUrl), { headers: {'Accept':'application/json'} }, 15000);
                         if (!resp.ok) continue;
                         var rawJ = await resp.json();
                         var candidate = (rawJ && rawJ.contents) ? JSON.parse(rawJ.contents) : rawJ;
                         if (candidate && candidate.success && candidate.result && candidate.result.records && candidate.result.records.length > 0) {
                             json = candidate;
-                            console.log('[Pensia] Got data via proxy', pi, 'resource', ri, 'records:', candidate.result.records.length);
+                            console.log('[Pensia] ✅ exact filter worked — proxy', pi, 'records:', candidate.result.records.length);
                         }
-                    } catch(e) { console.warn('[Pensia] proxy', pi, 'resource', ri, 'failed:', e.message); }
+                    } catch(e) { console.warn('[Pensia] proxy', pi, 'failed:', e.message); }
+                }
+
+                // Fallback: free-text search
+                if (!json) {
+                    var fbUrl = BASE + '?resource_id=' + PENSIA_RESOURCE_IDS[ri]
+                        + '&q=' + encodeURIComponent(kupahNum) + '&limit=24';
+                    for (var pi2 = 0; pi2 < PROXIES.length && !json; pi2++) {
+                        try {
+                            var r2 = await _fetchWithTimeout(PROXIES[pi2](fbUrl), { headers: {'Accept':'application/json'} }, 15000);
+                            if (!r2.ok) continue;
+                            var rj2 = await r2.json();
+                            var c2 = (rj2 && rj2.contents) ? JSON.parse(rj2.contents) : rj2;
+                            if (c2 && c2.success && c2.result && c2.result.records && c2.result.records.length > 0) {
+                                json = c2;
+                                console.log('[Pensia] ✅ free-text fallback — proxy', pi2);
+                            }
+                        } catch(e2) {}
+                    }
                 }
             }
 
@@ -7243,18 +7290,23 @@
             
             if (gemelAssets.length > 0) {
                 var kn = gemelAssets[0].gemelKupahNum;
-                line('🔍 גמל חיפוש קופה ' + kn + '...', 'var(--accent-gold)');
-                var gfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&q=' + encodeURIComponent(kn) + '&limit=5';
+                line('🔍 גמל exact filter קופה ' + kn + '...', 'var(--accent-gold)');
+                var filters = JSON.stringify({ 'FUND_ID': parseInt(kn, 10) });
+                var gfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&filters=' + encodeURIComponent(filters) + '&sort=REPORT_PERIOD+desc&limit=3';
                 var gf = await fetchJSON(gfUrl);
                 if (gf && gf.success) {
                     var cnt = (gf.result && gf.result.records) ? gf.result.records.length : 0;
-                    line((cnt > 0 ? '✅' : '⚠️') + ' תוצאות לקופה ' + kn + ': ' + cnt + ' רשומות', cnt > 0 ? 'var(--accent-green)' : 'orange');
+                    line((cnt > 0 ? '✅' : '⚠️') + ' תוצאות: ' + cnt + ' רשומות (total: ' + (gf.result.total || '?') + ')', cnt > 0 ? 'var(--accent-green)' : 'orange');
                     if (cnt > 0) {
                         var rec = gf.result.records[0];
-                        Object.keys(rec).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + rec[k]); });
+                        line('  FUND_NAME: ' + rec.FUND_NAME, 'var(--text-primary)');
+                        line('  REPORT_PERIOD: ' + rec.REPORT_PERIOD, 'var(--text-primary)');
+                        line('  MONTHLY_YIELD: ' + rec.MONTHLY_YIELD, 'var(--text-primary)');
+                        line('  AVG_ANNUAL_YIELD_TRAILING_3YRS: ' + rec.AVG_ANNUAL_YIELD_TRAILING_3YRS, 'var(--text-primary)');
+                        line('  AVG_ANNUAL_MANAGEMENT_FEE: ' + rec.AVG_ANNUAL_MANAGEMENT_FEE, 'var(--text-primary)');
                     }
                 } else {
-                    line('❌ חיפוש גמל נכשל: ' + JSON.stringify(gf).slice(0,150), 'var(--accent-red)');
+                    line('❌ exact filter נכשל: ' + JSON.stringify(gf).slice(0,150), 'var(--accent-red)');
                 }
                 sep();
             }
