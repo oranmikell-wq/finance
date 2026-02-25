@@ -6606,7 +6606,7 @@
                     if (data[0].yearlyReturn != null) document.getElementById('assetReturn').value = formatNum(data[0].yearlyReturn);
                     if (data[0].fee != null)          document.getElementById('assetFee').value    = formatNum(data[0].fee);
                 } else {
-                    showGemelError('❌ לא נמצאו נתונים לקופה ' + kupahNum + '.\nודא שהמספר נכון (3–5 ספרות) ושסוג הקופה תואם.');
+                    showGemelError('❌ לא נמצאו נתונים לקופה ' + kupahNum + '. נסה רשת אחרת (WiFi/סלולר) או בדוק ב-DevTools (F12 → Console) לפרטים.');
                 }
             } catch (err) {
                 console.error('[Gemel]', err);
@@ -6618,32 +6618,34 @@
         }
 
         async function fetchGemelFromGovAPI(kupahNum) {
-            var RESOURCE_ID = 'a30dcbea-a1d2-482c-ae29-8f781f5025fb';
             var BASE = 'https://data.gov.il/api/3/action/datastore_search';
-            var params = '?resource_id=' + RESOURCE_ID + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
-
+            var PROXIES = [
+                function(u) { return u; },
+                function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+                function(u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+                function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
+            ];
             var json = null;
 
-            // Try direct fetch first
-            try {
-                var resp = await _fetchWithTimeout(BASE + params, { headers: { 'Accept': 'application/json' } }, 14000);
-                if (resp.ok) json = await resp.json();
-            } catch(e) {
-                console.warn('[Gemel] Direct fetch failed:', e.message);
-            }
-
-            // Fallback: CORS proxy
-            if (!json || !json.success) {
-                try {
-                    var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(BASE + params);
-                    var resp2 = await _fetchWithTimeout(proxyUrl, {}, 14000);
-                    if (resp2.ok) json = await resp2.json();
-                } catch(e2) {
-                    console.warn('[Gemel] Proxy fetch failed:', e2.message);
+            for (var ri = 0; ri < GEMELNET_KNOWN_IDS.length && !json; ri++) {
+                var fullUrl = BASE + '?resource_id=' + GEMELNET_KNOWN_IDS[ri] + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
+                console.log('[Gemel] Trying resource ID:', GEMELNET_KNOWN_IDS[ri]);
+                for (var pi = 0; pi < PROXIES.length && !json; pi++) {
+                    try {
+                        var resp = await _fetchWithTimeout(PROXIES[pi](fullUrl), { headers: { 'Accept': 'application/json' } }, 15000);
+                        if (!resp.ok) continue;
+                        var rawJ = await resp.json();
+                        var candidate = (rawJ && rawJ.contents) ? JSON.parse(rawJ.contents) : rawJ;
+                        if (candidate && candidate.success && candidate.result && candidate.result.records && candidate.result.records.length > 0) {
+                            json = candidate;
+                            console.log('[Gemel] Got data via proxy', pi, 'resource', ri, 'records:', candidate.result.records.length);
+                        }
+                    } catch(e) { console.warn('[Gemel] proxy', pi, 'resource', ri, 'failed:', e.message); }
                 }
             }
 
             if (!json || !json.success || !json.result || !json.result.records || json.result.records.length === 0) {
+                console.error('[Gemel] All attempts failed for kupah:', kupahNum);
                 return null;
             }
 
@@ -6881,12 +6883,13 @@
             var sug = GEMEL_TYPE_SUG[document.getElementById('gemelFundType').value] || '4';
             var prevDate = new Date(); prevDate.setMonth(prevDate.getMonth() - 1);
             var ym = String(prevDate.getFullYear()) + String(prevDate.getMonth() + 1).padStart(2, '0');
-            var targetUrl = 'http://gemelnet.cma.gov.il/tsuot/ui/tsuotHodXML.aspx' +
+            var targetUrl = 'https://gemelnet.cma.gov.il/tsuot/ui/tsuotHodXML.aspx' +
                 '?miTkfDivuach=' + ym + '&adTkfDivuach=' + ym +
                 '&kupot=' + kupahNum + '&Dochot=1&sug=' + sug;
             var proxies = [
                 'https://corsproxy.io/?' + encodeURIComponent(targetUrl),
                 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl),
+                'https://thingproxy.freeboard.io/fetch/' + targetUrl,
             ];
             var xml = null;
             for (var pi = 0; pi < proxies.length; pi++) {
@@ -7053,21 +7056,34 @@
 
         async function fetchPensiaFromGovAPI(kupahNum) {
             // pensia-net dataset on data.gov.il
-            var RESOURCE_ID = '6d47d6b5-cb08-488b-b333-f1e717b1e1bd';
+            var PENSIA_RESOURCE_IDS = [
+                '6d47d6b5-cb08-488b-b333-f1e717b1e1bd',
+                '1f4dacc1-301e-4e3b-881a-e8b8a7f4f7e1'
+            ];
             var BASE = 'https://data.gov.il/api/3/action/datastore_search';
-            var params = '?resource_id=' + RESOURCE_ID + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
+            var PROXIES = [
+                function(u) { return u; },
+                function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+                function(u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+                function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
+            ];
 
             var json = null;
-            try {
-                var resp = await _fetchWithTimeout(BASE + params, { headers: {'Accept':'application/json'} }, 14000);
-                if (resp.ok) json = await resp.json();
-            } catch(e) { console.warn('[Pensia] Direct fetch failed:', e.message); }
-
-            if (!json || !json.success) {
-                try {
-                    var resp2 = await _fetchWithTimeout('https://corsproxy.io/?' + encodeURIComponent(BASE + params), {}, 14000);
-                    if (resp2.ok) json = await resp2.json();
-                } catch(e2) { console.warn('[Pensia] Proxy failed:', e2.message); }
+            for (var ri = 0; ri < PENSIA_RESOURCE_IDS.length && !json; ri++) {
+                var fullUrl = BASE + '?resource_id=' + PENSIA_RESOURCE_IDS[ri] + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
+                console.log('[Pensia] Trying resource ID:', PENSIA_RESOURCE_IDS[ri]);
+                for (var pi = 0; pi < PROXIES.length && !json; pi++) {
+                    try {
+                        var resp = await _fetchWithTimeout(PROXIES[pi](fullUrl), { headers: {'Accept':'application/json'} }, 15000);
+                        if (!resp.ok) continue;
+                        var rawJ = await resp.json();
+                        var candidate = (rawJ && rawJ.contents) ? JSON.parse(rawJ.contents) : rawJ;
+                        if (candidate && candidate.success && candidate.result && candidate.result.records && candidate.result.records.length > 0) {
+                            json = candidate;
+                            console.log('[Pensia] Got data via proxy', pi, 'resource', ri, 'records:', candidate.result.records.length);
+                        }
+                    } catch(e) { console.warn('[Pensia] proxy', pi, 'resource', ri, 'failed:', e.message); }
+                }
             }
 
             if (!json || !json.success || !json.result || !json.result.records || json.result.records.length === 0) return null;
