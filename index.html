@@ -4743,8 +4743,13 @@
                 if (hasGemelAssets) tasks.push(updateGemelAssets());
                 if (hasPensiaAssets) tasks.push(updatePensiaAssets());
 
+                // Snapshot assets before fetches to detect real changes
+                const _beforeFetch = JSON.stringify(assets);
                 await Promise.all(tasks);
-                updateUI();
+                // Only re-render if data actually changed
+                if (JSON.stringify(assets) !== _beforeFetch) {
+                    updateUI();
+                }
             }, 200);
         }
 
@@ -6505,7 +6510,7 @@
 
                 // ===== REGULAR ASSET =====
                 const valueInUSD = currency === 'USD' ? asset.value : (currency === 'ILS' ? asset.value / exchangeRate : valueInILS / exchangeRate);
-                const showUSD = (asset.type === 'pension' || asset.type === 'fund') && currency === 'ILS';
+                const showUSD = false; // USD display removed
                 const monthlyInILS = toILS(asset.monthly || 0, asset.monthlyCurrency || 'ILS');
                 const iconBg = asset.type === 'crypto' ? 'rgba(168,85,247,0.1)' : asset.type === 'pension' || asset.type === 'gemel' ? 'rgba(0,217,255,0.1)' : asset.type === 'fund' ? 'rgba(244,196,48,0.1)' : 'rgba(255,255,255,0.04)';
                 const currencyName = currency === 'USD' ? 'דולר' : currency === 'BTC' ? 'ביטקוין' : currency === 'ETH' ? 'איתריום' : 'שקל';
