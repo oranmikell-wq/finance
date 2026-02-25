@@ -2371,7 +2371,7 @@
                                 <div style="padding:12px;background:rgba(244,196,48,0.06);border:1px solid rgba(244,196,48,0.15);border-radius:10px;margin-bottom:10px;">
                                     <div style="font-size:0.9rem;font-weight:700;color:var(--accent-gold);margin-bottom:2px;" id="gemelFundNameDisplay">—</div>
                                     <div style="font-size:0.73rem;color:var(--text-secondary);margin-bottom:10px;" id="gemelCompanyDisplay">—</div>
-                                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-bottom:10px;">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
                                         <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
                                             <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">תשואה חודשית</div>
                                             <div style="font-size:0.95rem;font-weight:700;" id="gemelMonthlyReturn">—</div>
@@ -4829,10 +4829,11 @@
                     if (accum > 0) asset.value = accum;
                     var gd = gemelDataCache[kupahNum];
                     if (gd && gd.length > 0) {
-                        asset.gemelFundName     = gd[0].fundName;
-                        asset.gemelCompany      = gd[0].company;
-                        asset.gemelYearlyReturn = gd[0].yearlyReturn;
-                        asset.gemelFee          = gd[0].fee;
+                        asset.gemelFundName       = gd[0].fundName;
+                        asset.gemelCompany         = gd[0].company;
+                        asset.gemelYearlyReturn    = gd[0].yearlyReturn;
+                        asset.gemelMonthlyReturn   = gd[0].monthlyReturn;
+                        asset.gemelFee             = gd[0].fee;
                         if (gd[0].yearlyReturn != null) asset.return = gd[0].yearlyReturn;
                         if (gd[0].fee != null) asset.fee = gd[0].fee;
                     }
@@ -6119,7 +6120,13 @@
                         <div class="asset-row-icon" style="background:${iconBg};">${icon}</div>
                         <div class="asset-row-info">
                             <div class="asset-row-name">${asset.name}</div>
-                            <div class="asset-row-provider">${asset.provider} • ${typeName}</div>
+                            <div class="asset-row-provider">${asset.provider} • ${typeName}${
+                                (asset.type === 'gemel' || asset.type === 'fund') && asset.gemelMonthlyReturn != null
+                                    ? ` • <span style="color:${asset.gemelMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};font-weight:600;">${asset.gemelMonthlyReturn >= 0 ? '+' : ''}${asset.gemelMonthlyReturn.toFixed(2)}%</span> חודשי`
+                                    : asset.type === 'pension' && asset.dailyChangePct != null
+                                    ? ` • <span style="color:${asset.dailyChangePct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};font-weight:600;">${asset.dailyChangePct >= 0 ? '+' : ''}${asset.dailyChangePct.toFixed(3)}%</span> יומי`
+                                    : ''
+                            }</div>
                         </div>
                         <div class="asset-row-return ${retClass}">${retSign}${retPct}%</div>
                         <div class="asset-row-values">
@@ -6445,80 +6452,74 @@
             }
         }
 
-        // Fetch multiple months from data.gov.il and compute annual return from monthly data
         async function fetchGemelFromGovAPI(kupahNum) {
             var RESOURCE_ID = 'a30dcbea-a1d2-482c-ae29-8f781f5025fb';
+            var BASE = 'https://data.gov.il/api/3/action/datastore_search';
+            var params = '?resource_id=' + RESOURCE_ID + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
 
-            // Step 1: get latest record for fund info (name, fee, monthly return)
-            var baseUrl = 'https://data.gov.il/api/3/action/datastore_search' +
-                          '?resource_id=' + RESOURCE_ID +
-                          '&q=' + encodeURIComponent(kupahNum) +
-                          '&limit=100';
+            var json = null;
+
+            // Try direct fetch first
             try {
-                var resp = await fetch(baseUrl, { signal: AbortSignal.timeout(14000) });
-                if (!resp.ok) return null;
-                var json = await resp.json();
-                if (!json.success || !json.result || !json.result.records || json.result.records.length === 0) return null;
-
-                var allRecords = json.result.records;
-                console.log('[Gemel] Got', allRecords.length, 'records, fields:', Object.keys(allRecords[0]));
-                console.log('[Gemel] First record:', allRecords[0]);
-
-                // Filter to this kupah's records only
-                var kupahRecords = allRecords.filter(function(r) {
-                    return Object.values(r).some(function(v) {
-                        var s = String(v || '').trim();
-                        return s === kupahNum || s === String(parseInt(kupahNum, 10));
-                    });
+                var resp = await fetch(BASE + params, {
+                    signal: AbortSignal.timeout(14000),
+                    headers: { 'Accept': 'application/json' }
                 });
-                if (kupahRecords.length === 0) kupahRecords = allRecords;
+                if (resp.ok) json = await resp.json();
+            } catch(e) {
+                console.warn('[Gemel] Direct fetch failed:', e.message);
+            }
 
-                // Sort by period descending (newest first)
-                kupahRecords.sort(function(a, b) {
-                    var pa = _extractPeriod(a), pb = _extractPeriod(b);
-                    return (pb || '').localeCompare(pa || '');
+            // Fallback: CORS proxy
+            if (!json || !json.success) {
+                try {
+                    var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(BASE + params);
+                    var resp2 = await fetch(proxyUrl, { signal: AbortSignal.timeout(14000) });
+                    if (resp2.ok) json = await resp2.json();
+                } catch(e2) {
+                    console.warn('[Gemel] Proxy fetch failed:', e2.message);
+                }
+            }
+
+            if (!json || !json.success || !json.result || !json.result.records || json.result.records.length === 0) {
+                return null;
+            }
+
+            var allRecords = json.result.records;
+
+            // Filter to this kupah
+            var kupahRecords = allRecords.filter(function(r) {
+                return Object.values(r).some(function(v) {
+                    var s = String(v || '').trim();
+                    return s === kupahNum || s === String(parseInt(kupahNum, 10));
                 });
+            });
+            if (kupahRecords.length === 0) kupahRecords = allRecords;
 
-                var latestRecord = kupahRecords[0];
-                var keys = Object.keys(latestRecord);
+            // Sort newest first
+            kupahRecords.sort(function(a, b) {
+                var pa = _extractPeriod(a), pb = _extractPeriod(b);
+                return (pb || '').localeCompare(pa || '');
+            });
 
-                // Find the monthly return field name dynamically
-                var monthlyReturnField = _findMonthlyReturnField(keys, latestRecord);
-                console.log('[Gemel] Monthly return field:', monthlyReturnField,
-                    '=', monthlyReturnField ? latestRecord[monthlyReturnField] : 'not found');
-
-                // Compute annual return from up to 12 monthly values
-                var annualReturn = null;
-                if (monthlyReturnField && kupahRecords.length >= 2) {
-                    var monthlyVals = [];
-                    // Take last 12 records (already sorted newest first → reverse for oldest first)
+            var parsed = _parseGemelRecords([kupahRecords[0]]);
+            if (parsed && parsed.length > 0) {
+                // Compute annual return from monthly values if we have enough months
+                var mf = _findMonthlyReturnField(Object.keys(kupahRecords[0]), kupahRecords[0]);
+                if (mf && kupahRecords.length >= 6) {
                     var last12 = kupahRecords.slice(0, 12).reverse();
-                    last12.forEach(function(r) {
-                        var v = parseFloat(String(r[monthlyReturnField] || '').replace(',', '.'));
-                        if (!isNaN(v)) monthlyVals.push(v);
-                    });
-                    if (monthlyVals.length >= 6) {
-                        // Compound: ∏(1 + r_i/100) - 1
-                        var compound = 1;
-                        monthlyVals.forEach(function(m) { compound *= (1 + m / 100); });
-                        annualReturn = (compound - 1) * 100;
-                        // If only partial year, annualize
-                        if (monthlyVals.length < 12) {
-                            annualReturn = (Math.pow(compound, 12 / monthlyVals.length) - 1) * 100;
-                        }
-                        console.log('[Gemel] Computed annual from', monthlyVals.length, 'months:',
-                            annualReturn.toFixed(2) + '%', 'monthly values:', monthlyVals);
+                    var vals = last12.map(function(r) {
+                        return parseFloat(String(r[mf] || '').replace(',', '.'));
+                    }).filter(function(v) { return !isNaN(v); });
+                    if (vals.length >= 6) {
+                        var compound = vals.reduce(function(acc, m) { return acc * (1 + m / 100); }, 1);
+                        var annual = vals.length < 12
+                            ? (Math.pow(compound, 12 / vals.length) - 1) * 100
+                            : (compound - 1) * 100;
+                        parsed[0].yearlyReturn = Math.round(annual * 100) / 100;
                     }
                 }
-
-                var parsed = _parseGemelRecords([latestRecord]);
-                if (parsed && parsed.length > 0) {
-                    // Override yearlyReturn with computed value
-                    if (annualReturn !== null) parsed[0].yearlyReturn = Math.round(annualReturn * 100) / 100;
-                    return parsed;
-                }
-            } catch (e) {
-                console.warn('[Gemel] GovAPI failed:', e.message);
+                return parsed;
             }
             return null;
         }
