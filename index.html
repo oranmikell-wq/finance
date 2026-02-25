@@ -206,6 +206,10 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 40px;
+            transition: opacity 0.15s ease;
+        }
+        .assets-grid.updating {
+            opacity: 0.6;
         }
 
         .asset-row {
@@ -3622,12 +3626,15 @@
             const fundFields = document.getElementById('fundTrackingFields');
             const gemelFields = document.getElementById('gemelTrackingFields');
             
-            // Hide all special fields first
+            // Hide ALL special fields first
             realEstateFields.style.display = 'none';
             spyPensionCheckbox.style.display = 'none';
             document.getElementById('spyFields').style.display = 'none';
             document.getElementById('isSpyPension').checked = false;
             var spyMonthlyEl = document.getElementById('spyMonthlyILS'); if (spyMonthlyEl) spyMonthlyEl.value = '';
+            var pensiaNetchk = document.getElementById('pensiaNetcheckbox'); if (pensiaNetchk) pensiaNetchk.style.display = 'none';
+            var pensiaFlds = document.getElementById('pensiaFields'); if (pensiaFlds) pensiaFlds.style.display = 'none';
+            var isPensiaChk = document.getElementById('isPensiaTracked'); if (isPensiaChk) isPensiaChk.checked = false;
             fundFields.style.display = 'none';
             if (gemelFields) gemelFields.style.display = 'none';
             
@@ -5269,7 +5276,7 @@
                 updateFeeAnalysis();
                 calcRetirement();
                 checkAlerts();
-            }, 50);
+            }, 150);
         }
 
         function updateTotalWorth() {
