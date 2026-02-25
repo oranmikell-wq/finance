@@ -4910,8 +4910,8 @@
                         document.getElementById('mortgage').value = formatNum(asset.mortgage || 0);
                     }
                     
-                    // MUST run before spy/pensia blocks so it shows the right base fields
-                    // without resetting checkboxes that we're about to set
+                    // Run BEFORE spy/pensia blocks so it shows correct base fields
+                    // without overriding checkboxes we're about to set
                     toggleRealEstateFields();
                     
                     if (asset.type === 'pension' && asset.isSpyPension) {
@@ -4949,7 +4949,7 @@
                             var bvEl = document.getElementById('pensiaBaseValueInput');
                             if (bvEl) bvEl.value = asset.pensiaBaseValue.toLocaleString('he-IL', {maximumFractionDigits:0});
                         }
-                        document.getElementById('pensiaAccumulation').value = formatNum(asset.value || 0);
+                        var pensiaAccEl = document.getElementById('pensiaAccumulation'); if (pensiaAccEl) pensiaAccEl.value = formatNum(asset.value || 0);
                         togglePensiaFields();
                         if (asset.pensiaFundName) {
                             var cached = { fundName: asset.pensiaFundName, company: asset.pensiaCompany || '—', monthlyReturn: asset.pensiaMonthlyReturn != null ? asset.pensiaMonthlyReturn : null, yearlyReturn: asset.pensiaYearlyReturn != null ? asset.pensiaYearlyReturn : null, threeYearReturn: null, fee: asset.pensiaFee != null ? asset.pensiaFee : null, period: null };
