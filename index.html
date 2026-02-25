@@ -2811,20 +2811,22 @@
             }
         }
         function calcStockManualReturn() {
-            var curr     = (document.getElementById('stockManualCurrency') || {value:'ILS'}).value;
-            var basis    = parseNum(document.getElementById('stockManualCostBasis'));
-            var current  = parseNum(document.getElementById('stockManualAmount'));
-            var dispEl   = document.getElementById('stockManualReturnDisplay');
-            var valEl    = document.getElementById('stockManualReturnVal');
+            var curr    = (document.getElementById('stockManualCurrency') || {value:'ILS'}).value;
+            var basis   = parseNum(document.getElementById('stockManualCostBasis'));
+            var current = parseNum(document.getElementById('stockManualAmount'));
+            var dispEl  = document.getElementById('stockManualReturnDisplay');
+            var valEl   = document.getElementById('stockManualReturnVal');
             if (!dispEl || !valEl) return;
             if (basis > 0 && current > 0) {
-                var diff   = current - basis;
-                var pct    = (diff / basis) * 100;
-                var sym    = curr === 'USD' ? '$' : '₪';
-                var sign   = diff >= 0 ? '+' : '';
-                var color  = diff >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                // diff always in original currency for % calc
+                var diff    = current - basis;
+                var pct     = (diff / basis) * 100;
+                // convert diff to ILS for display
+                var diffILS = curr === 'USD' ? diff * exchangeRate : diff;
+                var sign    = diff >= 0 ? '+' : '';
+                var color   = diff >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 valEl.style.color = color;
-                valEl.textContent = sign + sym + Math.abs(diff).toLocaleString('he-IL', {maximumFractionDigits:0}) + ' (' + sign + pct.toFixed(1) + '%)';
+                valEl.textContent = sign + pct.toFixed(1) + '%  (' + sign + '₪' + Math.abs(Math.round(diffILS)).toLocaleString('he-IL') + ')';
                 dispEl.style.display = 'flex';
             } else {
                 dispEl.style.display = 'none';
@@ -2908,10 +2910,9 @@
             var ticker = (document.getElementById('stockTicker') || {value:''}).value.trim().toUpperCase();
             var units = parseNum(document.getElementById('stockUnits'));
             var res = document.getElementById('stockSearchResult');
-            if (!ticker || units <= 0 || !stockDataCache[ticker]) { if (res) res.style.display = 'none'; return; }
+            if (!ticker || !stockDataCache[ticker]) { if (res) res.style.display = 'none'; return; }
             var data = stockDataCache[ticker];
             var priceILS = data.currency === 'ILS' ? data.price : data.price * exchangeRate;
-            var valueILS = units * priceILS;
             var nameEl = document.getElementById('stockNameDisplay');
             var priceEl = document.getElementById('stockPriceDisplay');
             var valEl = document.getElementById('stockValueDisplay');
@@ -2922,7 +2923,17 @@
                 priceEl.textContent = priceStr + '  ' + dSign + data.dailyPct.toFixed(2) + '% יומי';
                 priceEl.style.color = data.dailyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
             }
-            if (valEl) valEl.textContent = '₪' + valueILS.toLocaleString('he-IL', {maximumFractionDigits: 0});
+            if (valEl) {
+                if (units > 0) {
+                    var valueILS = units * priceILS;
+                    valEl.textContent = '₪' + valueILS.toLocaleString('he-IL', {maximumFractionDigits: 0});
+                    valEl.style.display = '';
+                    valEl.previousElementSibling && (valEl.previousElementSibling.style.display = '');
+                } else {
+                    valEl.textContent = '—';
+                    valEl.style.display = '';
+                }
+            }
             if (res) res.style.display = 'block';
         }
 
@@ -6711,6 +6722,58 @@
                     </div>`;
                 }
                 
+                // ===== STOCK MANUAL ASSET =====
+                if (asset.type === 'trade' && asset.stockMode === 'manual' && !asset.stockTicker) {
+                    const mCurr   = asset.stockManualCurrency || 'ILS';
+                    const mAmt    = asset.stockManualAmount || 0;
+                    const mBasis  = asset.stockManualCostBasis || 0;
+                    const mValueILS = mCurr === 'ILS' ? mAmt : mAmt * exchangeRate;
+                    const mBasisILS = mCurr === 'ILS' ? mBasis : mBasis * exchangeRate;
+                    const mDiff   = mBasis > 0 ? mAmt - mBasis : 0;
+                    const mDiffILS = mCurr === 'ILS' ? mDiff : mDiff * exchangeRate;
+                    const mPct    = mBasis > 0 ? (mDiff / mBasis * 100) : 0;
+                    const sc = (v) => v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    const ss = (v) => v >= 0 ? '+' : '';
+                    const amtStr  = mCurr === 'ILS' ? '₪' + mAmt.toLocaleString('he-IL',{maximumFractionDigits:0}) : '$' + mAmt.toLocaleString('he-IL',{maximumFractionDigits:0}) + ' (₪' + Math.round(mValueILS).toLocaleString('he-IL') + ')';
+                    const subLine = mBasis > 0
+                        ? `<span style="color:${sc(mPct)};font-weight:600;">${ss(mPct)}${mPct.toFixed(1)}% (${ss(mDiffILS)}₪${Math.abs(Math.round(mDiffILS)).toLocaleString('he-IL')})</span>`
+                        : `<span style="color:var(--text-secondary);">${amtStr}</span>`;
+
+                    return `
+                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
+                        <div class="asset-row-main">
+                            <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
+                            <div class="asset-row-info">
+                                <div class="asset-row-name">${asset.name}</div>
+                                <div class="asset-row-provider">${asset.provider}${mBasis > 0 ? ' • <span style="color:'+sc(mPct)+';font-weight:600;">'+ss(mPct)+mPct.toFixed(1)+'% תשואה</span>' : ''}</div>
+                            </div>
+                            <div class="asset-row-values">
+                                <div class="asset-row-amount">₪${Math.round(mValueILS).toLocaleString('he-IL')}</div>
+                                <div class="asset-row-sub">${mCurr === 'USD' ? '<span style="color:var(--text-secondary);">$'+mAmt.toLocaleString('he-IL',{maximumFractionDigits:0})+'</span>' : (mBasis > 0 ? subLine : '')}</div>
+                            </div>
+                            <div class="asset-row-chevron">▼</div>
+                        </div>
+                        <div class="asset-row-expand">
+                            <div class="asset-row-details">
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">שווי נוכחי</span>
+                                    <span class="asset-row-detail-value">${amtStr}</span>
+                                </div>
+                                ${mBasis > 0 ? `
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">סכום בסיס</span>
+                                    <span class="asset-row-detail-value">${mCurr === 'ILS' ? '₪' : '$'}${mBasis.toLocaleString('he-IL',{maximumFractionDigits:0})}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">רווח/הפסד</span>
+                                    <span class="asset-row-detail-value" style="color:${sc(mPct)};font-weight:700;">${ss(mPct)}${mPct.toFixed(1)}% (${ss(mDiffILS)}₪${Math.abs(Math.round(mDiffILS)).toLocaleString('he-IL')})</span>
+                                </div>` : ''}
+                            </div>
+                            ${editBtn}
+                        </div>
+                    </div>`;
+                }
+
                 // ===== STOCK TICKER ASSET =====
                 if (asset.type === 'trade' && asset.stockTicker) {
                     const sTicker = asset.stockTicker;
