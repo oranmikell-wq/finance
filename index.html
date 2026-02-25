@@ -6316,6 +6316,18 @@
                                 <span class="asset-row-detail-label">תשואה שנתית</span>
                                 <span class="asset-row-detail-value ${retClass}">${retSign}${retPct}%</span>
                             </div>
+                            ${(asset.type === 'pension' || asset.type === 'gemel') && asset.pensiaMonthlyReturn != null ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">תשואה חודשית</span>
+                                <span class="asset-row-detail-value" style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span>
+                            </div>` : ''}
+                            ${asset.type === 'pension' && asset.pensiaLastAppliedPeriod ? (() => {
+                                var p = String(asset.pensiaLastAppliedPeriod);
+                                var pDisp = p.length === 6 ? p.slice(4) + '/' + p.slice(0,4) : p;
+                                return `<div class="asset-row-detail" style="grid-column:1/-1;">
+                                    <span class="asset-row-detail-label">📅 צבירה עודכנה אוטומטית</span>
+                                    <span class="asset-row-detail-value" style="color:var(--text-secondary);font-size:0.75rem;">לפי תשואת ${pDisp}</span>
+                                </div>`;
+                            })() : ''}
                             ${showUSD ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">שווי בדולר</span>
                                 <span class="asset-row-detail-value">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</span>
@@ -7039,9 +7051,25 @@
                             if (data.fee           != null) { x.fee = data.fee; x.pensiaFee = data.fee; }
                             if (data.fundName)              { x.pensiaFundName = data.fundName; }
                             if (data.company)               { x.pensiaCompany  = data.company; }
+
+                            // ── Auto-update accumulation value using monthly yield ──
+                            // Only apply if this is a NEW period we haven't applied yet
+                            var newPeriod = data.periodRaw; // e.g. "202601"
+                            var lastPeriod = x.pensiaLastAppliedPeriod || null;
+                            if (newPeriod && data.monthlyReturn != null && x.value > 0) {
+                                if (!lastPeriod || newPeriod > lastPeriod) {
+                                    var oldValue = x.value;
+                                    x.value = Math.round(x.value * (1 + data.monthlyReturn / 100));
+                                    x.pensiaLastAppliedPeriod = newPeriod;
+                                    console.log('[Pensia] 💰 Auto-applied monthly ' + data.monthlyReturn + '% for period ' + newPeriod
+                                        + ': ₪' + oldValue.toLocaleString('he-IL') + ' → ₪' + x.value.toLocaleString('he-IL'));
+                                } else {
+                                    console.log('[Pensia] Period ' + newPeriod + ' already applied (last: ' + lastPeriod + '), skipping accumulation update');
+                                }
+                            }
                         });
                         await saveAssets();
-                        console.log('[Pensia] ✅ Updated kupah', a.pensiaKupahNum, '→', data.fundName, 'monthly:', data.monthlyReturn);
+                        console.log('[Pensia] ✅ Updated kupah', a.pensiaKupahNum, '→', data.fundName, 'monthly:', data.monthlyReturn, 'period:', data.periodRaw);
                     }
                 } catch(e) { console.warn('[Pensia] Auto-update failed for ' + a.pensiaKupahNum, e); }
             }
@@ -7210,6 +7238,8 @@
                 return (pb||'').localeCompare(pa||'');
             });
 
+            // Sort all records newest first (already done above)
+            // Use newest record for latest data
             var r = filtered[0];
             function fld(names) {
                 for (var i = 0; i < names.length; i++) {
@@ -7226,20 +7256,46 @@
                 return isNaN(n) ? null : n;
             }
 
-            var period = fld(['REPORT_PERIOD','TKUFA','HODESH','PERIOD']);
-            if (period && /^\d{6}$/.test(String(period))) {
-                var p = String(period);
-                period = p.slice(4) + '/' + p.slice(0, 4);
+            var rawPeriod = fld(['REPORT_PERIOD','TKUFA','HODESH','PERIOD']);
+            var periodStr = rawPeriod ? String(rawPeriod) : null;
+            var periodDisplay = periodStr;
+            if (periodStr && /^\d{6}$/.test(periodStr)) {
+                periodDisplay = periodStr.slice(4) + '/' + periodStr.slice(0, 4);
             }
 
+            // Compute trailing 12-month compounded return from monthly yields
+            var trailing12 = null;
+            var monthlyRecords = filtered.slice(0, 12); // up to 12 most recent months
+            if (monthlyRecords.length >= 1) {
+                var compound = 1;
+                var validMonths = 0;
+                monthlyRecords.forEach(function(rec) {
+                    var my = parseFloat(String(rec.MONTHLY_YIELD || rec.TSUA_HODSHIT || rec.TSUA_HOD || '').replace(',', '.'));
+                    if (!isNaN(my)) {
+                        compound *= (1 + my / 100);
+                        validMonths++;
+                    }
+                });
+                if (validMonths >= 6) {
+                    // Annualize if less than 12 months
+                    trailing12 = validMonths < 12
+                        ? (Math.pow(compound, 12 / validMonths) - 1) * 100
+                        : (compound - 1) * 100;
+                    trailing12 = Math.round(trailing12 * 100) / 100;
+                }
+            }
+
+            var monthlyReturn = fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']);
+
             return {
-                fundName:      fld(['FUND_NAME','SHEM_KUPA','SHEM_KUPAH']) || '—',
-                company:       fld(['MANAGING_CORPORATION','CONTROLLING_CORPORATION','SHEM_CHV']) || '—',
-                monthlyReturn: fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']),
-                yearlyReturn:  fldNum(['AVG_ANNUAL_YIELD_TRAILING_3YRS','AVG_ANNUAL_YIELD_TRAILING_5YRS','YEAR_TO_DATE_YIELD','TSUA_SHNATI']),
+                fundName:        fld(['FUND_NAME','SHEM_KUPA','SHEM_KUPAH']) || '—',
+                company:         fld(['MANAGING_CORPORATION','CONTROLLING_CORPORATION','SHEM_CHV']) || '—',
+                monthlyReturn:   monthlyReturn,
+                yearlyReturn:    trailing12,                                          // computed from monthly
                 threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
-                fee:           fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
-                period:        period || null,
+                fee:             fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
+                period:          periodDisplay || null,
+                periodRaw:       periodStr || null,                                   // e.g. "202601"
             };
         }
 
