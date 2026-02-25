@@ -6745,7 +6745,7 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name}</div>
-                                <div class="asset-row-provider">${asset.provider}${mBasis > 0 ? ' • <span style="color:'+sc(mPct)+';font-weight:600;">'+ss(mPct)+mPct.toFixed(1)+'% תשואה</span>' : ''}</div>
+                                <div class="asset-row-provider">${asset.provider}${mBasis > 0 ? ' • <span style="color:'+sc(mPct)+';font-weight:600;">'+ss(mPct)+mPct.toFixed(1)+'%</span>' : ''}</div>
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${Math.round(mValueILS).toLocaleString('he-IL')}</div>
@@ -6766,7 +6766,7 @@
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">רווח/הפסד</span>
-                                    <span class="asset-row-detail-value" style="color:${sc(mPct)};font-weight:700;">${ss(mPct)}${mPct.toFixed(1)}% (${ss(mDiffILS)}₪${Math.abs(Math.round(mDiffILS)).toLocaleString('he-IL')})</span>
+                                    <span class="asset-row-detail-value" style="color:${sc(mPct)};font-weight:700;">${ss(mPct)}${mPct.toFixed(1)}%  ${mCurr === 'USD' ? '('+ss(mDiff)+'$'+Math.abs(mDiff).toLocaleString('he-IL',{maximumFractionDigits:0})+' / ' : '('}${ss(mDiffILS)}₪${Math.abs(Math.round(mDiffILS)).toLocaleString('he-IL')})</span>
                                 </div>` : ''}
                             </div>
                             ${editBtn}
