@@ -4724,40 +4724,27 @@
             
             updateUI();
             
-            // Check and update rate if needed (after UI loads)
+            // Fetch all data in parallel after UI loads — single re-render at the end
             setTimeout(async () => {
-                checkAndUpdateRate();
-
-                // SPY: always fetch on startup (used for rate bar + any SPY assets)
                 const hasSpyAssets = assets.some(a => a.isSpyPension);
-                if (hasSpyAssets) {
-                    const success = await fetchSpyPrice();
-                    if (!success) retrySpyFetch();
-                } else {
-                    // Still fetch SPY even without SPY assets (for rate display)
-                    fetchSpyPrice();
-                }
-
-                // Fund NAVs: auto-update on every startup
                 const hasFundAssets = assets.some(a => a.fundNumber);
-                if (hasFundAssets) {
-                    await updateFundAssets();
-                    updateUI();
-                }
-
-                // Gemel / Hashtalamut: auto-refresh on startup
                 const hasGemelAssets = assets.some(function(a) { return a.gemelKupahNum; });
-                if (hasGemelAssets) {
-                    await updateGemelAssets();
-                    updateUI();
+                const hasPensiaAssets = assets.some(function(a) { return a.pensiaKupahNum; });
+
+                const tasks = [checkAndUpdateRate()];
+
+                if (hasSpyAssets) {
+                    tasks.push(fetchSpyPrice().then(ok => { if (!ok) retrySpyFetch(); }));
+                } else {
+                    tasks.push(fetchSpyPrice());
                 }
 
-                // Pensia: auto-refresh on startup
-                const hasPensiaAssets = assets.some(function(a) { return a.pensiaKupahNum; });
-                if (hasPensiaAssets) {
-                    await updatePensiaAssets();
-                    updateUI();
-                }
+                if (hasFundAssets) tasks.push(updateFundAssets());
+                if (hasGemelAssets) tasks.push(updateGemelAssets());
+                if (hasPensiaAssets) tasks.push(updatePensiaAssets());
+
+                await Promise.all(tasks);
+                updateUI();
             }, 200);
         }
 
@@ -5257,21 +5244,27 @@
             }
         }
 
+        var _updateUITimer = null;
         function updateUI() {
-            updateTotalWorth();
-            updateAssetsGrid();
-            updateChart();
-            updateSpyButtonVisibility();
-            saveHistorySnapshot();
-            renderHistoryChart();
-            updateTrendsTab();
-            updateSummaryCards();
-            calcBudget();
-            updateExposure();
-            renderWatchlist();
-            updateFeeAnalysis();
-            calcRetirement();
-            checkAlerts();
+            // Debounce: batch rapid sequential calls into one render (prevents page jumps on load)
+            if (_updateUITimer) clearTimeout(_updateUITimer);
+            _updateUITimer = setTimeout(function() {
+                _updateUITimer = null;
+                updateTotalWorth();
+                updateAssetsGrid();
+                updateChart();
+                updateSpyButtonVisibility();
+                saveHistorySnapshot();
+                renderHistoryChart();
+                updateTrendsTab();
+                updateSummaryCards();
+                calcBudget();
+                updateExposure();
+                renderWatchlist();
+                updateFeeAnalysis();
+                calcRetirement();
+                checkAlerts();
+            }, 50);
         }
 
         function updateTotalWorth() {
