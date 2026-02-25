@@ -2402,6 +2402,86 @@
                         </div>
                     </div>
 
+
+                    <!-- ===== מניות / טיקר — Yahoo Finance ===== -->
+                    <div id="stockTrackingFields" style="display:none;">
+                        <div style="padding:14px;background:linear-gradient(135deg,rgba(255,0,110,0.08),rgba(255,140,0,0.06));border:1px solid rgba(255,0,110,0.2);border-radius:12px;margin-bottom:14px;">
+                            <div style="font-size:0.85rem;font-weight:600;color:#ff006e;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+                                📈 מעקב מניה
+                            </div>
+                            <!-- Mode toggle -->
+                            <div style="display:flex;gap:6px;margin-bottom:12px;">
+                                <button type="button" id="stockModeTickerBtn" onclick="selectStockMode('ticker')"
+                                    style="flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,0,110,0.55);background:rgba(255,0,110,0.15);color:#ff006e;cursor:pointer;transition:all 0.2s;font-family:inherit;">
+                                    🔗 טיקר אוטומטי
+                                </button>
+                                <button type="button" id="stockModeManualBtn" onclick="selectStockMode('manual')"
+                                    style="flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;">
+                                    ✏️ סכום ידני
+                                </button>
+                            </div>
+                            <input type="hidden" id="stockMode" value="ticker">
+                            <!-- Ticker mode fields -->
+                            <div id="stockTickerModeFields">
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>טיקר מניה</label>
+                                    <div style="display:flex;gap:8px;">
+                                        <input type="text" id="stockTicker" placeholder="לדוגמה: AAPL, MSFT, TEVA.TA" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+                                        <button type="button" onclick="fetchAndShowStockPrice()" style="padding:8px 14px;background:linear-gradient(135deg,#ff006e,#ff8c00);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap;" id="stockSearchBtn">🔍 חפש</button>
+                                    </div>
+                                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:5px;">NYSE/NASDAQ: AAPL &nbsp;|&nbsp; ת"א: TEVA.TA, NICE.TA</div>
+                                </div>
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>כמות יחידות (מניות)</label>
+                                    <input type="text" inputmode="decimal" id="stockUnits" placeholder="לדוגמה: 10" oninput="formatNumberInput(this); calculateStockValue()">
+                                </div>
+                                <div id="stockSearchResult" style="display:none;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;margin-top:8px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <div>
+                                            <div style="font-size:0.88rem;font-weight:700;color:#ff006e;" id="stockNameDisplay">—</div>
+                                            <div style="font-size:0.72rem;color:var(--text-secondary);" id="stockPriceDisplay">—</div>
+                                        </div>
+                                        <div style="text-align:left;">
+                                            <div style="font-size:0.72rem;color:var(--text-secondary);">שווי מחושב</div>
+                                            <div style="font-size:0.9rem;font-weight:700;color:var(--accent-green);" id="stockValueDisplay">—</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Manual mode fields -->
+                            <div id="stockManualModeFields" style="display:none;">
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label>מטבע</label>
+                                    <div style="display:flex;gap:6px;">
+                                        <button type="button" id="stockCurrBtnILS" onclick="selectStockManualCurrency('ILS')"
+                                            style="flex:1;padding:7px 4px;font-size:0.8rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,0,110,0.55);background:rgba(255,0,110,0.15);color:#ff006e;cursor:pointer;transition:all 0.2s;font-family:inherit;">
+                                            ₪ שקל
+                                        </button>
+                                        <button type="button" id="stockCurrBtnUSD" onclick="selectStockManualCurrency('USD')"
+                                            style="flex:1;padding:7px 4px;font-size:0.8rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;">
+                                            $ דולר
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="stockManualCurrency" value="ILS">
+                                </div>
+                                <div style="display:flex;gap:8px;margin-bottom:0;">
+                                    <div class="form-group" style="flex:1;margin-bottom:0;">
+                                        <label>סכום בסיס</label>
+                                        <input type="text" inputmode="decimal" id="stockManualCostBasis" placeholder="עלות קנייה" oninput="formatNumberInput(this); calcStockManualReturn()">
+                                    </div>
+                                    <div class="form-group" style="flex:1;margin-bottom:0;">
+                                        <label>שווי נוכחי</label>
+                                        <input type="text" inputmode="decimal" id="stockManualAmount" placeholder="שווי היום" oninput="formatNumberInput(this); calcStockManualReturn()">
+                                    </div>
+                                </div>
+                                <div id="stockManualReturnDisplay" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                                    <span style="font-size:0.75rem;color:var(--text-secondary);">רווח/הפסד</span>
+                                    <span id="stockManualReturnVal" style="font-size:0.88rem;font-weight:700;">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ===== גמל להשקעה / קרן השתלמות / קופת גמל — גמל-נט ===== -->
                     <div id="gemelTrackingFields" style="display:none;">
                         <div style="padding:14px;background:linear-gradient(135deg,rgba(244,196,48,0.08),rgba(0,217,255,0.06));border:1px solid rgba(244,196,48,0.18);border-radius:12px;margin-bottom:14px;">
@@ -2702,6 +2782,186 @@
                 fetch(url),
                 new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, ms); })
             ]);
+        }
+
+        // ─── Stock mode toggle ───
+        function selectStockMode(mode) {
+            var modeEl = document.getElementById('stockMode');
+            if (modeEl) modeEl.value = mode;
+            var tickerBtn   = document.getElementById('stockModeTickerBtn');
+            var manualBtn   = document.getElementById('stockModeManualBtn');
+            var tickerFlds  = document.getElementById('stockTickerModeFields');
+            var manualFlds  = document.getElementById('stockManualModeFields');
+            var activeStyle   = ';flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,0,110,0.55);background:rgba(255,0,110,0.15);color:#ff006e;cursor:pointer;transition:all 0.2s;font-family:inherit;';
+            var inactiveStyle = ';flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;';
+            if (mode === 'ticker') {
+                if (tickerBtn)  tickerBtn.style.cssText  = activeStyle;
+                if (manualBtn)  manualBtn.style.cssText  = inactiveStyle;
+                if (tickerFlds) tickerFlds.style.display = '';
+                if (manualFlds) manualFlds.style.display = 'none';
+            } else {
+                if (tickerBtn)  tickerBtn.style.cssText  = inactiveStyle;
+                if (manualBtn)  manualBtn.style.cssText  = activeStyle;
+                if (tickerFlds) tickerFlds.style.display = 'none';
+                if (manualFlds) manualFlds.style.display = '';
+                // clear ticker data
+                var stEl = document.getElementById('stockTicker'); if (stEl) stEl.value = '';
+                var suEl = document.getElementById('stockUnits');  if (suEl) suEl.value = '';
+                var srEl = document.getElementById('stockSearchResult'); if (srEl) srEl.style.display = 'none';
+            }
+        }
+        function calcStockManualReturn() {
+            var curr     = (document.getElementById('stockManualCurrency') || {value:'ILS'}).value;
+            var basis    = parseNum(document.getElementById('stockManualCostBasis'));
+            var current  = parseNum(document.getElementById('stockManualAmount'));
+            var dispEl   = document.getElementById('stockManualReturnDisplay');
+            var valEl    = document.getElementById('stockManualReturnVal');
+            if (!dispEl || !valEl) return;
+            if (basis > 0 && current > 0) {
+                var diff   = current - basis;
+                var pct    = (diff / basis) * 100;
+                var sym    = curr === 'USD' ? '$' : '₪';
+                var sign   = diff >= 0 ? '+' : '';
+                var color  = diff >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                valEl.style.color = color;
+                valEl.textContent = sign + sym + Math.abs(diff).toLocaleString('he-IL', {maximumFractionDigits:0}) + ' (' + sign + pct.toFixed(1) + '%)';
+                dispEl.style.display = 'flex';
+            } else {
+                dispEl.style.display = 'none';
+            }
+        }
+
+        function selectStockManualCurrency(curr) {
+            var hidEl = document.getElementById('stockManualCurrency');
+            if (hidEl) hidEl.value = curr;
+            var ilsBtn = document.getElementById('stockCurrBtnILS');
+            var usdBtn = document.getElementById('stockCurrBtnUSD');
+            var activeStyle   = ';flex:1;padding:7px 4px;font-size:0.8rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,0,110,0.55);background:rgba(255,0,110,0.15);color:#ff006e;cursor:pointer;transition:all 0.2s;font-family:inherit;';
+            var inactiveStyle = ';flex:1;padding:7px 4px;font-size:0.8rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;';
+            if (curr === 'ILS') {
+                if (ilsBtn) ilsBtn.style.cssText = activeStyle;
+                if (usdBtn) usdBtn.style.cssText = inactiveStyle;
+            } else {
+                if (ilsBtn) ilsBtn.style.cssText = inactiveStyle;
+                if (usdBtn) usdBtn.style.cssText = activeStyle;
+            }
+        }
+
+                // ─── Stock ticker price fetch ───
+        var stockDataCache = {}; // { ticker: { price, prevClose, dailyPct, name, currency, date } }
+
+        async function fetchStockPrice(ticker) {
+            if (!ticker) return null;
+            ticker = ticker.trim().toUpperCase();
+            // Check cache (max 15 min)
+            if (stockDataCache[ticker]) {
+                var age = (new Date() - new Date(stockDataCache[ticker].date)) / 60000;
+                if (age < 15) return stockDataCache[ticker];
+            }
+            // Try localStorage cache
+            try {
+                var lc = localStorage.getItem('stock-cache-' + ticker);
+                if (lc) {
+                    var lcp = JSON.parse(lc);
+                    var lcAge = (new Date() - new Date(lcp.date)) / 60000;
+                    if (lcAge < 30) { stockDataCache[ticker] = lcp; return lcp; }
+                }
+            } catch(e) {}
+
+            var proxies = [
+                'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1d'),
+                'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1d'),
+                'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1d'),
+            ];
+
+            for (var i = 0; i < proxies.length; i++) {
+                try {
+                    var resp = await _fetchTimeout(proxies[i], 8000);
+                    if (!resp.ok) continue;
+                    var raw = await resp.json();
+                    // allorigins wraps in .contents
+                    var parsed = (raw && raw.contents) ? JSON.parse(raw.contents) : raw;
+                    var meta = parsed && parsed.chart && parsed.chart.result && parsed.chart.result[0] && parsed.chart.result[0].meta;
+                    if (!meta) continue;
+                    var price = meta.regularMarketPrice || meta.previousClose || 0;
+                    if (price <= 0) continue;
+                    var result = {
+                        price: price,
+                        prevClose: meta.previousClose || 0,
+                        dailyPct: meta.previousClose > 0 ? ((price - meta.previousClose) / meta.previousClose * 100) : 0,
+                        name: meta.longName || meta.shortName || ticker,
+                        currency: meta.currency || 'USD',
+                        ticker: ticker,
+                        date: new Date().toISOString()
+                    };
+                    stockDataCache[ticker] = result;
+                    try { localStorage.setItem('stock-cache-' + ticker, JSON.stringify(result)); } catch(e) {}
+                    console.log('[Stock] ✅', ticker, price, result.currency);
+                    return result;
+                } catch(e) { console.warn('[Stock] proxy', i, 'failed:', e.message); }
+            }
+            console.error('[Stock] ❌ all sources failed for', ticker);
+            return null;
+        }
+
+        function calculateStockValue() {
+            var ticker = (document.getElementById('stockTicker') || {value:''}).value.trim().toUpperCase();
+            var units = parseNum(document.getElementById('stockUnits'));
+            var res = document.getElementById('stockSearchResult');
+            if (!ticker || units <= 0 || !stockDataCache[ticker]) { if (res) res.style.display = 'none'; return; }
+            var data = stockDataCache[ticker];
+            var priceILS = data.currency === 'ILS' ? data.price : data.price * exchangeRate;
+            var valueILS = units * priceILS;
+            var nameEl = document.getElementById('stockNameDisplay');
+            var priceEl = document.getElementById('stockPriceDisplay');
+            var valEl = document.getElementById('stockValueDisplay');
+            if (nameEl) nameEl.textContent = data.name;
+            if (priceEl) {
+                var dSign = data.dailyPct >= 0 ? '+' : '';
+                var priceStr = data.currency === 'ILS' ? '₪' + data.price.toFixed(2) : '$' + data.price.toFixed(2) + ' (₪' + priceILS.toFixed(2) + ')';
+                priceEl.textContent = priceStr + '  ' + dSign + data.dailyPct.toFixed(2) + '% יומי';
+                priceEl.style.color = data.dailyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            }
+            if (valEl) valEl.textContent = '₪' + valueILS.toLocaleString('he-IL', {maximumFractionDigits: 0});
+            if (res) res.style.display = 'block';
+        }
+
+        async function fetchAndShowStockPrice() {
+            var ticker = (document.getElementById('stockTicker') || {value:''}).value.trim().toUpperCase();
+            if (!ticker) { alert('הכנס טיקר מניה'); return; }
+            var btn = document.getElementById('stockSearchBtn');
+            if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+            var data = await fetchStockPrice(ticker);
+            if (btn) { btn.textContent = '🔍 חפש'; btn.disabled = false; }
+            if (!data) { alert('לא נמצא טיקר: ' + ticker + '\nבדוק שהטיקר נכון (לדוגמה: AAPL, TEVA.TA)'); return; }
+            calculateStockValue();
+        }
+
+        async function updateTradeAssets() {
+            var tradeAssets = assets.filter(function(a) { return a.type === 'trade' && a.stockTicker; });
+            if (tradeAssets.length === 0) return;
+            var seen = {};
+            for (var i = 0; i < tradeAssets.length; i++) {
+                var a = tradeAssets[i];
+                if (seen[a.stockTicker]) continue;
+                seen[a.stockTicker] = true;
+                try {
+                    var data = await fetchStockPrice(a.stockTicker);
+                    if (data) {
+                        assets.filter(function(x) { return x.stockTicker === a.stockTicker; }).forEach(function(x) {
+                            var priceILS = data.currency === 'ILS' ? data.price : data.price * exchangeRate;
+                            x.value = (x.stockUnits || 0) * priceILS;
+                            x.stockPrice = data.price;
+                            x.stockCurrency = data.currency;
+                            x.stockDailyPct = data.dailyPct;
+                            x.stockName = data.name;
+                            x.stockLastUpdate = data.date;
+                        });
+                        await saveAssets();
+                        console.log('[Stock] ✅ Updated', a.stockTicker, '→', data.price, data.currency);
+                    }
+                } catch(e) { console.warn('[Stock] update failed', a.stockTicker, e); }
+            }
         }
 
         async function fetchSpyPrice() {
@@ -3646,6 +3906,7 @@
             var isPensiaChk = document.getElementById('isPensiaTracked'); if (isPensiaChk) isPensiaChk.checked = false;
             fundFields.style.display = 'none';
             if (gemelFields) gemelFields.style.display = 'none';
+            var stockFields = document.getElementById('stockTrackingFields'); if (stockFields) stockFields.style.display = 'none';
             
             if (assetType === 'real_estate') {
                 realEstateFields.style.display = 'block';
@@ -3675,6 +3936,10 @@
                 valueField.style.display = 'none';
                 document.getElementById('assetCurrency').value = 'ILS';
                 selectGemelFundType('hashtalamut');
+            } else if (assetType === 'trade') {
+                var sf2 = document.getElementById('stockTrackingFields'); if (sf2) sf2.style.display = 'block';
+                currencyField.style.display = 'none';
+                valueField.style.display = 'none';
             } else {
                 currencyField.style.display = 'block';
                 valueField.style.display = 'block';
@@ -4758,6 +5023,8 @@
                 if (hasFundAssets) tasks.push(updateFundAssets());
                 if (hasGemelAssets) tasks.push(updateGemelAssets());
                 if (hasPensiaAssets) tasks.push(updatePensiaAssets());
+            var hasTradeStockAssets = assets.some(function(a) { return a.type === 'trade' && a.stockTicker; });
+            if (hasTradeStockAssets) tasks.push(updateTradeAssets());
 
                 // Snapshot assets before fetches to detect real changes
                 const _beforeFetch = JSON.stringify(assets);
@@ -4970,6 +5237,41 @@
                     var delBtn = document.getElementById('deleteAssetBtn');
                     if (delBtn) delBtn.style.display = '';
 
+                    // Handle stock tracking in edit mode
+                    if (asset.type === 'trade') {
+                        if (asset.stockTicker) {
+                            selectStockMode('ticker');
+                            var stEl = document.getElementById('stockTicker'); if (stEl) stEl.value = asset.stockTicker;
+                            var suEl = document.getElementById('stockUnits'); if (suEl) suEl.value = asset.stockUnits ? formatNum(asset.stockUnits) : '';
+                            // pre-populate cache so display shows immediately
+                            if (asset.stockPrice) {
+                                stockDataCache[asset.stockTicker] = {
+                                    price: asset.stockPrice,
+                                    prevClose: 0,
+                                    dailyPct: asset.stockDailyPct || 0,
+                                    name: asset.stockName || asset.stockTicker,
+                                    currency: asset.stockCurrency || 'USD',
+                                    ticker: asset.stockTicker,
+                                    date: asset.stockLastUpdate || new Date().toISOString()
+                                };
+                                setTimeout(calculateStockValue, 50);
+                            }
+                        } else {
+                            selectStockMode('manual');
+                            var savedCurr = asset.stockManualCurrency || 'ILS';
+                            selectStockManualCurrency(savedCurr);
+                            if (asset.stockManualAmount) {
+                                var maEl = document.getElementById('stockManualAmount');
+                                if (maEl) maEl.value = formatNum(asset.stockManualAmount);
+                            }
+                            if (asset.stockManualCostBasis) {
+                                var cbEl = document.getElementById('stockManualCostBasis');
+                                if (cbEl) cbEl.value = formatNum(asset.stockManualCostBasis);
+                            }
+                            setTimeout(calcStockManualReturn, 50);
+                        }
+                    }
+
                     // Handle fund tracking in edit mode
                     if (asset.type === 'savings' && asset.fundNumber) {
                         document.getElementById('fundNumber').value = asset.fundNumber;
@@ -5070,6 +5372,14 @@
             var fundLoad = document.getElementById('fundLoadingIndicator'); if (fundLoad) fundLoad.style.display = 'none';
             var fundNumInput = document.getElementById('fundNumber'); if (fundNumInput) fundNumInput.value = '';
             var fundUnitsInput = document.getElementById('fundUnits'); if (fundUnitsInput) fundUnitsInput.value = '';
+            var stEl = document.getElementById('stockTicker'); if (stEl) stEl.value = '';
+            var suEl = document.getElementById('stockUnits'); if (suEl) suEl.value = '';
+            var srEl = document.getElementById('stockSearchResult'); if (srEl) srEl.style.display = 'none';
+            selectStockMode('ticker'); // reset to default ticker mode
+            var maEl = document.getElementById('stockManualAmount'); if (maEl) maEl.value = '';
+            var cbEl = document.getElementById('stockManualCostBasis'); if (cbEl) cbEl.value = '';
+            var srD  = document.getElementById('stockManualReturnDisplay'); if (srD) srD.style.display = 'none';
+            selectStockManualCurrency('ILS');
             var fundBtn = document.getElementById('fundSearchBtn'); if (fundBtn) { fundBtn.textContent = '🔍 חפש'; fundBtn.disabled = false; }
             var costBasisInput = document.getElementById('assetCostBasis'); if (costBasisInput) costBasisInput.value = '';
             var basisDisplay = document.getElementById('basisReturnDisplay'); if (basisDisplay) basisDisplay.style.display = 'none';
@@ -5211,6 +5521,46 @@
             }
 
             // Add gemel / hashtalamut specific fields
+            if (assetType === 'trade') {
+                var stockModeVal = (document.getElementById('stockMode') || {value:'ticker'}).value;
+                asset.stockMode = stockModeVal;
+                if (stockModeVal === 'ticker') {
+                    var ticker = (document.getElementById('stockTicker') || {value:''}).value.trim().toUpperCase();
+                    if (ticker) {
+                        asset.stockTicker = ticker;
+                        var units = parseNum(document.getElementById('stockUnits'));
+                        if (units > 0) asset.stockUnits = units;
+                        var sd = stockDataCache[ticker];
+                        if (sd) {
+                            asset.stockPrice   = sd.price;
+                            asset.stockCurrency= sd.currency;
+                            asset.stockDailyPct= sd.dailyPct;
+                            asset.stockName    = sd.name;
+                            asset.stockLastUpdate = sd.date;
+                            var priceILS = sd.currency === 'ILS' ? sd.price : sd.price * exchangeRate;
+                            if (units > 0) asset.value = units * priceILS;
+                        }
+                        asset.currency = 'ILS';
+                    }
+                } else {
+                    // Manual mode
+                    var manualAmt   = parseNum(document.getElementById('stockManualAmount'));
+                    var manualBasis = parseNum(document.getElementById('stockManualCostBasis'));
+                    var manualCurr  = (document.getElementById('stockManualCurrency') || {value:'ILS'}).value;
+                    if (manualAmt > 0) {
+                        asset.stockManualAmount   = manualAmt;
+                        asset.stockManualCurrency = manualCurr;
+                        if (manualBasis > 0) asset.stockManualCostBasis = manualBasis;
+                        asset.value = manualCurr === 'ILS' ? manualAmt : manualAmt * exchangeRate;
+                        asset.currency = 'ILS';
+                    }
+                    // clear ticker fields
+                    delete asset.stockTicker;
+                    delete asset.stockUnits;
+                    delete asset.stockPrice;
+                }
+            }
+
             if (assetType === 'gemel' || assetType === 'fund') {
                 var kupahNum = (document.getElementById('gemelKupahNumber') || {value:''}).value.trim();
                 if (kupahNum.length >= 3) {
@@ -6361,7 +6711,64 @@
                     </div>`;
                 }
                 
-                // ===== SPY PENSION =====
+                // ===== STOCK TICKER ASSET =====
+                if (asset.type === 'trade' && asset.stockTicker) {
+                    const sTicker = asset.stockTicker;
+                    const sUnits  = asset.stockUnits || 0;
+                    const sPrice  = asset.stockPrice || 0;
+                    const sCurr   = asset.stockCurrency || 'USD';
+                    const sDailyPct = asset.stockDailyPct || 0;
+                    const sName   = asset.stockName || sTicker;
+                    const sPriceILS = sCurr === 'ILS' ? sPrice : sPrice * exchangeRate;
+                    const sValue  = sUnits * sPriceILS;
+                    const sDailyILS = sValue * (sDailyPct / 100);
+                    const sc = (v) => v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    const ss = (v) => v >= 0 ? '+' : '';
+                    const priceStr = sCurr === 'ILS' ? '₪' + sPrice.toFixed(2) : '$' + sPrice.toFixed(2);
+
+                    return `
+                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
+                        <div class="asset-row-main">
+                            <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
+                            <div class="asset-row-info">
+                                <div class="asset-row-name">${asset.name} <span style="font-size:0.7em;color:#ff006e;font-weight:700;">${sTicker}</span></div>
+                                <div class="asset-row-provider">${asset.provider} • <span style="color:${sc(sDailyPct)};font-weight:600;">${ss(sDailyPct)}${sDailyPct.toFixed(2)}%</span> יומי</div>
+                            </div>
+                            <div class="asset-row-values">
+                                <div class="asset-row-amount">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
+                                <div class="asset-row-sub" style="color:${sc(sDailyPct)};">${ss(sDailyILS)}₪${Math.abs(sDailyILS).toFixed(0)} היום</div>
+                            </div>
+                            <div class="asset-row-chevron">▼</div>
+                        </div>
+                        <div class="asset-row-expand">
+                            <div class="asset-row-details">
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">טיקר</span>
+                                    <span class="asset-row-detail-value" style="color:#ff006e;font-weight:700;">${sTicker}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">מחיר</span>
+                                    <span class="asset-row-detail-value">${priceStr}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">כמות מניות</span>
+                                    <span class="asset-row-detail-value">${sUnits.toLocaleString('he-IL', {maximumFractionDigits:3})}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">שינוי יומי</span>
+                                    <span class="asset-row-detail-value" style="color:${sc(sDailyPct)};">${ss(sDailyPct)}${sDailyPct.toFixed(2)}% (${ss(sDailyILS)}₪${Math.abs(sDailyILS).toFixed(0)})</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">שם</span>
+                                    <span class="asset-row-detail-value" style="font-size:0.75rem;">${sName}</span>
+                                </div>
+                            </div>
+                            ${editBtn}
+                        </div>
+                    </div>`;
+                }
+
+                                // ===== SPY PENSION =====
                 if (asset.type === 'pension' && asset.isSpyPension) {
                     const units = asset.spyUnits || 0;
                     const avgP = asset.spyAvgPrice || 0;
