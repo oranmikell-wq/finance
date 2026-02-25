@@ -6295,7 +6295,7 @@
                 const icon = assetTypeIcons[asset.type] || '📋';
                 const typeName = assetTypeNames[asset.type] || asset.type;
                 const delay = Math.min(idx * 0.05, 0.4);
-                const editBtn = `<button class="asset-row-edit-btn" onclick="editAsset(${asset.id}, event)">✏️ עריכה</button>`;
+                const editBtn = `<button class="asset-row-edit-btn" onclick="event.stopPropagation(); openModal('edit', ${asset.id});">✏️ עריכה</button>`;
                 
                 // ===== REAL ESTATE =====
                 if (asset.type === 'real_estate') {
