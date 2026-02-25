@@ -3965,6 +3965,7 @@
                         <div style="margin-bottom:6px;">🏠 כל הנתונים שמורים <strong>מקומית על המכשיר שלך בלבד</strong></div>
                         <div>🔒 לא נשלח מידע לשרתים חיצוניים</div>
                     </div>
+                    <button onclick="runAPIDiagnostics()" style="margin-top:14px;width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text-secondary);font-size:0.78rem;cursor:pointer;">🔬 אבחון חיבורי API</button>
                 `
             },
             terms: {
@@ -7175,6 +7176,60 @@
             try { localStorage.removeItem('pensia-kup-' + kupahNum); } catch(e){}
             document.getElementById('pensiaSearchResult').style.display = 'none';
             searchPensiaFund();
+        }
+
+        // ============ API DIAGNOSTICS ============
+        async function runAPIDiagnostics() {
+            var modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+            modal.innerHTML = '<div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;direction:rtl;"><h3 style="margin:0 0 16px;font-size:1rem;">🔬 אבחון חיבורי API</h3><div id="diagLog" style="font-family:monospace;font-size:0.72rem;line-height:1.8;"></div><button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px;width:100%;padding:10px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;cursor:pointer;">סגור</button></div>';
+            document.body.appendChild(modal);
+
+            var log = document.getElementById('diagLog');
+            function line(msg, color) {
+                var d = document.createElement('div');
+                d.style.color = color || 'var(--text-primary)';
+                d.textContent = msg;
+                log.appendChild(d);
+                log.scrollTop = log.scrollHeight;
+            }
+
+            var tests = [
+                { name: 'data.gov.il ישיר', url: 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1' },
+                { name: 'data.gov.il ישיר (פנסיה)', url: 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&limit=1' },
+                { name: 'corsproxy.io (גמל)', url: 'https://corsproxy.io/?' + encodeURIComponent('https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1') },
+                { name: 'allorigins (גמל)', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1') },
+                { name: 'thingproxy (גמל)', url: 'https://thingproxy.freeboard.io/fetch/https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1' },
+                { name: 'Bizportal (גמל-net)', url: 'https://corsproxy.io/?' + encodeURIComponent('https://www.bizportal.co.il/mutualfunds/quote/generalview/5113388') },
+                { name: 'gemelnet XML', url: 'https://corsproxy.io/?' + encodeURIComponent('https://gemelnet.cma.gov.il/tsuot/ui/tsuotHodXML.aspx?miTkfDivuach=202501&adTkfDivuach=202501&kupot=100&Dochot=1&sug=4') },
+            ];
+
+            line('בודק ' + tests.length + ' endpoints...', 'var(--text-secondary)');
+
+            for (var i = 0; i < tests.length; i++) {
+                var t = tests[i];
+                line('⏳ ' + t.name + '...', 'var(--text-secondary)');
+                try {
+                    var ctrl = new AbortController();
+                    var tid = setTimeout(function() { ctrl.abort(); }, 10000);
+                    var resp = await fetch(t.url, { signal: ctrl.signal });
+                    clearTimeout(tid);
+                    if (resp.ok) {
+                        var txt = await resp.text();
+                        var size = txt.length;
+                        var hasData = txt.includes('"success":true') || txt.includes('records') || txt.includes('<') || size > 500;
+                        log.lastChild.textContent = (hasData ? '✅' : '⚠️') + ' ' + t.name + ' — HTTP ' + resp.status + ' (' + size + ' bytes' + (hasData ? ', יש נתונים' : ', אין נתונים') + ')';
+                        log.lastChild.style.color = hasData ? 'var(--accent-green)' : 'var(--accent-orange, orange)';
+                    } else {
+                        log.lastChild.textContent = '❌ ' + t.name + ' — HTTP ' + resp.status;
+                        log.lastChild.style.color = 'var(--accent-red)';
+                    }
+                } catch(e) {
+                    log.lastChild.textContent = '❌ ' + t.name + ' — ' + e.message;
+                    log.lastChild.style.color = 'var(--accent-red)';
+                }
+            }
+            line('✔ אבחון הסתיים', 'var(--text-secondary)');
         }
 
     </script>
