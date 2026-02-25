@@ -2795,6 +2795,17 @@
                     } catch(e) { console.warn('[Fund] allorigins failed:', e.message); }
                 }
 
+                // Proxy 3: thingproxy.freeboard.io — additional fallback for desktop
+                if (!html) {
+                    try {
+                        var r3 = await fetch('https://thingproxy.freeboard.io/fetch/' + bizUrl, { signal: AbortSignal.timeout(20000) });
+                        if (r3.ok) {
+                            var t3 = await r3.text();
+                            if (t3 && t3.length > 1000) html = t3;
+                        }
+                    } catch(e) { console.warn('[Fund] thingproxy failed:', e.message); }
+                }
+
                 if (!html) throw new Error('All proxies failed or returned empty content');
                 
                 // Strip HTML tags to get clean text for parsing
@@ -2846,6 +2857,20 @@
 
                 console.log('Fund parsed:', fundName, 'NAV:', nav, 'Daily:', dailyPct, 'Monthly:', monthlyPct, 'Yearly:', yearlyPct);
 
+                // Try to parse the actual data date from Bizportal (e.g. "נכון ל-31/01/2025")
+                var reportDate = null;
+                var reportDateMatch = text.match(/נכון\s+ל[־\-]?\s*(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})/);
+                if (reportDateMatch) {
+                    reportDate = reportDateMatch[3] + '-' + reportDateMatch[2].padStart(2,'0') + '-' + reportDateMatch[1].padStart(2,'0');
+                }
+                // Fallback: look for standalone date pattern near the NAV
+                if (!reportDate) {
+                    var dateMatch2 = text.match(/(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})/);
+                    if (dateMatch2) {
+                        reportDate = dateMatch2[3] + '-' + dateMatch2[2].padStart(2,'0') + '-' + dateMatch2[1].padStart(2,'0');
+                    }
+                }
+
                 var result = {
                     nav: nav,
                     dailyPct: dailyPct,
@@ -2853,7 +2878,8 @@
                     yearlyPct: yearlyPct,
                     ytdPct: ytdPct,
                     name: fundName,
-                    date: new Date().toISOString()
+                    date: new Date().toISOString(),
+                    reportDate: reportDate
                 };
                 
                 fundDataCache[fundNumber] = result;
@@ -2868,13 +2894,11 @@
                     if (cached) {
                         var c = JSON.parse(cached);
                         var cacheAgeHours = c.date ? (new Date() - new Date(c.date)) / 3600000 : 9999;
-                        if (cacheAgeHours > 72) {
-                            console.warn('[Fund] Cache too stale (' + Math.round(cacheAgeHours) + 'h), skipping');
-                            return null;
-                        }
+                        // Always return cache (even if stale) — better than null
                         c._fromCache = true;
                         c._cacheAgeHours = Math.round(cacheAgeHours);
                         fundDataCache[fundNumber] = c;
+                        console.warn('[Fund] Using cache (' + Math.round(cacheAgeHours) + 'h old) as fallback');
                         return c;
                     }
                 } catch(e){}
@@ -2968,6 +2992,8 @@
                         a.fundMonthlyPct = data.monthlyPct;
                         a.fundYearlyPct = data.yearlyPct;
                         a.fundName = data.name;
+                        a.fundReportDate = data.reportDate || null;
+                        a.fundLastFetch = data.date || new Date().toISOString();
                     });
                 } else {
                     results.push('❌ קרן ' + fundNum + ' - נכשל');
@@ -4713,7 +4739,8 @@
                                 monthlyPct: asset.fundMonthlyPct || 0,
                                 yearlyPct: asset.fundYearlyPct || 0,
                                 name: asset.fundName || asset.name,
-                                date: new Date().toISOString()
+                                date: asset.fundLastFetch || new Date().toISOString(),
+                                reportDate: asset.fundReportDate || null
                             };
                             document.getElementById('fundNameDisplay').textContent = asset.fundName || asset.name;
                             document.getElementById('fundNAVDisplay').textContent = '₪' + asset.fundNAV.toFixed(4);
@@ -6216,6 +6243,19 @@
                                     <span class="asset-row-detail-label">הפקדה חודשית</span>
                                     <span class="asset-row-detail-value">₪${(asset.monthly || 0).toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
                                 </div>` : ''}
+                                ${(() => {
+                                    const rd = asset.fundReportDate;
+                                    const lf = asset.fundLastFetch;
+                                    const dateStr = rd
+                                        ? rd.split('-').reverse().join('/')
+                                        : lf ? new Date(lf).toLocaleDateString('he-IL') : null;
+                                    if (!dateStr) return '';
+                                    const isCache = !rd && lf && (new Date() - new Date(lf)) > 3600000 * 2;
+                                    return `<div class="asset-row-detail" style="grid-column:1/-1;">
+                                        <span class="asset-row-detail-label">📅 נתון נכון ל</span>
+                                        <span class="asset-row-detail-value" style="color:${isCache ? 'var(--accent-orange, #f97316)' : 'var(--text-secondary)'};">${dateStr}${isCache ? ' ⚠️ (מטמון)' : ''}</span>
+                                    </div>`;
+                                })()}
                             </div>
                             ${editBtn}
                         </div>
