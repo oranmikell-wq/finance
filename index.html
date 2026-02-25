@@ -7182,7 +7182,7 @@
         async function runAPIDiagnostics() {
             var modal = document.createElement('div');
             modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-            modal.innerHTML = '<div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;direction:rtl;"><h3 style="margin:0 0 16px;font-size:1rem;">🔬 אבחון חיבורי API</h3><div id="diagLog" style="font-family:monospace;font-size:0.72rem;line-height:1.8;"></div><button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px;width:100%;padding:10px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;cursor:pointer;">סגור</button></div>';
+            modal.innerHTML = '<div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;direction:rtl;"><h3 style="margin:0 0 16px;font-size:1rem;">🔬 אבחון API — שלב 2</h3><div id="diagLog" style="font-family:monospace;font-size:0.65rem;line-height:1.7;word-break:break-all;"></div><button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px;width:100%;padding:10px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;cursor:pointer;">סגור</button></div>';
             document.body.appendChild(modal);
 
             var log = document.getElementById('diagLog');
@@ -7192,43 +7192,95 @@
                 d.textContent = msg;
                 log.appendChild(d);
                 log.scrollTop = log.scrollHeight;
+                return d;
             }
+            function sep() { line('─────────────────────', 'rgba(255,255,255,0.15)'); }
 
-            var tests = [
-                { name: 'data.gov.il ישיר', url: 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1' },
-                { name: 'data.gov.il ישיר (פנסיה)', url: 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&limit=1' },
-                { name: 'corsproxy.io (גמל)', url: 'https://corsproxy.io/?' + encodeURIComponent('https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1') },
-                { name: 'allorigins (גמל)', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1') },
-                { name: 'thingproxy (גמל)', url: 'https://thingproxy.freeboard.io/fetch/https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1' },
-                { name: 'Bizportal (גמל-net)', url: 'https://corsproxy.io/?' + encodeURIComponent('https://www.bizportal.co.il/mutualfunds/quote/generalview/5113388') },
-                { name: 'gemelnet XML', url: 'https://corsproxy.io/?' + encodeURIComponent('https://gemelnet.cma.gov.il/tsuot/ui/tsuotHodXML.aspx?miTkfDivuach=202501&adTkfDivuach=202501&kupot=100&Dochot=1&sug=4') },
-            ];
-
-            line('בודק ' + tests.length + ' endpoints...', 'var(--text-secondary)');
-
-            for (var i = 0; i < tests.length; i++) {
-                var t = tests[i];
-                line('⏳ ' + t.name + '...', 'var(--text-secondary)');
+            async function fetchJSON(url) {
+                var ctrl = new AbortController();
+                var tid = setTimeout(function() { ctrl.abort(); }, 12000);
                 try {
-                    var ctrl = new AbortController();
-                    var tid = setTimeout(function() { ctrl.abort(); }, 10000);
-                    var resp = await fetch(t.url, { signal: ctrl.signal });
+                    var r = await fetch(url, { signal: ctrl.signal, headers: { 'Accept': 'application/json' } });
                     clearTimeout(tid);
-                    if (resp.ok) {
-                        var txt = await resp.text();
-                        var size = txt.length;
-                        var hasData = txt.includes('"success":true') || txt.includes('records') || txt.includes('<') || size > 500;
-                        log.lastChild.textContent = (hasData ? '✅' : '⚠️') + ' ' + t.name + ' — HTTP ' + resp.status + ' (' + size + ' bytes' + (hasData ? ', יש נתונים' : ', אין נתונים') + ')';
-                        log.lastChild.style.color = hasData ? 'var(--accent-green)' : 'var(--accent-orange, orange)';
-                    } else {
-                        log.lastChild.textContent = '❌ ' + t.name + ' — HTTP ' + resp.status;
-                        log.lastChild.style.color = 'var(--accent-red)';
-                    }
-                } catch(e) {
-                    log.lastChild.textContent = '❌ ' + t.name + ' — ' + e.message;
-                    log.lastChild.style.color = 'var(--accent-red)';
-                }
+                    if (!r.ok) return { err: 'HTTP ' + r.status };
+                    var j = await r.json();
+                    if (j && j.contents) j = JSON.parse(j.contents); // allorigins wrapper
+                    return j;
+                } catch(e) { clearTimeout(tid); return { err: e.message }; }
             }
+
+            // ── GEMEL ──
+            line('📊 בודק גמל API...', 'var(--accent-gold)');
+            var gemelUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1';
+            var gj = await fetchJSON(gemelUrl);
+            if (gj && gj.success && gj.result && gj.result.records && gj.result.records.length > 0) {
+                var gr = gj.result.records[0];
+                line('✅ גמל — רשומה ראשונה:', 'var(--accent-green)');
+                Object.keys(gr).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + gr[k]); });
+                line('סה"כ רשומות בתוצאה: ' + gj.result.records.length + ' / ' + (gj.result.total || '?'), 'var(--text-secondary)');
+            } else {
+                line('❌ גמל נכשל: ' + JSON.stringify(gj).slice(0,200), 'var(--accent-red)');
+            }
+            sep();
+
+            // ── PENSIA ──
+            line('🏛️ בודק פנסיה API...', 'var(--accent-cyan)');
+            var pensiaUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&limit=1';
+            var pj = await fetchJSON(pensiaUrl);
+            if (pj && pj.success && pj.result && pj.result.records && pj.result.records.length > 0) {
+                var pr = pj.result.records[0];
+                line('✅ פנסיה — רשומה ראשונה:', 'var(--accent-green)');
+                Object.keys(pr).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + pr[k]); });
+                line('סה"כ רשומות: ' + pj.result.records.length + ' / ' + (pj.result.total || '?'), 'var(--text-secondary)');
+            } else {
+                line('❌ פנסיה נכשל: ' + JSON.stringify(pj).slice(0,200), 'var(--accent-red)');
+            }
+            sep();
+
+            // ── GEMEL with kupah filter ──
+            var gemelAssets = assets.filter(function(a) { return a.gemelKupahNum; });
+            var pensiaAssets = assets.filter(function(a) { return a.pensiaKupahNum; });
+            
+            if (gemelAssets.length > 0) {
+                var kn = gemelAssets[0].gemelKupahNum;
+                line('🔍 גמל חיפוש קופה ' + kn + '...', 'var(--accent-gold)');
+                var gfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&q=' + encodeURIComponent(kn) + '&limit=5';
+                var gf = await fetchJSON(gfUrl);
+                if (gf && gf.success) {
+                    var cnt = (gf.result && gf.result.records) ? gf.result.records.length : 0;
+                    line((cnt > 0 ? '✅' : '⚠️') + ' תוצאות לקופה ' + kn + ': ' + cnt + ' רשומות', cnt > 0 ? 'var(--accent-green)' : 'orange');
+                    if (cnt > 0) {
+                        var rec = gf.result.records[0];
+                        Object.keys(rec).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + rec[k]); });
+                    }
+                } else {
+                    line('❌ חיפוש גמל נכשל: ' + JSON.stringify(gf).slice(0,150), 'var(--accent-red)');
+                }
+                sep();
+            }
+
+            if (pensiaAssets.length > 0) {
+                var pk = pensiaAssets[0].pensiaKupahNum;
+                line('🔍 פנסיה חיפוש קופה ' + pk + '...', 'var(--accent-cyan)');
+                var pfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&q=' + encodeURIComponent(pk) + '&limit=5';
+                var pf = await fetchJSON(pfUrl);
+                if (pf && pf.success) {
+                    var pcnt = (pf.result && pf.result.records) ? pf.result.records.length : 0;
+                    line((pcnt > 0 ? '✅' : '⚠️') + ' תוצאות לקופה ' + pk + ': ' + pcnt + ' רשומות', pcnt > 0 ? 'var(--accent-green)' : 'orange');
+                    if (pcnt > 0) {
+                        var prec = pf.result.records[0];
+                        Object.keys(prec).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + prec[k]); });
+                    }
+                } else {
+                    line('❌ חיפוש פנסיה נכשל: ' + JSON.stringify(pf).slice(0,150), 'var(--accent-red)');
+                }
+                sep();
+            }
+
+            if (gemelAssets.length === 0 && pensiaAssets.length === 0) {
+                line('⚠️ אין נכסי גמל/פנסיה עם מספר קופה — הוסף נכס תחילה', 'orange');
+            }
+
             line('✔ אבחון הסתיים', 'var(--text-secondary)');
         }
 
