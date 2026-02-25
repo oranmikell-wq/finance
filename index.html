@@ -4910,6 +4910,10 @@
                         document.getElementById('mortgage').value = formatNum(asset.mortgage || 0);
                     }
                     
+                    // MUST run before spy/pensia blocks so it shows the right base fields
+                    // without resetting checkboxes that we're about to set
+                    toggleRealEstateFields();
+                    
                     if (asset.type === 'pension' && asset.isSpyPension) {
                         document.getElementById('isSpyPension').checked = true;
                         document.getElementById('spyUnits').value = asset.spyUnits || 0;
@@ -4954,7 +4958,6 @@
                         }
                     }
                     
-                    toggleRealEstateFields();
                     editingAssetId = assetId;
                     var delBtn = document.getElementById('deleteAssetBtn');
                     if (delBtn) delBtn.style.display = '';
