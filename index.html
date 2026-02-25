@@ -6467,6 +6467,14 @@
 
         var gemelDataCache   = {};
         var gemelLastResults = [];
+
+        // AbortSignal.timeout polyfill for Safari desktop
+        function _fetchWithTimeout(url, opts, ms) {
+            var ctrl = new AbortController();
+            var tid = setTimeout(function() { ctrl.abort(); }, ms || 14000);
+            var fetchOpts = Object.assign({}, opts || {}, { signal: ctrl.signal });
+            return fetch(url, fetchOpts).finally(function() { clearTimeout(tid); });
+        }
         var _gemelFieldsLogged = false;
 
         // Known fallback resource IDs (sorted newest-first as discovered)
@@ -6578,10 +6586,7 @@
 
             // Try direct fetch first
             try {
-                var resp = await fetch(BASE + params, {
-                    signal: AbortSignal.timeout(14000),
-                    headers: { 'Accept': 'application/json' }
-                });
+                var resp = await _fetchWithTimeout(BASE + params, { headers: { 'Accept': 'application/json' } }, 14000);
                 if (resp.ok) json = await resp.json();
             } catch(e) {
                 console.warn('[Gemel] Direct fetch failed:', e.message);
@@ -6591,7 +6596,7 @@
             if (!json || !json.success) {
                 try {
                     var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(BASE + params);
-                    var resp2 = await fetch(proxyUrl, { signal: AbortSignal.timeout(14000) });
+                    var resp2 = await _fetchWithTimeout(proxyUrl, {}, 14000);
                     if (resp2.ok) json = await resp2.json();
                 } catch(e2) {
                     console.warn('[Gemel] Proxy fetch failed:', e2.message);
@@ -6846,7 +6851,7 @@
             var xml = null;
             for (var pi = 0; pi < proxies.length; pi++) {
                 try {
-                    var r = await fetch(proxies[pi], { signal: AbortSignal.timeout(14000) });
+                    var r = await _fetchWithTimeout(proxies[pi], {}, 14000);
                     if (r.ok) { var t = await r.text(); if (t && t.length > 200 && t.includes('<')) { xml = t; break; } }
                 } catch(e) { console.warn('[Gemel] XML proxy ' + pi + ' failed:', e.message); }
             }
@@ -6917,8 +6922,9 @@
                         gemelDataCache[a.gemelKupahNum] = data;
                         _saveGemelCache(a.gemelKupahNum, data);
                         assets.filter(function(x) { return x.gemelKupahNum === a.gemelKupahNum; }).forEach(function(x) {
-                            if (data[0].yearlyReturn != null) { x.return = data[0].yearlyReturn; x.gemelYearlyReturn = data[0].yearlyReturn; }
-                            if (data[0].fee != null)          { x.fee    = data[0].fee;          x.gemelFee          = data[0].fee; }
+                            if (data[0].yearlyReturn    != null) { x.return = data[0].yearlyReturn;  x.gemelYearlyReturn   = data[0].yearlyReturn; }
+                            if (data[0].monthlyReturn   != null) { x.gemelMonthlyReturn  = data[0].monthlyReturn; }
+                            if (data[0].fee             != null) { x.fee    = data[0].fee;            x.gemelFee            = data[0].fee; }
                         });
                     }
                 } catch(e) { console.warn('[Gemel] Auto-update failed for ' + a.gemelKupahNum, e); }
@@ -7013,13 +7019,13 @@
 
             var json = null;
             try {
-                var resp = await fetch(BASE + params, { signal: AbortSignal.timeout(14000), headers: {'Accept':'application/json'} });
+                var resp = await _fetchWithTimeout(BASE + params, { headers: {'Accept':'application/json'} }, 14000);
                 if (resp.ok) json = await resp.json();
             } catch(e) { console.warn('[Pensia] Direct fetch failed:', e.message); }
 
             if (!json || !json.success) {
                 try {
-                    var resp2 = await fetch('https://corsproxy.io/?' + encodeURIComponent(BASE + params), { signal: AbortSignal.timeout(14000) });
+                    var resp2 = await _fetchWithTimeout('https://corsproxy.io/?' + encodeURIComponent(BASE + params), {}, 14000);
                     if (resp2.ok) json = await resp2.json();
                 } catch(e2) { console.warn('[Pensia] Proxy failed:', e2.message); }
             }
@@ -7115,3 +7121,6 @@
             searchPensiaFund();
         }
 
+    </script>
+</body>
+</html>
