@@ -2204,6 +2204,74 @@
                         </label>
                     </div>
 
+                    <!-- Pensia-Net tracking -->
+                    <div id="pensiaNetcheckbox" style="display:none;margin-bottom:14px;">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:rgba(0,217,255,0.05);border:1px solid rgba(0,217,255,0.15);border-radius:10px;">
+                            <input type="checkbox" id="isPensiaTracked" onchange="togglePensiaFields()" style="width:20px;height:20px;cursor:pointer;accent-color:#00d9ff;">
+                            <div>
+                                <div style="font-weight:600;font-size:0.85rem;">🔍 חיבור לפנסיה-נט</div>
+                                <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px;">נתוני תשואה ודמי ניהול ממשרד האוצר</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div id="pensiaFields" style="display:none;">
+                        <div style="padding:14px;background:rgba(0,217,255,0.05);border:1px solid rgba(0,217,255,0.15);border-radius:12px;margin-bottom:14px;">
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--accent-cyan);margin-bottom:12px;">🏛️ פנסיה-נט — רשות שוק ההון</div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label>מספר קרן פנסיה (5 ספרות)</label>
+                                <input type="text" inputmode="numeric" id="pensiaKupahNumber"
+                                    placeholder="לדוגמה: 61000"
+                                    oninput="this.value=this.value.replace(/\D/g,'')"
+                                    style="letter-spacing:2px;font-size:1.1rem;">
+                                <div style="font-size:0.69rem;color:var(--text-secondary);margin-top:2px;">מצא ב-<a href="https://pensyanet.cma.gov.il" target="_blank" style="color:var(--accent-cyan);">pensyanet.cma.gov.il</a></div>
+                            </div>
+                            <button type="button" onclick="searchPensiaFund()"
+                                style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent-cyan);color:#000;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:inherit;">
+                                🔍 חפש קרן פנסיה
+                            </button>
+
+                            <div id="pensiaSearchResult" style="display:none;margin-top:12px;">
+                                <div style="padding:12px;background:rgba(0,217,255,0.06);border:1px solid rgba(0,217,255,0.15);border-radius:10px;">
+                                    <div style="font-size:0.88rem;font-weight:700;color:var(--accent-cyan);margin-bottom:2px;" id="pensiaFundNameDisplay">—</div>
+                                    <div style="font-size:0.73rem;color:var(--text-secondary);margin-bottom:10px;" id="pensiaCompanyDisplay">—</div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">תשואה חודשית</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="pensiaMonthlyReturn">—</div>
+                                        </div>
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">תשואה שנתית</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="pensiaYearlyReturn">—</div>
+                                        </div>
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">3 שנים</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="pensia3YearReturn">—</div>
+                                        </div>
+                                        <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
+                                            <div style="font-size:0.59rem;color:var(--text-secondary);margin-bottom:2px;">דמי ניהול</div>
+                                            <div style="font-size:0.95rem;font-weight:700;" id="pensiaFeeDisplay">—</div>
+                                        </div>
+                                    </div>
+                                    <div style="font-size:0.66rem;color:var(--text-secondary);" id="pensiaDataDate"></div>
+                                    <div style="margin-top:6px;text-align:right;">
+                                        <button type="button" onclick="refreshPensiaData()"
+                                            style="font-size:0.65rem;padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;">
+                                            🔄 רענן נתונים
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top:12px;margin-bottom:0;">
+                                <label>💰 יתרת צבירה (₪)</label>
+                                <input type="text" inputmode="decimal" id="pensiaAccumulation"
+                                    placeholder="הכנס את יתרת הצבירה מדוח הקרן"
+                                    oninput="formatNumberInput(this); document.getElementById('assetValue').value=this.value;">
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="spyFields" style="display: none;">
                         <input type="hidden" id="spyUnits" value="0">
                         <input type="hidden" id="spyAvgPrice" value="0">
@@ -3338,6 +3406,7 @@
                 calculateEquity();
             } else if (assetType === 'pension') {
                 spyPensionCheckbox.style.display = 'block';
+                document.getElementById('pensiaNetcheckbox').style.display = 'block';
                 currencyField.style.display = 'block';
                 valueField.style.display = 'block';
             } else if (assetType === 'savings') {
@@ -4614,6 +4683,18 @@
                             else if (mode && mode.value === 'units') calculateSpyValue();
                         }, 50);
                     }
+
+                    if (asset.type === 'pension' && asset.pensiaKupahNum) {
+                        document.getElementById('isPensiaTracked').checked = true;
+                        document.getElementById('pensiaKupahNumber').value = asset.pensiaKupahNum;
+                        document.getElementById('pensiaAccumulation').value = formatNum(asset.value || 0);
+                        togglePensiaFields();
+                        if (asset.pensiaFundName) {
+                            var cached = { fundName: asset.pensiaFundName, company: asset.pensiaCompany || '—', monthlyReturn: asset.pensiaMonthlyReturn != null ? asset.pensiaMonthlyReturn : null, yearlyReturn: asset.pensiaYearlyReturn != null ? asset.pensiaYearlyReturn : null, threeYearReturn: null, fee: asset.pensiaFee != null ? asset.pensiaFee : null, period: null };
+                            pensiaDataCache[asset.pensiaKupahNum] = cached;
+                            displayPensiaResults(cached, asset.pensiaKupahNum, true);
+                        }
+                    }
                     
                     toggleRealEstateFields();
                     editingAssetId = assetId;
@@ -4732,6 +4813,19 @@
             if (gemelBt) { gemelBt.textContent = '🔍 חפש'; gemelBt.disabled = false; }
             if (typeof gemelLastResults !== 'undefined') gemelLastResults = [];
             _gemelFieldsLogged = false;
+            // Reset pensia-net fields
+            var pensiaChk = document.getElementById('isPensiaTracked');
+            if (pensiaChk) { pensiaChk.checked = false; }
+            var pensiaKIn = document.getElementById('pensiaKupahNumber');
+            if (pensiaKIn) pensiaKIn.value = '';
+            var pensiaAIn = document.getElementById('pensiaAccumulation');
+            if (pensiaAIn) pensiaAIn.value = '';
+            var pensiaRes = document.getElementById('pensiaSearchResult');
+            if (pensiaRes) pensiaRes.style.display = 'none';
+            var pensiaFld = document.getElementById('pensiaFields');
+            if (pensiaFld) pensiaFld.style.display = 'none';
+            var pensiaCbx = document.getElementById('pensiaNetcheckbox');
+            if (pensiaCbx) pensiaCbx.style.display = 'none';
             editingAssetId = null;
         }
 
@@ -4797,6 +4891,27 @@
                     asset.spyMonthlyILS = spyMonthly;
                     asset.monthly = spyMonthly;
                     asset.monthlyCurrency = 'ILS';
+                }
+            }
+
+            // Pensia-Net tracking
+            if (assetType === 'pension' && document.getElementById('isPensiaTracked') && document.getElementById('isPensiaTracked').checked) {
+                var pensiaNum = (document.getElementById('pensiaKupahNumber').value || '').trim();
+                if (pensiaNum.length >= 4) {
+                    asset.pensiaKupahNum = pensiaNum;
+                    var accum = parseNum(document.getElementById('pensiaAccumulation'));
+                    if (accum > 0) asset.value = accum;
+                    var pd = pensiaDataCache[pensiaNum];
+                    if (pd) {
+                        asset.pensiaFundName      = pd.fundName;
+                        asset.pensiaCompany        = pd.company;
+                        asset.pensiaMonthlyReturn  = pd.monthlyReturn;
+                        asset.pensiaYearlyReturn   = pd.yearlyReturn;
+                        asset.pensiaFee            = pd.fee;
+                        if (pd.yearlyReturn != null) asset.return = pd.yearlyReturn;
+                        if (pd.fee != null) asset.fee = pd.fee;
+                    }
+                    asset.currency = 'ILS';
                 }
             }
 
@@ -6123,6 +6238,8 @@
                             <div class="asset-row-provider">${asset.provider} • ${typeName}${
                                 (asset.type === 'gemel' || asset.type === 'fund') && asset.gemelMonthlyReturn != null
                                     ? ` • <span style="color:${asset.gemelMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};font-weight:600;">${asset.gemelMonthlyReturn >= 0 ? '+' : ''}${asset.gemelMonthlyReturn.toFixed(2)}%</span> חודשי`
+                                    : asset.type === 'pension' && asset.pensiaMonthlyReturn != null
+                                    ? ` • <span style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};font-weight:600;">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span> חודשי`
                                     : asset.type === 'pension' && asset.dailyChangePct != null
                                     ? ` • <span style="color:${asset.dailyChangePct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};font-weight:600;">${asset.dailyChangePct >= 0 ? '+' : ''}${asset.dailyChangePct.toFixed(3)}%</span> יומי`
                                     : ''
@@ -6808,6 +6925,193 @@
             }
         }
 
-    </script>
-</body>
-</html>
+        // ═══════════════════════════════════════════════
+        //  PENSIA-NET — קרן פנסיה
+        // ═══════════════════════════════════════════════
+
+        var pensiaDataCache = {};
+
+        function togglePensiaFields() {
+            var isChecked = document.getElementById('isPensiaTracked').checked;
+            document.getElementById('pensiaFields').style.display = isChecked ? 'block' : 'none';
+            if (isChecked) {
+                // Uncheck SPY if enabled
+                var spy = document.getElementById('isSpyPension');
+                if (spy && spy.checked) {
+                    spy.checked = false;
+                    document.getElementById('spyFields').style.display = 'none';
+                    document.getElementById('currencyField').style.display = 'block';
+                    document.getElementById('valueField').style.display = 'block';
+                }
+            }
+        }
+
+        function _loadPensiaCache(kupahNum) {
+            try {
+                var raw = localStorage.getItem('pensia-kup-' + kupahNum);
+                if (!raw) return null;
+                var obj = JSON.parse(raw);
+                if (Date.now() - obj.ts > 48 * 3600 * 1000) return null;
+                return obj.data;
+            } catch(e) { return null; }
+        }
+
+        function _savePensiaCache(kupahNum, data) {
+            try { localStorage.setItem('pensia-kup-' + kupahNum, JSON.stringify({ts: Date.now(), data: data})); } catch(e){}
+        }
+
+        async function searchPensiaFund() {
+            var kupahNum = (document.getElementById('pensiaKupahNumber').value || '').trim();
+            if (!kupahNum || kupahNum.length < 4) {
+                alert('נא להזין מספר קרן פנסיה (4–5 ספרות)');
+                return;
+            }
+
+            var btn = document.querySelector('#pensiaFields button[onclick="searchPensiaFund()"]');
+            if (btn) { btn.textContent = '⏳ מחפש...'; btn.disabled = true; }
+            document.getElementById('pensiaSearchResult').style.display = 'none';
+
+            try {
+                var cached = _loadPensiaCache(kupahNum);
+                if (cached) {
+                    pensiaDataCache[kupahNum] = cached;
+                    displayPensiaResults(cached, kupahNum, true);
+                    fetchPensiaFromGovAPI(kupahNum).then(function(fresh) {
+                        if (fresh) { pensiaDataCache[kupahNum] = fresh; _savePensiaCache(kupahNum, fresh); }
+                    }).catch(function(){});
+                    return;
+                }
+
+                var data = await fetchPensiaFromGovAPI(kupahNum);
+
+                if (data) {
+                    pensiaDataCache[kupahNum] = data;
+                    _savePensiaCache(kupahNum, data);
+                    displayPensiaResults(data, kupahNum, false);
+                    // Auto-fill form
+                    var nameIn = document.getElementById('assetName');
+                    var provIn = document.getElementById('assetProvider');
+                    if (!nameIn.value && data.fundName) nameIn.value = data.fundName;
+                    if (!provIn.value && data.company)  provIn.value = data.company;
+                    if (data.yearlyReturn != null) document.getElementById('assetReturn').value = formatNum(data.yearlyReturn);
+                    if (data.fee != null)          document.getElementById('assetFee').value = formatNum(data.fee);
+                } else {
+                    alert('❌ לא נמצאו נתונים לקרן ' + kupahNum + '. ודא שהמספר נכון.');
+                }
+            } catch(err) {
+                alert('❌ שגיאה: ' + err.message);
+            } finally {
+                if (btn) { btn.textContent = '🔍 חפש קרן פנסיה'; btn.disabled = false; }
+            }
+        }
+
+        async function fetchPensiaFromGovAPI(kupahNum) {
+            // pensia-net dataset on data.gov.il
+            var RESOURCE_ID = '6d47d6b5-cb08-488b-b333-f1e717b1e1bd';
+            var BASE = 'https://data.gov.il/api/3/action/datastore_search';
+            var params = '?resource_id=' + RESOURCE_ID + '&q=' + encodeURIComponent(kupahNum) + '&limit=100';
+
+            var json = null;
+            try {
+                var resp = await fetch(BASE + params, { signal: AbortSignal.timeout(14000), headers: {'Accept':'application/json'} });
+                if (resp.ok) json = await resp.json();
+            } catch(e) { console.warn('[Pensia] Direct fetch failed:', e.message); }
+
+            if (!json || !json.success) {
+                try {
+                    var resp2 = await fetch('https://corsproxy.io/?' + encodeURIComponent(BASE + params), { signal: AbortSignal.timeout(14000) });
+                    if (resp2.ok) json = await resp2.json();
+                } catch(e2) { console.warn('[Pensia] Proxy failed:', e2.message); }
+            }
+
+            if (!json || !json.success || !json.result || !json.result.records || json.result.records.length === 0) return null;
+
+            var records = json.result.records;
+            // Filter to this fund
+            var filtered = records.filter(function(r) {
+                return Object.values(r).some(function(v) {
+                    var s = String(v||'').trim();
+                    return s === kupahNum || s === String(parseInt(kupahNum, 10));
+                });
+            });
+            if (filtered.length === 0) filtered = records;
+
+            // Sort newest first
+            filtered.sort(function(a, b) {
+                var pa = _extractPeriod(a), pb = _extractPeriod(b);
+                return (pb||'').localeCompare(pa||'');
+            });
+
+            var r = filtered[0];
+            function fld(names) {
+                for (var i = 0; i < names.length; i++) {
+                    for (var k in r) {
+                        if (k.toUpperCase() === names[i].toUpperCase() && r[k] !== null && r[k] !== '') return r[k];
+                    }
+                }
+                return null;
+            }
+            function fldNum(names) {
+                var v = fld(names);
+                if (v === null) return null;
+                var n = parseFloat(String(v).replace(',', '.'));
+                return isNaN(n) ? null : n;
+            }
+
+            var period = fld(['REPORT_PERIOD','TKUFA','HODESH','PERIOD']);
+            if (period && /^\d{6}$/.test(String(period))) {
+                var p = String(period);
+                period = p.slice(4) + '/' + p.slice(0, 4);
+            }
+
+            return {
+                fundName:      fld(['FUND_NAME','SHEM_KUPA','SHEM_KUPAH']) || '—',
+                company:       fld(['MANAGING_CORPORATION','CONTROLLING_CORPORATION','SHEM_CHV']) || '—',
+                monthlyReturn: fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']),
+                yearlyReturn:  fldNum(['AVG_ANNUAL_YIELD_TRAILING_3YRS','AVG_ANNUAL_YIELD_TRAILING_5YRS','YEAR_TO_DATE_YIELD','TSUA_SHNATI']),
+                threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
+                fee:           fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
+                period:        period || null,
+            };
+        }
+
+        function displayPensiaResults(data, kupahNum, fromCache) {
+            document.getElementById('pensiaFundNameDisplay').textContent = data.fundName + ' — קרן ' + kupahNum;
+            document.getElementById('pensiaCompanyDisplay').textContent  = data.company + (fromCache ? ' · ⚠️ מטמון' : '');
+
+            function setR(id, val) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                if (val != null) {
+                    el.textContent = (val >= 0 ? '+' : '') + val.toFixed(2) + '%';
+                    el.style.color = val >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                } else {
+                    el.textContent = '—'; el.style.color = 'var(--text-secondary)';
+                }
+            }
+            setR('pensiaMonthlyReturn', data.monthlyReturn);
+            setR('pensiaYearlyReturn',  data.yearlyReturn);
+            setR('pensia3YearReturn',   data.threeYearReturn);
+
+            var feeEl = document.getElementById('pensiaFeeDisplay');
+            if (feeEl) {
+                if (data.fee != null && data.fee > 0) {
+                    feeEl.textContent = data.fee.toFixed(3) + '%';
+                    feeEl.style.color = data.fee < 0.5 ? 'var(--accent-green)' : 'var(--accent-gold)';
+                } else { feeEl.textContent = '—'; feeEl.style.color = 'var(--text-secondary)'; }
+            }
+
+            var dateEl = document.getElementById('pensiaDataDate');
+            if (dateEl && data.period) dateEl.textContent = 'נתונים לפי: ' + data.period;
+
+            document.getElementById('pensiaSearchResult').style.display = 'block';
+        }
+
+        function refreshPensiaData() {
+            var kupahNum = (document.getElementById('pensiaKupahNumber') || {value:''}).value.trim();
+            if (!kupahNum) return;
+            try { localStorage.removeItem('pensia-kup-' + kupahNum); } catch(e){}
+            document.getElementById('pensiaSearchResult').style.display = 'none';
+            searchPensiaFund();
+        }
+
