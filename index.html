@@ -2739,6 +2739,82 @@
                 console.warn('[SPY] corsproxy failed:', e.message);
             }
 
+            // === Source 3: Yahoo via allorigins ===
+            try {
+                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d');
+                console.log('[SPY] Trying Yahoo via allorigins...');
+                const ctrl3 = new AbortController();
+                const tid3 = setTimeout(() => ctrl3.abort(), 8000);
+                const resp3 = await fetch(url, { signal: ctrl3.signal });
+                clearTimeout(tid3);
+                if (resp3.ok) {
+                    const raw3 = await resp3.json();
+                    const parsed3 = raw3 && raw3.contents ? JSON.parse(raw3.contents) : raw3;
+                    const meta3 = parsed3 && parsed3.chart && parsed3.chart.result && parsed3.chart.result[0] && parsed3.chart.result[0].meta;
+                    const price3 = meta3 ? (meta3.regularMarketPrice || meta3.previousClose) : 0;
+                    if (price3 > 0) {
+                        console.log('[SPY] ✅ allorigins price:', price3);
+                        return applySpyPrice(price3);
+                    }
+                }
+                lastError += ' | allorigins: no valid price';
+            } catch (e) {
+                lastError += ' | allorigins: ' + e.message;
+                console.warn('[SPY] allorigins failed:', e.message);
+            }
+
+            // === Source 4: stooq.com (no key, no CORS issues) ===
+            try {
+                const stooqUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/l/?s=spy.us&f=sd2t2ohlcv&h&e=csv');
+                console.log('[SPY] Trying stooq...');
+                const ctrl4 = new AbortController();
+                const tid4 = setTimeout(() => ctrl4.abort(), 8000);
+                const resp4 = await fetch(stooqUrl, { signal: ctrl4.signal });
+                clearTimeout(tid4);
+                if (resp4.ok) {
+                    const raw4 = await resp4.json();
+                    const csv = raw4 && raw4.contents ? raw4.contents : '';
+                    // CSV format: Symbol,Date,Time,Open,High,Low,Close,Volume
+                    const lines = csv.trim().split('
+');
+                    if (lines.length >= 2) {
+                        const cols = lines[1].split(',');
+                        const closePrice = parseFloat(cols[6]);
+                        if (closePrice > 0) {
+                            console.log('[SPY] ✅ stooq price:', closePrice);
+                            return applySpyPrice(closePrice);
+                        }
+                    }
+                }
+                lastError += ' | stooq: no valid price';
+            } catch (e) {
+                lastError += ' | stooq: ' + e.message;
+                console.warn('[SPY] stooq failed:', e.message);
+            }
+
+            // === Source 5: Yahoo query2 direct ===
+            try {
+                const url5 = 'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d');
+                console.log('[SPY] Trying Yahoo query2...');
+                const ctrl5 = new AbortController();
+                const tid5 = setTimeout(() => ctrl5.abort(), 6000);
+                const resp5 = await fetch(url5, { signal: ctrl5.signal });
+                clearTimeout(tid5);
+                if (resp5.ok) {
+                    const data5 = await resp5.json();
+                    const meta5 = data5 && data5.chart && data5.chart.result && data5.chart.result[0] && data5.chart.result[0].meta;
+                    const price5 = meta5 ? (meta5.regularMarketPrice || meta5.previousClose) : 0;
+                    if (price5 > 0) {
+                        console.log('[SPY] ✅ Yahoo query2 price:', price5);
+                        return applySpyPrice(price5);
+                    }
+                }
+                lastError += ' | yahoo-q2: no valid price';
+            } catch (e) {
+                lastError += ' | yahoo-q2: ' + e.message;
+                console.warn('[SPY] Yahoo query2 failed:', e.message);
+            }
+
             console.error('[SPY] ❌ All sources failed:', lastError);
             return spyPrice > 0;
         }
@@ -3194,15 +3270,21 @@
             return false;
         }
 
-        // Auto-update SPY - every minute when market open, every 5 min otherwise
+        // Auto-update SPY - every minute when market open, every 15 min otherwise (for after-hours/prev close)
         setInterval(() => {
             const hasSpyAssets = assets.some(a => a.isSpyPension);
             if (!hasSpyAssets) return;
-            
-            if (isMarketOpen()) {
+            fetchSpyPrice();
+        }, 60000); // every 1 min - API calls are lightweight
+
+        // Slower fallback interval when market is closed (every 15 min)
+        setInterval(() => {
+            const hasSpyAssets = assets.some(a => a.isSpyPension);
+            if (!hasSpyAssets) return;
+            if (!isMarketOpen()) {
                 fetchSpyPrice();
             }
-        }, 60000);
+        }, 15 * 60000);
 
         // Retry SPY fetch after initial failure (try again after 10s, 30s, 60s)
         let spyRetryCount = 0;
@@ -7101,7 +7183,7 @@
                 var raw = localStorage.getItem('pensia-kup-' + kupahNum);
                 if (!raw) return null;
                 var obj = JSON.parse(raw);
-                if (Date.now() - obj.ts > 48 * 3600 * 1000) return null;
+                if (Date.now() - obj.ts > 6 * 3600 * 1000) return null;  // 6h TTL
                 return obj.data;
             } catch(e) { return null; }
         }
@@ -7265,25 +7347,33 @@
 
             // Compute trailing 12-month compounded return from monthly yields
             var trailing12 = null;
+            var trailing12Source = null;
             var monthlyRecords = filtered.slice(0, 12); // up to 12 most recent months
             if (monthlyRecords.length >= 1) {
                 var compound = 1;
                 var validMonths = 0;
+                var monthDetails = [];
                 monthlyRecords.forEach(function(rec) {
                     var my = parseFloat(String(rec.MONTHLY_YIELD || rec.TSUA_HODSHIT || rec.TSUA_HOD || '').replace(',', '.'));
+                    var period = rec.REPORT_PERIOD || rec.TKUFA || '?';
                     if (!isNaN(my)) {
                         compound *= (1 + my / 100);
                         validMonths++;
+                        monthDetails.push(period + ':' + my + '%');
                     }
                 });
-                if (validMonths >= 6) {
+                console.log('[Pensia] Monthly data for trailing calc:', monthDetails.join(', '));
+                console.log('[Pensia] compound factor:', compound, 'validMonths:', validMonths);
+                if (validMonths >= 3) {
                     // Annualize if less than 12 months
                     trailing12 = validMonths < 12
                         ? (Math.pow(compound, 12 / validMonths) - 1) * 100
                         : (compound - 1) * 100;
                     trailing12 = Math.round(trailing12 * 100) / 100;
+                    trailing12Source = validMonths + ' חודשים' + (validMonths < 12 ? ' (מנורמל שנתי)' : '');
                 }
             }
+            console.log('[Pensia] trailing12:', trailing12, 'source:', trailing12Source, 'records available:', filtered.length);
 
             var monthlyReturn = fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']);
 
@@ -7291,11 +7381,13 @@
                 fundName:        fld(['FUND_NAME','SHEM_KUPA','SHEM_KUPAH']) || '—',
                 company:         fld(['MANAGING_CORPORATION','CONTROLLING_CORPORATION','SHEM_CHV']) || '—',
                 monthlyReturn:   monthlyReturn,
-                yearlyReturn:    trailing12,                                          // computed from monthly
+                yearlyReturn:    trailing12,                                          // computed from monthly compounds
+                yearlyReturnSource: trailing12Source,                                 // e.g. "12 חודשים"
                 threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
                 fee:             fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
                 period:          periodDisplay || null,
                 periodRaw:       periodStr || null,                                   // e.g. "202601"
+                recordsAvailable: filtered.length,
             };
         }
 
@@ -7427,15 +7519,42 @@
 
             if (pensiaAssets.length > 0) {
                 var pk = pensiaAssets[0].pensiaKupahNum;
-                line('🔍 פנסיה חיפוש קופה ' + pk + '...', 'var(--accent-cyan)');
-                var pfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&q=' + encodeURIComponent(pk) + '&limit=5';
+                
+                // Find all pensia resource IDs from the package
+                line('🔍 מחפש resource IDs עדכניים לפנסיה...', 'var(--accent-cyan)');
+                var pkgUrl = 'https://data.gov.il/api/3/action/package_show?id=gemelnet';
+                var pkg = await fetchJSON(pkgUrl);
+                if (pkg && pkg.success && pkg.result && pkg.result.resources) {
+                    var pensiaResources = pkg.result.resources.filter(function(r) {
+                        return r.name && (r.name.includes('pensia') || r.name.includes('pension') || r.name.includes('פנסיה') || r.name.includes('Pension'));
+                    });
+                    line('נמצאו ' + pensiaResources.length + ' resource(s) פנסיה:', 'var(--text-secondary)');
+                    pensiaResources.slice(0,5).forEach(function(r) { line('  ' + r.id + ' — ' + r.name + ' (' + (r.last_modified||'') + ')', 'var(--text-primary)'); });
+                    
+                    // Also show ALL resources with their last_modified
+                    line('כל ה-resources:', 'var(--text-secondary)');
+                    pkg.result.resources.slice(0,20).forEach(function(r) { line('  ' + r.id.slice(0,8) + '... — ' + r.name + ' [' + (r.last_modified||'').slice(0,10) + ']', 'var(--text-primary)'); });
+                } else {
+                    line('לא ניתן לשלוף package, מנסה resource ישיר...', 'orange');
+                }
+                sep();
+
+                // Test current resource with exact filter
+                line('🔍 פנסיה exact filter קופה ' + pk + '...', 'var(--accent-cyan)');
+                var pFilters = JSON.stringify({ 'FUND_ID': parseInt(pk, 10) });
+                var pfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&filters=' + encodeURIComponent(pFilters) + '&sort=REPORT_PERIOD+desc&limit=3';
                 var pf = await fetchJSON(pfUrl);
                 if (pf && pf.success) {
                     var pcnt = (pf.result && pf.result.records) ? pf.result.records.length : 0;
-                    line((pcnt > 0 ? '✅' : '⚠️') + ' תוצאות לקופה ' + pk + ': ' + pcnt + ' רשומות', pcnt > 0 ? 'var(--accent-green)' : 'orange');
+                    line((pcnt > 0 ? '✅' : '⚠️') + ' תוצאות: ' + pcnt + ' (total: ' + (pf.result.total||'?') + ')', pcnt > 0 ? 'var(--accent-green)' : 'orange');
                     if (pcnt > 0) {
                         var prec = pf.result.records[0];
-                        Object.keys(prec).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + prec[k]); });
+                        line('  FUND_NAME: ' + prec.FUND_NAME, 'var(--text-primary)');
+                        line('  REPORT_PERIOD (newest): ' + prec.REPORT_PERIOD, 'var(--text-primary)');
+                        line('  MONTHLY_YIELD: ' + prec.MONTHLY_YIELD, 'var(--text-primary)');
+                        line('  AVG_ANNUAL_YIELD_TRAILING_3YRS: ' + prec.AVG_ANNUAL_YIELD_TRAILING_3YRS, 'var(--text-primary)');
+                        if (pcnt > 1) line('  REPORT_PERIOD (2nd): ' + pf.result.records[1].REPORT_PERIOD, 'var(--text-secondary)');
+                        if (pcnt > 2) line('  REPORT_PERIOD (3rd): ' + pf.result.records[2].REPORT_PERIOD, 'var(--text-secondary)');
                     }
                 } else {
                     line('❌ חיפוש פנסיה נכשל: ' + JSON.stringify(pf).slice(0,150), 'var(--accent-red)');
