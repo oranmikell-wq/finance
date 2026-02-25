@@ -2596,6 +2596,8 @@
         let spyPrice = 0; // SPY current price
         let spyPrevClose = 0; // SPY previous close
         let spyDailyChangePct = 0; // SPY daily change %
+        let btcDailyChangePct = 0; // BTC 24h change %
+        let ethDailyChangePct = 0; // ETH 24h change %
         let ta125Price = 0; // TA-125 index
         let ta125Change = 0; // TA-125 daily change %
         let sp500Price = 0; // S&P 500 index
@@ -3525,11 +3527,19 @@
 
                 // Fetch crypto rates (BTC and ETH in USD)
                 try {
-                    var cryptoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
+                    var cryptoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
                     if (cryptoResponse.ok) {
                         var cryptoData = await cryptoResponse.json();
-                        if (cryptoData && cryptoData.bitcoin) btcRate = cryptoData.bitcoin.usd;
-                        if (cryptoData && cryptoData.ethereum) ethRate = cryptoData.ethereum.usd;
+                        if (cryptoData && cryptoData.bitcoin) {
+                            btcRate = cryptoData.bitcoin.usd;
+                            btcDailyChangePct = cryptoData.bitcoin.usd_24h_change || 0;
+                            try { localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
+                        }
+                        if (cryptoData && cryptoData.ethereum) {
+                            ethRate = cryptoData.ethereum.usd;
+                            ethDailyChangePct = cryptoData.ethereum.usd_24h_change || 0;
+                            try { localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
+                        }
                     }
                 } catch(e) { console.warn('[Rate] Crypto fetch failed:', e.message); }
                 
@@ -4665,6 +4675,10 @@
                 }
                 
                 // Load daily change data
+                var btcDC = localStorage.getItem('btc-daily-change');
+                if (btcDC) btcDailyChangePct = parseFloat(btcDC);
+                var ethDC = localStorage.getItem('eth-daily-change');
+                if (ethDC) ethDailyChangePct = parseFloat(ethDC);
                 var spyPC = localStorage.getItem('spy-prev-close');
                 if (spyPC) spyPrevClose = parseFloat(spyPC);
                 var spyDC = localStorage.getItem('spy-daily-change');
@@ -6341,7 +6355,7 @@
                             <div class="asset-row-return ${rCls}">${s(rPct)}${rPct.toFixed(1)}%</div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${vILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
-                                <div class="asset-row-sub">$${vUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
+                                <div class="asset-row-sub">$${vUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}${spyDailyChangePct ? ` <span style="color:${spyDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${spyDailyChangePct>=0?'+':''}${spyDailyChangePct.toFixed(2)}%</span>` : ''}</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -6503,7 +6517,11 @@
                         <div class="asset-row-values">
                             <div class="asset-row-amount">₪${valueInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                             ${showUSD ? `<div class="asset-row-sub">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>` : ''}
-                            ${currency !== 'ILS' && !showUSD ? `<div class="asset-row-sub">${formatAmount(asset.value, currency)}</div>` : ''}
+                            ${currency !== 'ILS' && !showUSD ? `<div class="asset-row-sub">${formatAmount(asset.value, currency)}${
+                                (currency === 'BTC' && btcDailyChangePct) ? ` <span style="color:${btcDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${btcDailyChangePct>=0?'+':''}${btcDailyChangePct.toFixed(2)}%</span>` :
+                                (currency === 'ETH' && ethDailyChangePct) ? ` <span style="color:${ethDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${ethDailyChangePct>=0?'+':''}${ethDailyChangePct.toFixed(2)}%</span>` :
+                                (currency === 'USD' && (asset.type === 'trade' || asset.type === 'crypto') && exchangeRatePrevClose > 0) ? ` <span style="color:${((exchangeRate-exchangeRatePrevClose)/exchangeRatePrevClose*100)>=0?'var(--accent-green)':'var(--accent-red)'};">${((exchangeRate-exchangeRatePrevClose)/exchangeRatePrevClose*100)>=0?'+':''}${((exchangeRate-exchangeRatePrevClose)/exchangeRatePrevClose*100).toFixed(2)}%</span>` : ''
+                            }</div>` : ''}
                         </div>
                         <div class="asset-row-chevron">▼</div>
                     </div>
