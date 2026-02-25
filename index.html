@@ -7302,6 +7302,18 @@
                             if (data[0].fee             != null) { x.fee    = data[0].fee;            x.gemelFee            = data[0].fee; }
                             if (data[0].fundName)                { x.gemelFundName = data[0].fundName; }
                             if (data[0].company)                 { x.gemelCompany  = data[0].company; }
+                            // Auto-apply monthly return to accumulation value — only on new period
+                            var newPeriod = data[0].period;
+                            var lastPeriod = x.gemelLastAppliedPeriod || null;
+                            if (newPeriod && data[0].monthlyReturn != null && x.value > 0) {
+                                if (!lastPeriod || newPeriod > lastPeriod) {
+                                    var oldValue = x.value;
+                                    x.value = Math.round(x.value * (1 + data[0].monthlyReturn / 100));
+                                    x.gemelLastAppliedPeriod = newPeriod;
+                                    console.log('[Gemel] 💰 Auto-applied monthly ' + data[0].monthlyReturn + '% for period ' + newPeriod
+                                        + ': ₪' + oldValue.toLocaleString('he-IL') + ' → ₪' + x.value.toLocaleString('he-IL'));
+                                }
+                            }
                         });
                         await saveAssets();
                         console.log('[Gemel] ✅ Updated kupah', a.gemelKupahNum, '→', data[0].fundName, 'monthly:', data[0].monthlyReturn);
