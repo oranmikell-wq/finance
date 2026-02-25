@@ -1535,6 +1535,8 @@
                         <span>$1 = ₪<span id="exchangeRateDisplay">3.7</span> <span id="ilsDailyChange" style="font-size:0.75em;"></span></span>
                         <span>₿1 = $<span id="btcRateDisplay">100,000</span></span>
                         <span>Ξ1 = $<span id="ethRateDisplay">3,500</span></span>
+                        <span>SPY <span id="spyIndexDisplay" style="font-size:0.75em;">—</span> <span id="spyIndexChange" style="font-size:0.75em;"></span></span>
+                        <span>ת"א125 <span id="ta125Display" style="font-size:0.75em;">—</span> <span id="ta125Change" style="font-size:0.75em;"></span></span>
                     </span>
                 </span>
             </div>
@@ -2594,6 +2596,8 @@
         let spyPrice = 0; // SPY current price
         let spyPrevClose = 0; // SPY previous close
         let spyDailyChangePct = 0; // SPY daily change %
+        let ta125Price = 0; // TA-125 index
+        let ta125Change = 0; // TA-125 daily change %
         let lastRateUpdate = null;
         let lastSpyUpdate = null;
         const FINNHUB_DEFAULT_KEY = 'd69gf19r01qjmno57nngd69gf19r01qjmno57no0';
@@ -2775,8 +2779,7 @@
                     const raw4 = await resp4.json();
                     const csv = raw4 && raw4.contents ? raw4.contents : '';
                     // CSV format: Symbol,Date,Time,Open,High,Low,Close,Volume
-                    const lines = csv.trim().split('
-');
+                    const lines = csv.trim().split('\n');
                     if (lines.length >= 2) {
                         const cols = lines[1].split(',');
                         const closePrice = parseFloat(cols[6]);
@@ -2828,6 +2831,7 @@
                 localStorage.setItem('spy-price-date', lastSpyUpdate);
             } catch (e) {}
             console.log('[SPY] Applied price: $' + spyPrice.toFixed(2));
+            updateRateDisplay();
             updateSpyAssets();
             // Update modal if open
             var sf = document.getElementById('spyFields');
@@ -3286,6 +3290,66 @@
             }
         }, 15 * 60000);
 
+        // ── TA-125 Index fetch ──
+        async function fetchTA125() {
+            // Try Yahoo Finance for ^TA125.TA
+            var sources = [
+                'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
+                'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
+                'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
+            ];
+
+            for (var i = 0; i < sources.length; i++) {
+                try {
+                    var ctrl = new AbortController();
+                    var tid = setTimeout(function() { ctrl.abort(); }, 8000);
+                    var resp = await fetch(sources[i], { signal: ctrl.signal });
+                    clearTimeout(tid);
+                    if (!resp.ok) continue;
+                    var raw = await resp.json();
+                    var data = raw && raw.contents ? JSON.parse(raw.contents) : raw;
+                    var meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+                    if (meta) {
+                        var price = meta.regularMarketPrice || meta.previousClose;
+                        var prevClose = meta.previousClose || meta.chartPreviousClose;
+                        if (price > 0) {
+                            ta125Price = price;
+                            ta125Change = prevClose > 0 ? ((price - prevClose) / prevClose * 100) : 0;
+                            try {
+                                localStorage.setItem('ta125-price', ta125Price.toString());
+                                localStorage.setItem('ta125-change', ta125Change.toString());
+                                localStorage.setItem('ta125-date', new Date().toISOString());
+                            } catch(e) {}
+                            console.log('[TA-125] ✅ price:', ta125Price.toFixed(0), 'change:', ta125Change.toFixed(2) + '%');
+                            updateRateDisplay();
+                            return true;
+                        }
+                    }
+                } catch(e) {
+                    console.warn('[TA-125] source', i, 'failed:', e.message);
+                }
+            }
+            console.warn('[TA-125] all sources failed');
+            return false;
+        }
+
+        // Load TA-125 from cache
+        (function() {
+            try {
+                var p = parseFloat(localStorage.getItem('ta125-price') || '0');
+                var c = parseFloat(localStorage.getItem('ta125-change') || '0');
+                var d = localStorage.getItem('ta125-date');
+                if (p > 0 && d && (Date.now() - new Date(d).getTime()) < 12 * 3600000) {
+                    ta125Price = p; ta125Change = c;
+                    console.log('[TA-125] loaded from cache:', p);
+                }
+            } catch(e) {}
+        })();
+
+        // Fetch TA-125 on startup and every 5 min
+        setTimeout(fetchTA125, 2000);
+        setInterval(fetchTA125, 5 * 60000);
+
         // Retry SPY fetch after initial failure (try again after 10s, 30s, 60s)
         let spyRetryCount = 0;
         function retrySpyFetch() {
@@ -3484,6 +3548,28 @@
                 var chg = ((exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100);
                 ilsChangeEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
                 ilsChangeEl.style.color = chg >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            }
+
+            // SPY index display
+            var spyEl = document.getElementById('spyIndexDisplay');
+            var spyChgEl = document.getElementById('spyIndexChange');
+            if (spyEl && spyPrice > 0) {
+                spyEl.textContent = '$' + spyPrice.toFixed(2);
+                if (spyChgEl && spyDailyChangePct != null && spyDailyChangePct !== 0) {
+                    spyChgEl.textContent = (spyDailyChangePct >= 0 ? '+' : '') + spyDailyChangePct.toFixed(2) + '%';
+                    spyChgEl.style.color = spyDailyChangePct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                }
+            }
+
+            // TA-125 display
+            var taEl = document.getElementById('ta125Display');
+            var taChgEl = document.getElementById('ta125Change');
+            if (taEl && typeof ta125Price !== 'undefined' && ta125Price > 0) {
+                taEl.textContent = ta125Price.toLocaleString('he-IL', {maximumFractionDigits: 0});
+                if (taChgEl && typeof ta125Change !== 'undefined' && ta125Change !== 0) {
+                    taChgEl.textContent = (ta125Change >= 0 ? '+' : '') + ta125Change.toFixed(2) + '%';
+                    taChgEl.style.color = ta125Change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                }
             }
         }
 
