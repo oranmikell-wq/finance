@@ -4531,6 +4531,13 @@
                     await updateGemelAssets();
                     updateUI();
                 }
+
+                // Pensia: auto-refresh on startup
+                const hasPensiaAssets = assets.some(function(a) { return a.pensiaKupahNum; });
+                if (hasPensiaAssets) {
+                    await updatePensiaAssets();
+                    updateUI();
+                }
             }, 200);
         }
 
@@ -6576,11 +6583,20 @@
                     gemelLastResults = cached;
                     gemelDataCache[kupahNum] = cached;
                     displayGemelResults(cached, kupahNum, true);
-                    // Refresh in background
+                    // Refresh in background and update display when done
                     fetchGemelFromGovAPI(kupahNum).then(function(fresh) {
                         if (fresh && fresh.length > 0) {
                             gemelDataCache[kupahNum] = fresh;
                             _saveGemelCache(kupahNum, fresh);
+                            // Update display with fresh data
+                            displayGemelResults(fresh, kupahNum, false);
+                            // Update form fields
+                            var nameIn2 = document.getElementById('assetName');
+                            var provIn2 = document.getElementById('assetProvider');
+                            if (fresh[0].fundName && (!nameIn2.value || nameIn2.value === cached[0].fundName)) nameIn2.value = fresh[0].fundName;
+                            if (fresh[0].company && (!provIn2.value || provIn2.value === cached[0].company)) provIn2.value = fresh[0].company;
+                            if (fresh[0].yearlyReturn != null) document.getElementById('assetReturn').value = formatNum(fresh[0].yearlyReturn);
+                            if (fresh[0].fee != null) document.getElementById('assetFee').value = formatNum(fresh[0].fee);
                         }
                     }).catch(function(){});
                     return;
@@ -6994,9 +7010,40 @@
                             if (data[0].yearlyReturn    != null) { x.return = data[0].yearlyReturn;  x.gemelYearlyReturn   = data[0].yearlyReturn; }
                             if (data[0].monthlyReturn   != null) { x.gemelMonthlyReturn  = data[0].monthlyReturn; }
                             if (data[0].fee             != null) { x.fee    = data[0].fee;            x.gemelFee            = data[0].fee; }
+                            if (data[0].fundName)                { x.gemelFundName = data[0].fundName; }
+                            if (data[0].company)                 { x.gemelCompany  = data[0].company; }
                         });
+                        await saveAssets();
+                        console.log('[Gemel] ✅ Updated kupah', a.gemelKupahNum, '→', data[0].fundName, 'monthly:', data[0].monthlyReturn);
                     }
                 } catch(e) { console.warn('[Gemel] Auto-update failed for ' + a.gemelKupahNum, e); }
+            }
+        }
+
+        async function updatePensiaAssets() {
+            var pensiaAssets = assets.filter(function(a) { return a.pensiaKupahNum; });
+            if (pensiaAssets.length === 0) return;
+            var seen = {};
+            for (var i = 0; i < pensiaAssets.length; i++) {
+                var a = pensiaAssets[i];
+                if (seen[a.pensiaKupahNum]) continue;
+                seen[a.pensiaKupahNum] = true;
+                try {
+                    var data = await fetchPensiaFromGovAPI(a.pensiaKupahNum);
+                    if (data) {
+                        pensiaDataCache[a.pensiaKupahNum] = data;
+                        _savePensiaCache(a.pensiaKupahNum, data);
+                        assets.filter(function(x) { return x.pensiaKupahNum === a.pensiaKupahNum; }).forEach(function(x) {
+                            if (data.yearlyReturn  != null) { x.return = data.yearlyReturn; x.pensiaYearlyReturn = data.yearlyReturn; }
+                            if (data.monthlyReturn != null) { x.pensiaMonthlyReturn = data.monthlyReturn; }
+                            if (data.fee           != null) { x.fee = data.fee; x.pensiaFee = data.fee; }
+                            if (data.fundName)              { x.pensiaFundName = data.fundName; }
+                            if (data.company)               { x.pensiaCompany  = data.company; }
+                        });
+                        await saveAssets();
+                        console.log('[Pensia] ✅ Updated kupah', a.pensiaKupahNum, '→', data.fundName, 'monthly:', data.monthlyReturn);
+                    }
+                } catch(e) { console.warn('[Pensia] Auto-update failed for ' + a.pensiaKupahNum, e); }
             }
         }
 
@@ -7052,7 +7099,18 @@
                     pensiaDataCache[kupahNum] = cached;
                     displayPensiaResults(cached, kupahNum, true);
                     fetchPensiaFromGovAPI(kupahNum).then(function(fresh) {
-                        if (fresh) { pensiaDataCache[kupahNum] = fresh; _savePensiaCache(kupahNum, fresh); }
+                        if (fresh) {
+                            pensiaDataCache[kupahNum] = fresh;
+                            _savePensiaCache(kupahNum, fresh);
+                            // Update display with fresh data
+                            displayPensiaResults(fresh, kupahNum, false);
+                            var n2 = document.getElementById('assetName');
+                            var p2 = document.getElementById('assetProvider');
+                            if (fresh.fundName && (!n2.value || n2.value === cached.fundName)) n2.value = fresh.fundName;
+                            if (fresh.company && (!p2.value || p2.value === cached.company)) p2.value = fresh.company;
+                            if (fresh.yearlyReturn != null) document.getElementById('assetReturn').value = formatNum(fresh.yearlyReturn);
+                            if (fresh.fee != null) document.getElementById('assetFee').value = formatNum(fresh.fee);
+                        }
                     }).catch(function(){});
                     return;
                 }
