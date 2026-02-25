@@ -1,7 +1,26 @@
 // Service Worker — Network First for HTML, Cache First for static assets
-var CACHE_VERSION = 'financier-v6';
+// API calls bypass cache entirely
+var CACHE_VERSION = 'financier-v7';
 
-// Listen for skip waiting message
+var API_DOMAINS = [
+    'finnhub.io',
+    'query1.finance.yahoo.com',
+    'query2.finance.yahoo.com',
+    'corsproxy.io',
+    'api.allorigins.win',
+    'thingproxy.freeboard.io',
+    'stooq.com',
+    'data.gov.il',
+    'www.bizportal.co.il',
+    'api.frankfurter.app',
+    'open.er-api.com',
+    'v6.exchangerate-api.com',
+    'cdn.jsdelivr.net',
+    'api.coingecko.com',
+    'api.exchangerate.host',
+    'gemelnet.cma.gov.il',
+];
+
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
@@ -9,61 +28,68 @@ self.addEventListener('message', function(event) {
 });
 
 self.addEventListener('install', function(event) {
-    // Activate immediately, don't wait
     self.skipWaiting();
 });
 
 self.addEventListener('activate', function(event) {
-    // Clean old caches
     event.waitUntil(
         caches.keys().then(function(cacheNames) {
             return Promise.all(
                 cacheNames.filter(function(name) {
                     return name !== CACHE_VERSION;
                 }).map(function(name) {
-                    console.log('Deleting old cache:', name);
                     return caches.delete(name);
                 })
             );
         }).then(function() {
-            // Take control of all pages immediately
             return self.clients.claim();
         })
     );
 });
 
 self.addEventListener('fetch', function(event) {
-    var url = new URL(event.request.url);
+    var url;
+    try { url = new URL(event.request.url); } catch(e) { return; }
 
-    // For HTML pages (navigation requests) — ALWAYS network first
+    // Never cache API calls — let them go straight to network
+    var isAPI = API_DOMAINS.some(function(d) { return url.hostname.includes(d); });
+    if (isAPI) {
+        // Pass through directly, no caching, no cloning
+        return;
+    }
+
+    // For HTML/navigation — network first, cache fallback
     if (event.request.mode === 'navigate' ||
         url.pathname.endsWith('.html') ||
         url.pathname.endsWith('/')) {
         event.respondWith(
             fetch(event.request).then(function(response) {
-                // Cache the fresh response
-                var clone = response.clone();
-                caches.open(CACHE_VERSION).then(function(cache) {
-                    cache.put(event.request, clone);
-                });
+                if (response.ok) {
+                    var clone = response.clone();
+                    caches.open(CACHE_VERSION).then(function(cache) {
+                        cache.put(event.request, clone);
+                    });
+                }
                 return response;
             }).catch(function() {
-                // Offline fallback to cache
                 return caches.match(event.request);
             })
         );
         return;
     }
 
-    // For fonts and external resources — cache first
-    if (url.origin !== location.origin) {
+    // Static local assets — cache first
+    if (url.origin === location.origin) {
         event.respondWith(
             caches.match(event.request).then(function(cached) {
-                return cached || fetch(event.request).then(function(response) {
-                    var clone = response.clone();
-                    caches.open(CACHE_VERSION).then(function(cache) {
-                        cache.put(event.request, clone);
-                    });
+                if (cached) return cached;
+                return fetch(event.request).then(function(response) {
+                    if (response.ok) {
+                        var clone = response.clone();
+                        caches.open(CACHE_VERSION).then(function(cache) {
+                            cache.put(event.request, clone);
+                        });
+                    }
                     return response;
                 });
             })
@@ -71,16 +97,6 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
-    // For other local assets (logo, manifest) — network first with cache fallback
-    event.respondWith(
-        fetch(event.request).then(function(response) {
-            var clone = response.clone();
-            caches.open(CACHE_VERSION).then(function(cache) {
-                cache.put(event.request, clone);
-            });
-            return response;
-        }).catch(function() {
-            return caches.match(event.request);
-        })
-    );
+    // Everything else (non-API external) — network only
+    // Don't cache, don't clone — avoids clone errors
 });

@@ -1535,7 +1535,7 @@
                         <span>$1 = ₪<span id="exchangeRateDisplay">3.7</span> <span id="ilsDailyChange" style="font-size:0.75em;"></span></span>
                         <span>₿1 = $<span id="btcRateDisplay">100,000</span></span>
                         <span>Ξ1 = $<span id="ethRateDisplay">3,500</span></span>
-                        <span>SPY <span id="spyIndexDisplay" style="font-size:0.75em;">—</span> <span id="spyIndexChange" style="font-size:0.75em;"></span></span>
+                        <span>S&P500 <span id="spyIndexDisplay" style="font-size:0.75em;">—</span> <span id="spyIndexChange" style="font-size:0.75em;"></span></span>
                         <span>ת"א125 <span id="ta125Display" style="font-size:0.75em;">—</span> <span id="ta125Change" style="font-size:0.75em;"></span></span>
                     </span>
                 </span>
@@ -2598,6 +2598,8 @@
         let spyDailyChangePct = 0; // SPY daily change %
         let ta125Price = 0; // TA-125 index
         let ta125Change = 0; // TA-125 daily change %
+        let sp500Price = 0; // S&P 500 index
+        let sp500Change = 0; // S&P 500 daily change %
         let lastRateUpdate = null;
         let lastSpyUpdate = null;
         const FINNHUB_DEFAULT_KEY = 'd69gf19r01qjmno57nngd69gf19r01qjmno57no0';
@@ -2681,6 +2683,14 @@
             return localStorage.getItem('finnhub-api-key') || FINNHUB_DEFAULT_KEY;
         }
 
+        // timeout via Promise.race — no AbortController (avoids iOS SW clone error)
+        function _fetchTimeout(url, ms) {
+            return Promise.race([
+                fetch(url),
+                new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, ms); })
+            ]);
+        }
+
         async function fetchSpyPrice() {
             console.log('[SPY] fetchSpyPrice called');
             let lastError = '';
@@ -2688,135 +2698,88 @@
             // === Source 1: Finnhub /quote ===
             try {
                 const key = getFinnhubKey();
-                const url = `https://finnhub.io/api/v1/quote?symbol=SPY&token=${key}`;
-                console.log('[SPY] Trying Finnhub...');
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                console.log('[SPY] Finnhub HTTP', response.status);
+                const url = 'https://finnhub.io/api/v1/quote?symbol=SPY&token=' + key;
+                const response = await _fetchTimeout(url, 6000);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('[SPY] Finnhub data:', JSON.stringify(data));
                     const price = (data && data.c > 0) ? data.c : (data && data.pc > 0 ? data.pc : 0);
                     if (price > 0) {
-                        console.log('[SPY] ✅ Finnhub price:', price);
-                        // Store daily change data
                         if (data.pc > 0) {
                             spyPrevClose = data.pc;
                             spyDailyChangePct = data.dp || ((price - data.pc) / data.pc * 100);
-                            try {
-                                localStorage.setItem('spy-prev-close', spyPrevClose.toString());
-                                localStorage.setItem('spy-daily-change', spyDailyChangePct.toString());
-                            } catch(e) {}
+                            try { localStorage.setItem('spy-prev-close', spyPrevClose.toString()); localStorage.setItem('spy-daily-change', spyDailyChangePct.toString()); } catch(e) {}
                         }
+                        console.log('[SPY] ✅ Finnhub:', price);
                         return applySpyPrice(price);
                     }
                 }
                 lastError = 'Finnhub: no valid price';
-            } catch (e) {
-                lastError = 'Finnhub: ' + e.message;
-                console.warn('[SPY] Finnhub failed:', e.message);
-            }
+            } catch (e) { lastError = 'Finnhub: ' + e.message; }
 
             // === Source 2: Yahoo via corsproxy.io ===
             try {
-                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/SPY');
-                console.log('[SPY] Trying Yahoo via corsproxy...');
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                console.log('[SPY] corsproxy HTTP', response.status);
+                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d');
+                const response = await _fetchTimeout(url, 8000);
                 if (response.ok) {
                     const data = await response.json();
                     const meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
                     const price = meta ? (meta.regularMarketPrice || meta.previousClose) : 0;
                     if (price > 0) {
-                        console.log('[SPY] ✅ corsproxy price:', price);
+                        if (meta.previousClose > 0) { spyPrevClose = meta.previousClose; spyDailyChangePct = (price - meta.previousClose) / meta.previousClose * 100; }
+                        console.log('[SPY] ✅ corsproxy:', price);
                         return applySpyPrice(price);
                     }
                 }
                 lastError += ' | corsproxy: no valid price';
-            } catch (e) {
-                lastError += ' | corsproxy: ' + e.message;
-                console.warn('[SPY] corsproxy failed:', e.message);
-            }
+            } catch (e) { lastError += ' | corsproxy: ' + e.message; }
 
             // === Source 3: Yahoo via allorigins ===
             try {
                 const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d');
-                console.log('[SPY] Trying Yahoo via allorigins...');
-                const ctrl3 = new AbortController();
-                const tid3 = setTimeout(() => ctrl3.abort(), 8000);
-                const resp3 = await fetch(url, { signal: ctrl3.signal });
-                clearTimeout(tid3);
-                if (resp3.ok) {
-                    const raw3 = await resp3.json();
-                    const parsed3 = raw3 && raw3.contents ? JSON.parse(raw3.contents) : raw3;
-                    const meta3 = parsed3 && parsed3.chart && parsed3.chart.result && parsed3.chart.result[0] && parsed3.chart.result[0].meta;
-                    const price3 = meta3 ? (meta3.regularMarketPrice || meta3.previousClose) : 0;
-                    if (price3 > 0) {
-                        console.log('[SPY] ✅ allorigins price:', price3);
-                        return applySpyPrice(price3);
+                const resp = await _fetchTimeout(url, 8000);
+                if (resp.ok) {
+                    const raw = await resp.json();
+                    const parsed = raw && raw.contents ? JSON.parse(raw.contents) : raw;
+                    const meta = parsed && parsed.chart && parsed.chart.result && parsed.chart.result[0] && parsed.chart.result[0].meta;
+                    const price = meta ? (meta.regularMarketPrice || meta.previousClose) : 0;
+                    if (price > 0) {
+                        if (meta.previousClose > 0) { spyPrevClose = meta.previousClose; spyDailyChangePct = (price - meta.previousClose) / meta.previousClose * 100; }
+                        console.log('[SPY] ✅ allorigins:', price);
+                        return applySpyPrice(price);
                     }
                 }
                 lastError += ' | allorigins: no valid price';
-            } catch (e) {
-                lastError += ' | allorigins: ' + e.message;
-                console.warn('[SPY] allorigins failed:', e.message);
-            }
+            } catch (e) { lastError += ' | allorigins: ' + e.message; }
 
-            // === Source 4: stooq.com (no key, no CORS issues) ===
+            // === Source 4: stooq.com ===
             try {
-                const stooqUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/l/?s=spy.us&f=sd2t2ohlcv&h&e=csv');
-                console.log('[SPY] Trying stooq...');
-                const ctrl4 = new AbortController();
-                const tid4 = setTimeout(() => ctrl4.abort(), 8000);
-                const resp4 = await fetch(stooqUrl, { signal: ctrl4.signal });
-                clearTimeout(tid4);
-                if (resp4.ok) {
-                    const raw4 = await resp4.json();
-                    const csv = raw4 && raw4.contents ? raw4.contents : '';
-                    // CSV format: Symbol,Date,Time,Open,High,Low,Close,Volume
+                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/l/?s=spy.us&f=sd2t2ohlcv&h&e=csv');
+                const resp = await _fetchTimeout(url, 8000);
+                if (resp.ok) {
+                    const raw = await resp.json();
+                    const csv = raw && raw.contents ? raw.contents : '';
                     const lines = csv.trim().split('\n');
                     if (lines.length >= 2) {
                         const cols = lines[1].split(',');
                         const closePrice = parseFloat(cols[6]);
-                        if (closePrice > 0) {
-                            console.log('[SPY] ✅ stooq price:', closePrice);
-                            return applySpyPrice(closePrice);
-                        }
+                        if (closePrice > 0) { console.log('[SPY] ✅ stooq:', closePrice); return applySpyPrice(closePrice); }
                     }
                 }
                 lastError += ' | stooq: no valid price';
-            } catch (e) {
-                lastError += ' | stooq: ' + e.message;
-                console.warn('[SPY] stooq failed:', e.message);
-            }
+            } catch (e) { lastError += ' | stooq: ' + e.message; }
 
-            // === Source 5: Yahoo query2 direct ===
+            // === Source 5: Yahoo query2 ===
             try {
-                const url5 = 'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d');
-                console.log('[SPY] Trying Yahoo query2...');
-                const ctrl5 = new AbortController();
-                const tid5 = setTimeout(() => ctrl5.abort(), 6000);
-                const resp5 = await fetch(url5, { signal: ctrl5.signal });
-                clearTimeout(tid5);
-                if (resp5.ok) {
-                    const data5 = await resp5.json();
-                    const meta5 = data5 && data5.chart && data5.chart.result && data5.chart.result[0] && data5.chart.result[0].meta;
-                    const price5 = meta5 ? (meta5.regularMarketPrice || meta5.previousClose) : 0;
-                    if (price5 > 0) {
-                        console.log('[SPY] ✅ Yahoo query2 price:', price5);
-                        return applySpyPrice(price5);
-                    }
+                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d');
+                const resp = await _fetchTimeout(url, 8000);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+                    const price = meta ? (meta.regularMarketPrice || meta.previousClose) : 0;
+                    if (price > 0) { console.log('[SPY] ✅ yahoo-q2:', price); return applySpyPrice(price); }
                 }
                 lastError += ' | yahoo-q2: no valid price';
-            } catch (e) {
-                lastError += ' | yahoo-q2: ' + e.message;
-                console.warn('[SPY] Yahoo query2 failed:', e.message);
-            }
+            } catch (e) { lastError += ' | yahoo-q2: ' + e.message; }
 
             console.error('[SPY] ❌ All sources failed:', lastError);
             return spyPrice > 0;
@@ -2857,7 +2820,7 @@
 
                 // Proxy 1: corsproxy.io — no server cache, direct raw HTML
                 try {
-                    var r1 = await fetch('https://corsproxy.io/?' + encodeURIComponent(bizUrl), { signal: AbortSignal.timeout(15000) });
+                    var r1 = await fetch('https://corsproxy.io/?' + encodeURIComponent(bizUrl));
                     if (r1.ok) {
                         var t1 = await r1.text();
                         if (t1 && t1.length > 1000) html = t1;
@@ -2867,7 +2830,7 @@
                 // Proxy 2: allorigins.win with cache-bust — fallback
                 if (!html) {
                     try {
-                        var r2 = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(bizUrl + '?_=' + Date.now()), { signal: AbortSignal.timeout(20000) });
+                        var r2 = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(bizUrl + '?_=' + Date.now()));
                         if (r2.ok) {
                             var j2 = await r2.json();
                             if (j2 && j2.contents && j2.contents.length > 1000) html = j2.contents;
@@ -2878,7 +2841,7 @@
                 // Proxy 3: thingproxy.freeboard.io — additional fallback for desktop
                 if (!html) {
                     try {
-                        var r3 = await fetch('https://thingproxy.freeboard.io/fetch/' + bizUrl, { signal: AbortSignal.timeout(20000) });
+                        var r3 = await fetch('https://thingproxy.freeboard.io/fetch/' + bizUrl);
                         if (r3.ok) {
                             var t3 = await r3.text();
                             if (t3 && t3.length > 1000) html = t3;
@@ -3346,9 +3309,64 @@
             } catch(e) {}
         })();
 
+        // ── S&P 500 Index fetch ──
+        async function fetchSP500() {
+            var sources = [
+                'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d'),
+                'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d'),
+                'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d'),
+            ];
+            for (var i = 0; i < sources.length; i++) {
+                try {
+                    var ctrl = new AbortController();
+                    var tid = setTimeout(function() { ctrl.abort(); }, 8000);
+                    var resp = await fetch(sources[i], { signal: ctrl.signal });
+                    clearTimeout(tid);
+                    if (!resp.ok) continue;
+                    var raw = await resp.json();
+                    var data = raw && raw.contents ? JSON.parse(raw.contents) : raw;
+                    var meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+                    if (meta) {
+                        var price = meta.regularMarketPrice || meta.previousClose;
+                        var prev = meta.previousClose || meta.chartPreviousClose;
+                        if (price > 0) {
+                            sp500Price = price;
+                            sp500Change = prev > 0 ? ((price - prev) / prev * 100) : 0;
+                            try {
+                                localStorage.setItem('sp500-price', sp500Price.toString());
+                                localStorage.setItem('sp500-change', sp500Change.toString());
+                                localStorage.setItem('sp500-date', new Date().toISOString());
+                            } catch(e) {}
+                            console.log('[S&P500] ✅', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
+                            updateRateDisplay();
+                            return true;
+                        }
+                    }
+                } catch(e) { console.warn('[S&P500] source', i, 'failed:', e.message); }
+            }
+            return false;
+        }
+
+        // Load S&P 500 from cache
+        (function() {
+            try {
+                var p = parseFloat(localStorage.getItem('sp500-price') || '0');
+                var c = parseFloat(localStorage.getItem('sp500-change') || '0');
+                var d = localStorage.getItem('sp500-date');
+                if (p > 0 && d && (Date.now() - new Date(d).getTime()) < 12 * 3600000) {
+                    sp500Price = p; sp500Change = c;
+                    console.log('[S&P500] loaded from cache:', p);
+                }
+            } catch(e) {}
+        })();
+
         // Fetch TA-125 on startup and every 5 min
         setTimeout(fetchTA125, 2000);
         setInterval(fetchTA125, 5 * 60000);
+
+        // Fetch S&P 500 on startup and every 5 min
+        setTimeout(fetchSP500, 3000);
+        setInterval(fetchSP500, 5 * 60000);
 
         // Retry SPY fetch after initial failure (try again after 10s, 30s, 60s)
         let spyRetryCount = 0;
@@ -3550,14 +3568,18 @@
                 ilsChangeEl.style.color = chg >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
             }
 
-            // SPY index display
+            // S&P 500 index display
             var spyEl = document.getElementById('spyIndexDisplay');
             var spyChgEl = document.getElementById('spyIndexChange');
-            if (spyEl && spyPrice > 0) {
-                spyEl.textContent = '$' + spyPrice.toFixed(2);
-                if (spyChgEl && spyDailyChangePct != null && spyDailyChangePct !== 0) {
-                    spyChgEl.textContent = (spyDailyChangePct >= 0 ? '+' : '') + spyDailyChangePct.toFixed(2) + '%';
-                    spyChgEl.style.color = spyDailyChangePct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            if (spyEl) {
+                var sp500Val = (typeof sp500Price !== 'undefined' && sp500Price > 0) ? sp500Price : 0;
+                var sp500Chg = (typeof sp500Change !== 'undefined') ? sp500Change : 0;
+                if (sp500Val > 0) {
+                    spyEl.textContent = sp500Val.toLocaleString('en-US', {maximumFractionDigits: 0});
+                    if (spyChgEl && sp500Chg !== 0) {
+                        spyChgEl.textContent = (sp500Chg >= 0 ? '+' : '') + sp500Chg.toFixed(2) + '%';
+                        spyChgEl.style.color = sp500Chg >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    }
                 }
             }
 
@@ -4133,7 +4155,6 @@
                         <div style="margin-bottom:6px;">🏠 כל הנתונים שמורים <strong>מקומית על המכשיר שלך בלבד</strong></div>
                         <div>🔒 לא נשלח מידע לשרתים חיצוניים</div>
                     </div>
-                    <button onclick="runAPIDiagnostics()" style="margin-top:14px;width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text-secondary);font-size:0.78rem;cursor:pointer;">🔬 אבחון חיבורי API</button>
                 `
             },
             terms: {
@@ -4632,8 +4653,15 @@
                 }
                 
                 const spyData = localStorage.getItem('spy-price');
-                if (spyData) {
-                    spyPrice = parseFloat(spyData);
+                const spyDateRaw = localStorage.getItem('spy-price-date');
+                if (spyData && spyDateRaw) {
+                    const ageHours = (Date.now() - new Date(spyDateRaw).getTime()) / 3600000;
+                    if (ageHours < 24) { // only use cache if < 24h old
+                        spyPrice = parseFloat(spyData);
+                        console.log('[SPY] loaded from cache, age:', ageHours.toFixed(1) + 'h, price:', spyPrice);
+                    } else {
+                        console.log('[SPY] cache too old (' + ageHours.toFixed(1) + 'h), will fetch fresh');
+                    }
                 }
                 
                 // Load daily change data
@@ -4679,11 +4707,14 @@
             setTimeout(async () => {
                 checkAndUpdateRate();
 
-                // SPY: always try to fetch (we have default key)
+                // SPY: always fetch on startup (used for rate bar + any SPY assets)
                 const hasSpyAssets = assets.some(a => a.isSpyPension);
                 if (hasSpyAssets) {
                     const success = await fetchSpyPrice();
                     if (!success) retrySpyFetch();
+                } else {
+                    // Still fetch SPY even without SPY assets (for rate display)
+                    fetchSpyPrice();
                 }
 
                 // Fund NAVs: auto-update on every startup
@@ -6326,7 +6357,13 @@
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">מחיר נוכחי</span>
-                                    <span class="asset-row-detail-value" style="color:var(--accent-green);">$${curP.toFixed(2)}</span>
+                                    <span class="asset-row-detail-value" style="color:var(--accent-green);">$${curP.toFixed(2)}${(() => {
+                                        if (!lastSpyUpdate) return '';
+                                        var ageMin = (Date.now() - new Date(lastSpyUpdate).getTime()) / 60000;
+                                        var ageStr = ageMin < 60 ? Math.round(ageMin) + 'd' : Math.round(ageMin/60) + 'h';
+                                        var col = ageMin < 30 ? 'var(--accent-green)' : ageMin < 480 ? 'var(--accent-gold)' : 'var(--accent-red)';
+                                        return ' <span style="font-size:0.7em;color:' + col + ';">עודכן לפני ' + ageStr + '</span>';
+                                    })()}</span>
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">שער $/₪</span>
@@ -6699,10 +6736,15 @@
 
         // AbortSignal.timeout polyfill for Safari desktop
         function _fetchWithTimeout(url, opts, ms) {
-            var ctrl = new AbortController();
-            var tid = setTimeout(function() { ctrl.abort(); }, ms || 14000);
-            var fetchOpts = Object.assign({}, opts || {}, { signal: ctrl.signal });
-            return fetch(url, fetchOpts).finally(function() { clearTimeout(tid); });
+            // Use Promise.race instead of AbortController — avoids iOS Service Worker clone error
+            var timeout = ms || 14000;
+            var fetchOpts = opts || {};
+            return Promise.race([
+                fetch(url, fetchOpts),
+                new Promise(function(_, reject) {
+                    setTimeout(function() { reject(new Error('timeout after ' + timeout + 'ms')); }, timeout);
+                })
+            ]);
         }
         var _gemelFieldsLogged = false;
 
@@ -7518,142 +7560,6 @@
         }
 
         // ============ API DIAGNOSTICS ============
-        async function runAPIDiagnostics() {
-            var modal = document.createElement('div');
-            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-            modal.innerHTML = '<div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;direction:rtl;"><h3 style="margin:0 0 16px;font-size:1rem;">🔬 אבחון API — שלב 2</h3><div id="diagLog" style="font-family:monospace;font-size:0.65rem;line-height:1.7;word-break:break-all;"></div><button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px;width:100%;padding:10px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;cursor:pointer;">סגור</button></div>';
-            document.body.appendChild(modal);
-
-            var log = document.getElementById('diagLog');
-            function line(msg, color) {
-                var d = document.createElement('div');
-                d.style.color = color || 'var(--text-primary)';
-                d.textContent = msg;
-                log.appendChild(d);
-                log.scrollTop = log.scrollHeight;
-                return d;
-            }
-            function sep() { line('─────────────────────', 'rgba(255,255,255,0.15)'); }
-
-            async function fetchJSON(url) {
-                var ctrl = new AbortController();
-                var tid = setTimeout(function() { ctrl.abort(); }, 12000);
-                try {
-                    var r = await fetch(url, { signal: ctrl.signal, headers: { 'Accept': 'application/json' } });
-                    clearTimeout(tid);
-                    if (!r.ok) return { err: 'HTTP ' + r.status };
-                    var j = await r.json();
-                    if (j && j.contents) j = JSON.parse(j.contents); // allorigins wrapper
-                    return j;
-                } catch(e) { clearTimeout(tid); return { err: e.message }; }
-            }
-
-            // ── GEMEL ──
-            line('📊 בודק גמל API...', 'var(--accent-gold)');
-            var gemelUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&limit=1';
-            var gj = await fetchJSON(gemelUrl);
-            if (gj && gj.success && gj.result && gj.result.records && gj.result.records.length > 0) {
-                var gr = gj.result.records[0];
-                line('✅ גמל — רשומה ראשונה:', 'var(--accent-green)');
-                Object.keys(gr).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + gr[k]); });
-                line('סה"כ רשומות בתוצאה: ' + gj.result.records.length + ' / ' + (gj.result.total || '?'), 'var(--text-secondary)');
-            } else {
-                line('❌ גמל נכשל: ' + JSON.stringify(gj).slice(0,200), 'var(--accent-red)');
-            }
-            sep();
-
-            // ── PENSIA ──
-            line('🏛️ בודק פנסיה API...', 'var(--accent-cyan)');
-            var pensiaUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&limit=1';
-            var pj = await fetchJSON(pensiaUrl);
-            if (pj && pj.success && pj.result && pj.result.records && pj.result.records.length > 0) {
-                var pr = pj.result.records[0];
-                line('✅ פנסיה — רשומה ראשונה:', 'var(--accent-green)');
-                Object.keys(pr).forEach(function(k) { if (k !== '_id') line('  ' + k + ': ' + pr[k]); });
-                line('סה"כ רשומות: ' + pj.result.records.length + ' / ' + (pj.result.total || '?'), 'var(--text-secondary)');
-            } else {
-                line('❌ פנסיה נכשל: ' + JSON.stringify(pj).slice(0,200), 'var(--accent-red)');
-            }
-            sep();
-
-            // ── GEMEL with kupah filter ──
-            var gemelAssets = assets.filter(function(a) { return a.gemelKupahNum; });
-            var pensiaAssets = assets.filter(function(a) { return a.pensiaKupahNum; });
-            
-            if (gemelAssets.length > 0) {
-                var kn = gemelAssets[0].gemelKupahNum;
-                line('🔍 גמל exact filter קופה ' + kn + '...', 'var(--accent-gold)');
-                var filters = JSON.stringify({ 'FUND_ID': parseInt(kn, 10) });
-                var gfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=a30dcbea-a1d2-482c-ae29-8f781f5025fb&filters=' + encodeURIComponent(filters) + '&sort=REPORT_PERIOD+desc&limit=3';
-                var gf = await fetchJSON(gfUrl);
-                if (gf && gf.success) {
-                    var cnt = (gf.result && gf.result.records) ? gf.result.records.length : 0;
-                    line((cnt > 0 ? '✅' : '⚠️') + ' תוצאות: ' + cnt + ' רשומות (total: ' + (gf.result.total || '?') + ')', cnt > 0 ? 'var(--accent-green)' : 'orange');
-                    if (cnt > 0) {
-                        var rec = gf.result.records[0];
-                        line('  FUND_NAME: ' + rec.FUND_NAME, 'var(--text-primary)');
-                        line('  REPORT_PERIOD: ' + rec.REPORT_PERIOD, 'var(--text-primary)');
-                        line('  MONTHLY_YIELD: ' + rec.MONTHLY_YIELD, 'var(--text-primary)');
-                        line('  AVG_ANNUAL_YIELD_TRAILING_3YRS: ' + rec.AVG_ANNUAL_YIELD_TRAILING_3YRS, 'var(--text-primary)');
-                        line('  AVG_ANNUAL_MANAGEMENT_FEE: ' + rec.AVG_ANNUAL_MANAGEMENT_FEE, 'var(--text-primary)');
-                    }
-                } else {
-                    line('❌ exact filter נכשל: ' + JSON.stringify(gf).slice(0,150), 'var(--accent-red)');
-                }
-                sep();
-            }
-
-            if (pensiaAssets.length > 0) {
-                var pk = pensiaAssets[0].pensiaKupahNum;
-                
-                // Find all pensia resource IDs from the package
-                line('🔍 מחפש resource IDs עדכניים לפנסיה...', 'var(--accent-cyan)');
-                var pkgUrl = 'https://data.gov.il/api/3/action/package_show?id=gemelnet';
-                var pkg = await fetchJSON(pkgUrl);
-                if (pkg && pkg.success && pkg.result && pkg.result.resources) {
-                    var pensiaResources = pkg.result.resources.filter(function(r) {
-                        return r.name && (r.name.includes('pensia') || r.name.includes('pension') || r.name.includes('פנסיה') || r.name.includes('Pension'));
-                    });
-                    line('נמצאו ' + pensiaResources.length + ' resource(s) פנסיה:', 'var(--text-secondary)');
-                    pensiaResources.slice(0,5).forEach(function(r) { line('  ' + r.id + ' — ' + r.name + ' (' + (r.last_modified||'') + ')', 'var(--text-primary)'); });
-                    
-                    // Also show ALL resources with their last_modified
-                    line('כל ה-resources:', 'var(--text-secondary)');
-                    pkg.result.resources.slice(0,20).forEach(function(r) { line('  ' + r.id.slice(0,8) + '... — ' + r.name + ' [' + (r.last_modified||'').slice(0,10) + ']', 'var(--text-primary)'); });
-                } else {
-                    line('לא ניתן לשלוף package, מנסה resource ישיר...', 'orange');
-                }
-                sep();
-
-                // Test current resource with exact filter
-                line('🔍 פנסיה exact filter קופה ' + pk + '...', 'var(--accent-cyan)');
-                var pFilters = JSON.stringify({ 'FUND_ID': parseInt(pk, 10) });
-                var pfUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=6d47d6b5-cb08-488b-b333-f1e717b1e1bd&filters=' + encodeURIComponent(pFilters) + '&sort=REPORT_PERIOD+desc&limit=3';
-                var pf = await fetchJSON(pfUrl);
-                if (pf && pf.success) {
-                    var pcnt = (pf.result && pf.result.records) ? pf.result.records.length : 0;
-                    line((pcnt > 0 ? '✅' : '⚠️') + ' תוצאות: ' + pcnt + ' (total: ' + (pf.result.total||'?') + ')', pcnt > 0 ? 'var(--accent-green)' : 'orange');
-                    if (pcnt > 0) {
-                        var prec = pf.result.records[0];
-                        line('  FUND_NAME: ' + prec.FUND_NAME, 'var(--text-primary)');
-                        line('  REPORT_PERIOD (newest): ' + prec.REPORT_PERIOD, 'var(--text-primary)');
-                        line('  MONTHLY_YIELD: ' + prec.MONTHLY_YIELD, 'var(--text-primary)');
-                        line('  AVG_ANNUAL_YIELD_TRAILING_3YRS: ' + prec.AVG_ANNUAL_YIELD_TRAILING_3YRS, 'var(--text-primary)');
-                        if (pcnt > 1) line('  REPORT_PERIOD (2nd): ' + pf.result.records[1].REPORT_PERIOD, 'var(--text-secondary)');
-                        if (pcnt > 2) line('  REPORT_PERIOD (3rd): ' + pf.result.records[2].REPORT_PERIOD, 'var(--text-secondary)');
-                    }
-                } else {
-                    line('❌ חיפוש פנסיה נכשל: ' + JSON.stringify(pf).slice(0,150), 'var(--accent-red)');
-                }
-                sep();
-            }
-
-            if (gemelAssets.length === 0 && pensiaAssets.length === 0) {
-                line('⚠️ אין נכסי גמל/פנסיה עם מספר קופה — הוסף נכס תחילה', 'orange');
-            }
-
-            line('✔ אבחון הסתיים', 'var(--text-secondary)');
-        }
 
     </script>
 </body>
