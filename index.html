@@ -2431,9 +2431,15 @@
                                     </div>
                                     <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:5px;">NYSE/NASDAQ: AAPL &nbsp;|&nbsp; ת"א: TEVA.TA, NICE.TA</div>
                                 </div>
-                                <div class="form-group" style="margin-bottom:10px;">
-                                    <label>כמות יחידות (מניות)</label>
-                                    <input type="text" inputmode="decimal" id="stockUnits" placeholder="לדוגמה: 10" oninput="formatNumberInput(this); calculateStockValue()">
+                                <div style="display:flex;gap:8px;margin-bottom:10px;">
+                                    <div class="form-group" style="flex:1;margin-bottom:0;">
+                                        <label>כמות יחידות (מניות)</label>
+                                        <input type="text" inputmode="decimal" id="stockUnits" placeholder="לדוגמה: 10" oninput="formatNumberInput(this); calculateStockValue()">
+                                    </div>
+                                    <div class="form-group" style="flex:1;margin-bottom:0;">
+                                        <label>מחיר קנייה ממוצע</label>
+                                        <input type="text" inputmode="decimal" id="stockAvgBuyPrice" placeholder="לדוגמה: 150.00" oninput="formatNumberInput(this); calculateStockValue()">
+                                    </div>
                                 </div>
                                 <div id="stockSearchResult" style="display:none;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;margin-top:8px;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -2907,32 +2913,38 @@
         }
 
         function calculateStockValue() {
-            var ticker = (document.getElementById('stockTicker') || {value:''}).value.trim().toUpperCase();
-            var units = parseNum(document.getElementById('stockUnits'));
-            var res = document.getElementById('stockSearchResult');
+            var ticker   = (document.getElementById('stockTicker') || {value:''}).value.trim().toUpperCase();
+            var units    = parseNum(document.getElementById('stockUnits'));
+            var avgBuy   = parseNum(document.getElementById('stockAvgBuyPrice'));
+            var res      = document.getElementById('stockSearchResult');
             if (!ticker || !stockDataCache[ticker]) { if (res) res.style.display = 'none'; return; }
-            var data = stockDataCache[ticker];
+            var data     = stockDataCache[ticker];
             var priceILS = data.currency === 'ILS' ? data.price : data.price * exchangeRate;
-            var nameEl = document.getElementById('stockNameDisplay');
-            var priceEl = document.getElementById('stockPriceDisplay');
-            var valEl = document.getElementById('stockValueDisplay');
+            var nameEl   = document.getElementById('stockNameDisplay');
+            var priceEl  = document.getElementById('stockPriceDisplay');
+            var valEl    = document.getElementById('stockValueDisplay');
             if (nameEl) nameEl.textContent = data.name;
             if (priceEl) {
                 var dSign = data.dailyPct >= 0 ? '+' : '';
                 var priceStr = data.currency === 'ILS' ? '₪' + data.price.toFixed(2) : '$' + data.price.toFixed(2) + ' (₪' + priceILS.toFixed(2) + ')';
-                priceEl.textContent = priceStr + '  ' + dSign + data.dailyPct.toFixed(2) + '% יומי';
-                priceEl.style.color = data.dailyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                // Add return vs buy price if provided
+                var returnStr = '';
+                if (avgBuy > 0) {
+                    var retPct  = (data.price - avgBuy) / avgBuy * 100;
+                    var retSign = retPct >= 0 ? '+' : '';
+                    var retColor= retPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    returnStr = '  <span style="color:' + retColor + ';font-weight:700;">' + retSign + retPct.toFixed(1) + '%</span>';
+                }
+                priceEl.innerHTML = priceStr + '  <span style="color:' + (data.dailyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + dSign + data.dailyPct.toFixed(2) + '% יומי</span>' + returnStr;
             }
             if (valEl) {
                 if (units > 0) {
                     var valueILS = units * priceILS;
                     valEl.textContent = '₪' + valueILS.toLocaleString('he-IL', {maximumFractionDigits: 0});
-                    valEl.style.display = '';
-                    valEl.previousElementSibling && (valEl.previousElementSibling.style.display = '');
                 } else {
                     valEl.textContent = '—';
-                    valEl.style.display = '';
                 }
+                valEl.style.display = '';
             }
             if (res) res.style.display = 'block';
         }
@@ -5254,6 +5266,7 @@
                             selectStockMode('ticker');
                             var stEl = document.getElementById('stockTicker'); if (stEl) stEl.value = asset.stockTicker;
                             var suEl = document.getElementById('stockUnits'); if (suEl) suEl.value = asset.stockUnits ? formatNum(asset.stockUnits) : '';
+                            var abEl = document.getElementById('stockAvgBuyPrice'); if (abEl) abEl.value = asset.stockAvgBuyPrice ? formatNum(asset.stockAvgBuyPrice) : '';
                             // pre-populate cache so display shows immediately
                             if (asset.stockPrice) {
                                 stockDataCache[asset.stockTicker] = {
@@ -5385,6 +5398,7 @@
             var fundUnitsInput = document.getElementById('fundUnits'); if (fundUnitsInput) fundUnitsInput.value = '';
             var stEl = document.getElementById('stockTicker'); if (stEl) stEl.value = '';
             var suEl = document.getElementById('stockUnits'); if (suEl) suEl.value = '';
+            var abEl = document.getElementById('stockAvgBuyPrice'); if (abEl) abEl.value = '';
             var srEl = document.getElementById('stockSearchResult'); if (srEl) srEl.style.display = 'none';
             selectStockMode('ticker'); // reset to default ticker mode
             var maEl = document.getElementById('stockManualAmount'); if (maEl) maEl.value = '';
@@ -5541,6 +5555,8 @@
                         asset.stockTicker = ticker;
                         var units = parseNum(document.getElementById('stockUnits'));
                         if (units > 0) asset.stockUnits = units;
+                        var avgBuy = parseNum(document.getElementById('stockAvgBuyPrice'));
+                        if (avgBuy > 0) asset.stockAvgBuyPrice = avgBuy; else delete asset.stockAvgBuyPrice;
                         var sd = stockDataCache[ticker];
                         if (sd) {
                             asset.stockPrice   = sd.price;
@@ -6776,18 +6792,24 @@
 
                 // ===== STOCK TICKER ASSET =====
                 if (asset.type === 'trade' && asset.stockTicker) {
-                    const sTicker = asset.stockTicker;
-                    const sUnits  = asset.stockUnits || 0;
-                    const sPrice  = asset.stockPrice || 0;
-                    const sCurr   = asset.stockCurrency || 'USD';
+                    const sTicker   = asset.stockTicker;
+                    const sUnits    = asset.stockUnits || 0;
+                    const sPrice    = asset.stockPrice || 0;
+                    const sCurr     = asset.stockCurrency || 'USD';
                     const sDailyPct = asset.stockDailyPct || 0;
-                    const sName   = asset.stockName || sTicker;
+                    const sName     = asset.stockName || sTicker;
+                    const sAvgBuy   = asset.stockAvgBuyPrice || 0;
                     const sPriceILS = sCurr === 'ILS' ? sPrice : sPrice * exchangeRate;
-                    const sValue  = sUnits * sPriceILS;
+                    const sValue    = sUnits * sPriceILS;
                     const sDailyILS = sValue * (sDailyPct / 100);
+                    const sRetPct   = sAvgBuy > 0 ? (sPrice - sAvgBuy) / sAvgBuy * 100 : null;
+                    const sRetILS   = sRetPct !== null ? sUnits * (sPrice - sAvgBuy) * (sCurr === 'ILS' ? 1 : exchangeRate) : 0;
                     const sc = (v) => v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                     const ss = (v) => v >= 0 ? '+' : '';
-                    const priceStr = sCurr === 'ILS' ? '₪' + sPrice.toFixed(2) : '$' + sPrice.toFixed(2);
+                    const priceStr  = sCurr === 'ILS' ? '₪' + sPrice.toFixed(2) : '$' + sPrice.toFixed(2);
+                    const subSuffix = sRetPct !== null
+                        ? `<span style="color:${sc(sRetPct)};font-weight:600;">${ss(sRetPct)}${sRetPct.toFixed(1)}%</span>`
+                        : `<span style="color:${sc(sDailyPct)};">${ss(sDailyILS)}₪${Math.abs(Math.round(sDailyILS)).toLocaleString('he-IL')} היום</span>`;
 
                     return `
                     <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
@@ -6799,7 +6821,7 @@
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                <div class="asset-row-sub" style="color:${sc(sDailyPct)};">${ss(sDailyILS)}₪${Math.abs(sDailyILS).toFixed(0)} היום</div>
+                                <div class="asset-row-sub">${subSuffix}</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -6819,8 +6841,17 @@
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">שינוי יומי</span>
-                                    <span class="asset-row-detail-value" style="color:${sc(sDailyPct)};">${ss(sDailyPct)}${sDailyPct.toFixed(2)}% (${ss(sDailyILS)}₪${Math.abs(sDailyILS).toFixed(0)})</span>
+                                    <span class="asset-row-detail-value" style="color:${sc(sDailyPct)};">${ss(sDailyPct)}${sDailyPct.toFixed(2)}% (${ss(sDailyILS)}₪${Math.abs(Math.round(sDailyILS)).toLocaleString('he-IL')})</span>
                                 </div>
+                                ${sAvgBuy > 0 ? `
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">מחיר קנייה</span>
+                                    <span class="asset-row-detail-value">${sCurr === 'ILS' ? '₪' : '$'}${sAvgBuy.toLocaleString('he-IL',{maximumFractionDigits:2})}</span>
+                                </div>
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">תשואה</span>
+                                    <span class="asset-row-detail-value" style="color:${sc(sRetPct)};font-weight:700;">${ss(sRetPct)}${sRetPct.toFixed(1)}% (${ss(sRetILS)}₪${Math.abs(Math.round(sRetILS)).toLocaleString('he-IL')})</span>
+                                </div>` : ''}
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">שם</span>
                                     <span class="asset-row-detail-value" style="font-size:0.75rem;">${sName}</span>
@@ -7778,23 +7809,13 @@
                         gemelDataCache[a.gemelKupahNum] = data;
                         _saveGemelCache(a.gemelKupahNum, data);
                         assets.filter(function(x) { return x.gemelKupahNum === a.gemelKupahNum; }).forEach(function(x) {
+                            var _savedValue = x.value; // NEVER touch value — user sets it manually
                             if (data[0].yearlyReturn    != null) { x.return = data[0].yearlyReturn;  x.gemelYearlyReturn   = data[0].yearlyReturn; }
                             if (data[0].monthlyReturn   != null) { x.gemelMonthlyReturn  = data[0].monthlyReturn; }
                             if (data[0].fee             != null) { x.fee    = data[0].fee;            x.gemelFee            = data[0].fee; }
                             if (data[0].fundName)                { x.gemelFundName = data[0].fundName; }
                             if (data[0].company)                 { x.gemelCompany  = data[0].company; }
-                            // Auto-apply monthly return to accumulation value — only on new period
-                            var newPeriod = data[0].period;
-                            var lastPeriod = x.gemelLastAppliedPeriod || null;
-                            if (newPeriod && data[0].monthlyReturn != null && x.value > 0) {
-                                if (!lastPeriod || newPeriod > lastPeriod) {
-                                    var oldValue = x.value;
-                                    x.value = Math.round(x.value * (1 + data[0].monthlyReturn / 100));
-                                    x.gemelLastAppliedPeriod = newPeriod;
-                                    console.log('[Gemel] 💰 Auto-applied monthly ' + data[0].monthlyReturn + '% for period ' + newPeriod
-                                        + ': ₪' + oldValue.toLocaleString('he-IL') + ' → ₪' + x.value.toLocaleString('he-IL'));
-                                }
-                            }
+                            x.value = _savedValue; // restore — gemel value is manual-only
                         });
                         await saveAssets();
                         console.log('[Gemel] ✅ Updated kupah', a.gemelKupahNum, '→', data[0].fundName, 'monthly:', data[0].monthlyReturn);
