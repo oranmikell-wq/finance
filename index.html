@@ -2212,8 +2212,8 @@
 
                     <!-- Pensia-Net tracking -->
                     <div id="pensiaNetcheckbox" style="display:none;margin-bottom:14px;">
-                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:rgba(0,217,255,0.05);border:1px solid rgba(0,217,255,0.15);border-radius:10px;">
-                            <input type="checkbox" id="isPensiaTracked" onchange="togglePensiaFields()" style="width:20px;height:20px;cursor:pointer;accent-color:#00d9ff;">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:rgba(176,38,255,0.05);border:1px solid rgba(176,38,255,0.15);border-radius:10px;">
+                            <input type="checkbox" id="isPensiaTracked" onchange="togglePensiaFields()" style="width:20px;height:20px;cursor:pointer;accent-color:#b026ff;">
                             <div>
                                 <div style="font-weight:600;font-size:0.85rem;">🔍 חיבור לפנסיה-נט</div>
                                 <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px;">נתוני תשואה ודמי ניהול ממשרד האוצר</div>
@@ -2222,8 +2222,8 @@
                     </div>
 
                     <div id="pensiaFields" style="display:none;">
-                        <div style="padding:14px;background:rgba(0,217,255,0.05);border:1px solid rgba(0,217,255,0.15);border-radius:12px;margin-bottom:14px;">
-                            <div style="font-size:0.85rem;font-weight:600;color:var(--accent-cyan);margin-bottom:12px;">🏛️ פנסיה-נט — רשות שוק ההון</div>
+                        <div style="padding:14px;background:rgba(176,38,255,0.05);border:1px solid rgba(176,38,255,0.15);border-radius:12px;margin-bottom:14px;">
+                            <div style="font-size:0.85rem;font-weight:600;color:#b026ff;margin-bottom:12px;">🏛️ פנסיה-נט — רשות שוק ההון</div>
                             <div class="form-group" style="margin-bottom:10px;">
                                 <label>מספר קרן פנסיה (5 ספרות)</label>
                                 <input type="text" inputmode="numeric" id="pensiaKupahNumber"
@@ -2233,13 +2233,13 @@
                                 <div style="font-size:0.69rem;color:var(--text-secondary);margin-top:2px;">מצא ב-<a href="https://pensyanet.cma.gov.il" target="_blank" style="color:var(--accent-cyan);">pensyanet.cma.gov.il</a></div>
                             </div>
                             <button type="button" onclick="searchPensiaFund()"
-                                style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent-cyan);color:#000;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:inherit;">
+                                style="width:100%;padding:10px;border-radius:10px;border:none;background:#b026ff;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:inherit;">
                                 🔍 חפש קרן פנסיה
                             </button>
 
                             <div id="pensiaSearchResult" style="display:none;margin-top:12px;">
-                                <div style="padding:12px;background:rgba(0,217,255,0.06);border:1px solid rgba(0,217,255,0.15);border-radius:10px;">
-                                    <div style="font-size:0.88rem;font-weight:700;color:var(--accent-cyan);margin-bottom:2px;" id="pensiaFundNameDisplay">—</div>
+                                <div style="padding:12px;background:rgba(176,38,255,0.06);border:1px solid rgba(176,38,255,0.15);border-radius:10px;">
+                                    <div style="font-size:0.88rem;font-weight:700;color:#b026ff;margin-bottom:2px;" id="pensiaFundNameDisplay">—</div>
                                     <div style="font-size:0.73rem;color:var(--text-secondary);margin-bottom:10px;" id="pensiaCompanyDisplay">—</div>
                                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
                                         <div style="text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:8px;">
@@ -6455,7 +6455,7 @@
                     const fs = function(v) { return v >= 0 ? '+' : ''; };
                     
                     return `
-                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s;border-right:3px solid var(--accent-cyan);">
+                    <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s;">
                         <div class="asset-row-main">
                             <div class="asset-row-icon" style="background:rgba(0,217,255,0.1);">${icon}</div>
                             <div class="asset-row-info">
@@ -6521,7 +6521,7 @@
                 const valueInUSD = currency === 'USD' ? asset.value : (currency === 'ILS' ? asset.value / exchangeRate : valueInILS / exchangeRate);
                 const showUSD = false; // USD display removed
                 const monthlyInILS = toILS(asset.monthly || 0, asset.monthlyCurrency || 'ILS');
-                const iconBg = asset.type === 'crypto' ? 'rgba(168,85,247,0.1)' : asset.type === 'pension' || asset.type === 'gemel' ? 'rgba(0,217,255,0.1)' : asset.type === 'fund' ? 'rgba(244,196,48,0.1)' : 'rgba(255,255,255,0.04)';
+                const iconBg = asset.type === 'crypto' ? 'rgba(168,85,247,0.1)' : asset.type === 'pension' || asset.type === 'gemel' ? 'rgba(176,38,255,0.1)' : asset.type === 'fund' ? 'rgba(244,196,48,0.1)' : 'rgba(255,255,255,0.04)';
                 const currencyName = currency === 'USD' ? 'דולר' : currency === 'BTC' ? 'ביטקוין' : currency === 'ETH' ? 'איתריום' : 'שקל';
                 
                 return `
