@@ -1944,8 +1944,11 @@
                         <input type="text" inputmode="decimal" id="retireFeeDeposit" value="0" class="retire-input" oninput="formatNumberInput(this); calcRetirement()">
                     </div>
                 </div>
-                <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:14px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
+                <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
                     💡 <strong>לעצמאי:</strong> הזן הפקדה כוללת (כולל חלק "מעסיק"). <strong>לשכיר:</strong> כולל מעסיק + פיצויים (≈18.5% שכר).
+                </div>
+                <div style="text-align:left;margin-bottom:14px;">
+                    <button onclick="resetRetirementInputs()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
                 </div>
 
                 <!-- No data message -->
@@ -4797,7 +4800,45 @@
         }
 
         // ============ Retirement Calculator ============
+        function saveRetirementInputs() {
+            var data = {
+                retireCurrentAge: document.getElementById('retireCurrentAge').value,
+                retireAge: document.getElementById('retireAge').value,
+                retireReturn: document.getElementById('retireReturn').value,
+                retireMonthly: document.getElementById('retireMonthly').value,
+                retireFeeBalance: document.getElementById('retireFeeBalance').value,
+                retireFeeDeposit: document.getElementById('retireFeeDeposit').value
+            };
+            localStorage.setItem('retirement-calculator', JSON.stringify(data));
+        }
+
+        function loadRetirementInputs() {
+            var saved = localStorage.getItem('retirement-calculator');
+            if (!saved) return;
+            try {
+                var data = JSON.parse(saved);
+                var fields = ['retireCurrentAge','retireAge','retireReturn','retireMonthly','retireFeeBalance','retireFeeDeposit'];
+                fields.forEach(function(id) {
+                    if (data[id] !== undefined && data[id] !== '') {
+                        document.getElementById(id).value = data[id];
+                    }
+                });
+            } catch(e) {}
+        }
+
+        function resetRetirementInputs() {
+            localStorage.removeItem('retirement-calculator');
+            document.getElementById('retireCurrentAge').value = '';
+            document.getElementById('retireAge').value = '67';
+            document.getElementById('retireReturn').value = '6';
+            document.getElementById('retireMonthly').value = '';
+            document.getElementById('retireFeeBalance').value = '0.5';
+            document.getElementById('retireFeeDeposit').value = '0';
+            calcRetirement();
+        }
+
         function calcRetirement() {
+            saveRetirementInputs();
             var retireAge = parseInt(document.getElementById('retireAge').value) || 67;
             var retireReturn = parseFloat(document.getElementById('retireReturn').value) || 6;
             var feeBalance = parseFloat(document.getElementById('retireFeeBalance').value) || 0;
@@ -7537,6 +7578,7 @@
         // Initialize
         loadAssets();
         loadProfile();
+        loadRetirementInputs();
 
         // Register Service Worker for PWA — with auto-update
         if ('serviceWorker' in navigator) {
