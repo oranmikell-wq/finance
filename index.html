@@ -7100,7 +7100,13 @@
                                     : ''
                             }</div>
                         </div>
-                        <div class="asset-row-return ${retClass}">${retSign}${retPct}%</div>
+                        ${currency === 'USD' && exchangeRatePrevClose > 0
+                            ? (() => { const dp = (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100; return `<div class="asset-row-return ${dp >= 0 ? 'positive' : 'negative'}">${dp >= 0 ? '+' : ''}${dp.toFixed(2)}%</div>`; })()
+                            : currency === 'BTC' && btcDailyChangePct
+                            ? `<div class="asset-row-return ${btcDailyChangePct >= 0 ? 'positive' : 'negative'}">${btcDailyChangePct >= 0 ? '+' : ''}${btcDailyChangePct.toFixed(2)}%</div>`
+                            : currency === 'ETH' && ethDailyChangePct
+                            ? `<div class="asset-row-return ${ethDailyChangePct >= 0 ? 'positive' : 'negative'}">${ethDailyChangePct >= 0 ? '+' : ''}${ethDailyChangePct.toFixed(2)}%</div>`
+                            : retPct !== 0 ? `<div class="asset-row-return ${retClass}">${retSign}${retPct}%</div>` : ''}
                         <div class="asset-row-values">
                             <div class="asset-row-amount">₪${valueInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                             ${showUSD ? `<div class="asset-row-sub">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>` : ''}
