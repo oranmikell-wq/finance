@@ -1576,10 +1576,10 @@
 
         <div id="greetingBanner" style="display:none;text-align:center;padding:16px 20px 6px;"></div>
 
-        <div class="total-worth-card">
-            <div style="display:flex;align-items:center;gap:16px;direction:rtl;">
-                <!-- Right: text info -->
-                <div style="flex:1;min-width:0;">
+        <div style="display:flex;gap:12px;align-items:stretch;direction:rtl;">
+            <!-- Original total-worth-card (right) -->
+            <div class="total-worth-card" style="flex:1;min-width:0;">
+                <div class="total-worth-content">
                     <div class="total-label">סך כל הנכסים</div>
                     <div class="total-amount" id="totalWorth">₪0</div>
                     <div class="total-change positive" id="totalChange">
@@ -1587,23 +1587,35 @@
                         <span>+₪0 (0%)</span>
                         <span>החודש</span>
                     </div>
-                    <!-- Mini legend -->
-                    <div id="miniLegend" style="margin-top:14px;display:flex;flex-direction:column;gap:5px;"></div>
-                </div>
-                <!-- Left: mini donut -->
-                <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-                    <div style="position:relative;width:110px;height:110px;">
-                        <svg id="donutChart" viewBox="0 0 100 100" style="width:110px;height:110px;"></svg>
-                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                            <div id="chartTotal" style="font-size:0.72rem;font-weight:700;color:var(--text-primary);">—</div>
-                            <div style="font-size:0.55rem;color:var(--text-secondary);">נכסים</div>
+                    <div id="totalBreakdown" style="display:flex;justify-content:center;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.15);border-radius:10px;padding:8px 14px;">
+                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">💰 נזילים</span>
+                            <span id="totalLiquid" style="font-size:0.95rem;font-weight:600;color:#00d9ff;white-space:nowrap;">₪0</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;background:rgba(176,38,255,0.08);border:1px solid rgba(176,38,255,0.15);border-radius:10px;padding:8px 14px;">
+                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">🏦 פנסיה</span>
+                            <span id="totalPension" style="font-size:0.95rem;font-weight:600;color:#b026ff;white-space:nowrap;">₪0</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:8px 14px;">
+                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">🏠 נדל"ן</span>
+                            <span id="totalRealEstate" style="font-size:0.95rem;font-weight:600;color:#10b981;white-space:nowrap;">₪0</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- hidden elements kept for JS compat -->
-            <div id="totalBreakdown" style="display:none;">
-                <span id="totalLiquid"></span><span id="totalPension"></span><span id="totalRealEstate"></span>
+            <!-- Donut card (left) -->
+            <div class="total-worth-card" style="flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 12px;cursor:pointer;" id="donutCardWrapper" onclick="toggleDonutDetail()">
+                <div style="position:relative;width:100px;height:100px;">
+                    <svg id="donutChart" viewBox="0 0 100 100" style="width:100px;height:100px;"></svg>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+                        <div id="chartTotal" style="font-size:1rem;font-weight:700;color:var(--text-primary);">—</div>
+                        <div style="font-size:0.58rem;color:var(--text-secondary);">נכסים</div>
+                    </div>
+                </div>
+                <div id="donutTooltip" style="display:none;position:absolute;z-index:50;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px 14px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.4);direction:rtl;">
+                    <div id="donutTooltipContent"></div>
+                </div>
+                <div id="miniLegend" style="margin-top:8px;display:flex;flex-direction:column;gap:3px;width:100%;"></div>
             </div>
         </div>
 
@@ -7223,18 +7235,47 @@
             grid._delegationAttached = true;
         }
 
+        var _donutDetailOpen = false;
+        function toggleDonutDetail() {
+            _donutDetailOpen = !_donutDetailOpen;
+            var tip = document.getElementById('donutTooltip');
+            var wrapper = document.getElementById('donutCardWrapper');
+            if (!tip) return;
+            if (_donutDetailOpen) {
+                tip.style.display = 'block';
+                // Position below the donut card
+                var rect = wrapper.getBoundingClientRect();
+                tip.style.top = (rect.bottom + 8) + 'px';
+                tip.style.left = Math.max(8, rect.right - 170) + 'px';
+                tip.style.position = 'fixed';
+                wrapper.style.borderColor = 'rgba(244,196,48,0.4)';
+            } else {
+                tip.style.display = 'none';
+                wrapper.style.borderColor = '';
+            }
+        }
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#donutCardWrapper') && _donutDetailOpen) {
+                _donutDetailOpen = false;
+                var tip = document.getElementById('donutTooltip');
+                if (tip) tip.style.display = 'none';
+                var w = document.getElementById('donutCardWrapper');
+                if (w) w.style.borderColor = '';
+            }
+        });
+
         function updateChart() {
             const total = assets.reduce((sum, a) => sum + toILS(a.value, a.currency || 'ILS'), 0);
             const donutEl = document.getElementById('donutChart');
             const miniLegendEl = document.getElementById('miniLegend');
             const chartTotalEl = document.getElementById('chartTotal');
+            const tooltipEl = document.getElementById('donutTooltipContent');
             if (total === 0) {
                 if (donutEl) donutEl.innerHTML = '';
                 if (miniLegendEl) miniLegendEl.innerHTML = '';
                 return;
             }
 
-            // Group by type, sorted by value desc
             const grouped = {};
             assets.forEach(asset => {
                 if (!grouped[asset.type]) grouped[asset.type] = 0;
@@ -7242,40 +7283,52 @@
             });
             const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
 
-            // Draw ring donut
-            const R = 38, r = 26, center = 50;
-            let currentAngle = -90;
-            let segments = '';
-            const GAP = 2;
-
-            sorted.forEach(([type, value]) => {
+            // Ring donut
+            const R = 38, r = 27, center = 50, GAP = 2;
+            let angle0 = -90, segs = '';
+            sorted.forEach(function([type, value]) {
                 const pct = value / total;
-                const angle = pct * 360 - GAP;
-                if (angle <= 0) return;
-                const rad1 = currentAngle * Math.PI / 180;
-                const rad2 = (currentAngle + angle) * Math.PI / 180;
-                const x1o = center + R * Math.cos(rad1), y1o = center + R * Math.sin(rad1);
-                const x2o = center + R * Math.cos(rad2), y2o = center + R * Math.sin(rad2);
-                const x1i = center + r * Math.cos(rad1), y1i = center + r * Math.sin(rad1);
-                const x2i = center + r * Math.cos(rad2), y2i = center + r * Math.sin(rad2);
-                const large = angle > 180 ? 1 : 0;
-                segments += '<path d="M' + x1o + ',' + y1o + ' A' + R + ',' + R + ' 0 ' + large + ' 1 ' + x2o + ',' + y2o + ' L' + x2i + ',' + y2i + ' A' + r + ',' + r + ' 0 ' + large + ' 0 ' + x1i + ',' + y1i + ' Z" fill="' + (assetColors[type] || '#888') + '" opacity="0.92"/>';
-                currentAngle += angle + GAP;
+                const sweep = pct * 360 - GAP;
+                if (sweep <= 0) return;
+                const r1 = angle0 * Math.PI / 180, r2 = (angle0 + sweep) * Math.PI / 180;
+                const x1o = center + R * Math.cos(r1), y1o = center + R * Math.sin(r1);
+                const x2o = center + R * Math.cos(r2), y2o = center + R * Math.sin(r2);
+                const x1i = center + r * Math.cos(r1), y1i = center + r * Math.sin(r1);
+                const x2i = center + r * Math.cos(r2), y2i = center + r * Math.sin(r2);
+                const lg = sweep > 180 ? 1 : 0;
+                const color = assetColors[type] || '#888';
+                segs += '<path d="M' + x1o.toFixed(2) + ',' + y1o.toFixed(2) + ' A' + R + ',' + R + ' 0 ' + lg + ' 1 ' + x2o.toFixed(2) + ',' + y2o.toFixed(2) + ' L' + x2i.toFixed(2) + ',' + y2i.toFixed(2) + ' A' + r + ',' + r + ' 0 ' + lg + ' 0 ' + x1i.toFixed(2) + ',' + y1i.toFixed(2) + ' Z" fill="' + color + '" opacity="0.9"/>';
+                angle0 += sweep + GAP;
             });
-
-            if (donutEl) donutEl.innerHTML = segments;
+            if (donutEl) donutEl.innerHTML = segs;
             if (chartTotalEl) chartTotalEl.textContent = assets.length;
 
-            // Mini legend
+            // Mini legend (compact — color dot + %)
             if (miniLegendEl) {
                 miniLegendEl.innerHTML = sorted.map(function([type, value]) {
                     const pct = (value / total * 100).toFixed(0);
                     const color = assetColors[type] || '#888';
                     const name = assetTypeNames[type] || type;
-                    return '<div style="display:flex;align-items:center;gap:6px;direction:rtl;">' +
-                        '<div style="width:7px;height:7px;border-radius:50%;background:' + color + ';flex-shrink:0;"></div>' +
-                        '<span style="font-size:0.72rem;color:var(--text-secondary);flex:1;">' + name + '</span>' +
-                        '<span style="font-size:0.72rem;font-weight:700;color:' + color + ';">' + pct + '%</span>' +
+                    return '<div style="display:flex;align-items:center;gap:4px;direction:rtl;">' +
+                        '<div style="width:6px;height:6px;border-radius:50%;background:' + color + ';flex-shrink:0;"></div>' +
+                        '<span style="font-size:0.62rem;color:var(--text-secondary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>' +
+                        '<span style="font-size:0.62rem;font-weight:700;color:' + color + ';">' + pct + '%</span>' +
+                        '</div>';
+                }).join('');
+            }
+
+            // Tooltip detail (on click)
+            if (tooltipEl) {
+                tooltipEl.innerHTML = '<div style="font-size:0.75rem;font-weight:700;color:var(--text-primary);margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:6px;">התפלגות נכסים</div>' +
+                sorted.map(function([type, value]) {
+                    const pct = (value / total * 100).toFixed(1);
+                    const color = assetColors[type] || '#888';
+                    const name = assetTypeNames[type] || type;
+                    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;direction:rtl;">' +
+                        '<div style="width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0;"></div>' +
+                        '<span style="font-size:0.73rem;color:var(--text-secondary);flex:1;">' + name + '</span>' +
+                        '<span style="font-size:0.73rem;font-weight:600;color:var(--text-primary);">₪' + value.toLocaleString('he-IL', {maximumFractionDigits:0}) + '</span>' +
+                        '<span style="font-size:0.7rem;font-weight:700;color:' + color + ';min-width:36px;text-align:left;">' + pct + '%</span>' +
                         '</div>';
                 }).join('');
             }
@@ -7284,7 +7337,7 @@
             const legEl = document.getElementById('legend');
             if (legEl) legEl.innerHTML = sorted.map(function([type, value]) {
                 const pct = (value / total * 100).toFixed(1);
-                return '<div class="legend-item"><div class="legend-color" style="background:' + (assetColors[type] || '#888') + '"></div><div class="legend-label">' + (assetTypeNames[type] || type) + '</div><div class="legend-value">₪' + value.toLocaleString('he-IL', {maximumFractionDigits:0}) + '</div><div class="legend-percent">' + pct + '%</div></div>';
+                return '<div class="legend-item"><div class="legend-color" style="background:' + (assetColors[type]||'#888') + '"></div><div class="legend-label">' + (assetTypeNames[type]||type) + '</div><div class="legend-value">₪' + value.toLocaleString('he-IL',{maximumFractionDigits:0}) + '</div><div class="legend-percent">' + pct + '%</div></div>';
             }).join('');
         }
 
