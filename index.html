@@ -6854,9 +6854,11 @@
                     const sc = (v) => v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                     const ss = (v) => v >= 0 ? '+' : '';
                     const priceStr  = sCurr === 'ILS' ? '₪' + sPrice.toFixed(2) : '$' + sPrice.toFixed(2);
-                    const subSuffix = sRetPct !== null
-                        ? `<span style="color:${sc(sRetPct)};font-weight:600;">${ss(sRetPct)}${sRetPct.toFixed(1)}%</span>`
-                        : `<span style="color:${sc(sDailyPct)};">${ss(sDailyILS)}₪${Math.abs(Math.round(sDailyILS)).toLocaleString('he-IL')} היום</span>`;
+                    // Combined daily: stock % + USD/ILS rate change (for USD stocks)
+                    const ilsDayPct = (sCurr === 'USD' && exchangeRatePrevClose > 0)
+                        ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 : 0;
+                    const combinedDailyPct = sDailyPct + ilsDayPct;
+                    const combinedDailyILS = sValue * (combinedDailyPct / 100);
 
                     return `
                     <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
@@ -6864,11 +6866,12 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name} <span style="font-size:0.7em;color:#ff006e;font-weight:700;">${sTicker}</span></div>
-                                <div class="asset-row-provider">${asset.provider} • <span style="color:${sc(sDailyPct)};font-weight:600;">${ss(sDailyPct)}${sDailyPct.toFixed(2)}%</span> יומי</div>
+                                <div class="asset-row-provider">${asset.provider} • <span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
                             </div>
+                            <div class="asset-row-return ${combinedDailyPct >= 0 ? 'positive' : 'negative'}">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                <div class="asset-row-sub">${subSuffix}</div>
+                                <div class="asset-row-sub" style="color:${sc(combinedDailyPct)};">${ss(combinedDailyILS)}₪${Math.abs(Math.round(combinedDailyILS)).toLocaleString('he-IL')} היום</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
