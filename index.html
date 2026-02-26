@@ -5125,44 +5125,14 @@
         }
 
         async function updateAllRates() {
-            const auto = confirm('רוצה למשוך שערים עדכניים מהאינטרנט?\n(דולר, ביטקוין, SPY, קרנות נאמנות)\n\nלחץ "אישור" למשיכה אוטומטית\nלחץ "ביטול" להזנה ידנית');
+            // Fetch silently — no confirm/alert
+            await fetchExchangeRate();
             
-            if (auto) {
-                var results = [];
-                // Fetch exchange rates
-                var rateSuccess = await fetchExchangeRate();
-                results.push(rateSuccess ? '✅ שערי מטבע עודכנו' : '❌ שערי מטבע - נכשל');
-                
-                // Fetch SPY if we have SPY assets
-                var hasSpyAssets = assets.some(function(a) { return a.isSpyPension; });
-                if (hasSpyAssets) {
-                    var spySuccess = await fetchSpyPrice();
-                    results.push(spySuccess ? '✅ SPY: $' + spyPrice.toFixed(2) : '❌ SPY - נכשל');
-                }
+            var hasSpyAssets = assets.some(function(a) { return a.isSpyPension; });
+            if (hasSpyAssets) await fetchSpyPrice();
 
-                // Fetch fund NAVs
-                var fundResults = await updateFundAssets();
-                results = results.concat(fundResults);
-                
-                updateUI();
-                
-                var msg = 'עדכון שערים:\n\n' + results.join('\n');
-                if (rateSuccess) {
-                    msg += '\n\n💵 $1 = ₪' + exchangeRate.toFixed(4);
-                    msg += '\n₿ BTC = $' + btcRate.toLocaleString('en-US');
-                    msg += '\nΞ ETH = $' + ethRate.toLocaleString('en-US');
-                }
-                alert(msg);
-            } else {
-                // Manual input
-                const newRate = prompt('הזן שער המרה חדש דולר לשקל:', exchangeRate.toFixed(4));
-                if (newRate && !isNaN(newRate) && parseFloat(newRate) > 0) {
-                    exchangeRate = parseFloat(newRate);
-                    localStorage.setItem('exchange-rate', exchangeRate.toString());
-                    updateRateDisplay();
-                    updateUI();
-                }
-            }
+            await updateFundAssets();
+            updateUI();
         }
 
         // Keep old name for header click
