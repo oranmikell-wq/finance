@@ -1540,18 +1540,15 @@
                     <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש..." oninput="filterAssets(this.value)" style="padding:8px 12px;font-size:0.82rem;height:36px;text-align:right;direction:rtl;">
                 </div>
             </div>
-            <div class="last-update">
-                עדכון אחרון: <span id="lastUpdate">--</span>
-                <span style="margin: 0 10px;">•</span>
-                <span style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" onclick="updateExchangeRate()" title="לחץ לעדכון שערים">
-                    <span id="rateUpdateIndicator" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
-                    <span style="display: inline-flex; gap: 15px; flex-wrap: wrap;">
-                        <span>$1 = ₪<span id="exchangeRateDisplay">3.7</span> <span id="ilsDailyChange" style="font-size:0.75em;"></span></span>
-                        <span>₿1 = $<span id="btcRateDisplay">100,000</span></span>
-                        <span>Ξ1 = $<span id="ethRateDisplay">3,500</span></span>
-                        <span>S&P500 <span id="spyIndexDisplay" style="font-size:0.75em;">—</span> <span id="spyIndexChange" style="font-size:0.75em;"></span></span>
-                        <span>ת"א125 <span id="ta125Display" style="font-size:0.75em;">—</span> <span id="ta125Change" style="font-size:0.75em;"></span></span>
-                    </span>
+            <div class="last-update" style="display:flex;align-items:center;justify-content:space-between;direction:rtl;">
+                <span style="white-space:nowrap;flex-shrink:0;">עדכון אחרון: <span id="lastUpdate">--</span></span>
+                <span style="cursor:pointer;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;direction:ltr;" onclick="updateExchangeRate()" title="לחץ לעדכון שערים">
+                    <span id="rateUpdateIndicator" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0;"></span>
+                    <span>$1 = ₪<span id="exchangeRateDisplay">3.7</span> <span id="ilsDailyChange" style="font-size:0.85em;"></span></span>
+                    <span>₿1 = $<span id="btcRateDisplay">100,000</span></span>
+                    <span>Ξ1 = $<span id="ethRateDisplay">3,500</span></span>
+                    <span>S&P500 <span id="spyIndexDisplay">—</span> <span id="spyIndexChange"></span></span>
+                    <span>ת"א125 <span id="ta125Display">—</span> <span id="ta125Change"></span></span>
                 </span>
             </div>
         </div>
@@ -6814,7 +6811,7 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name}</div>
-                                <div class="asset-row-provider">${asset.provider}${mDayPct !== null ? ' • <span style="color:'+sc(mDayPct)+';font-weight:600;">'+ss(mDayPct)+mDayPct.toFixed(2)+'%</span> יומי' : ''}</div>
+                                ${mDayPct !== null ? `<div class="asset-row-provider"><span style="color:${sc(mDayPct)};font-weight:600;">${ss(mDayPct)}${mDayPct.toFixed(2)}%</span> יומי</div>` : ''}
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${Math.round(mValueILS).toLocaleString('he-IL')}</div>
@@ -6872,7 +6869,7 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name} <span style="font-size:0.7em;color:#ff006e;font-weight:700;">${sTicker}</span></div>
-                                <div class="asset-row-provider">${asset.provider} • <span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
+                                <div class="asset-row-provider"><span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
