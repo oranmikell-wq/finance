@@ -6740,10 +6740,10 @@
                                 <div class="asset-row-name">${asset.name}</div>
                                 <div class="asset-row-provider">${asset.provider}</div>
                             </div>
+                            ${rentalYield !== null ? `<div class="asset-row-return positive">${rentalYield.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
-                                ${rentalYield !== null ? `<div class="asset-row-return positive">${rentalYield.toFixed(1)}%</div>` : ''}
                                 <div class="asset-row-amount">₪${eq.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
-                                <div class="asset-row-sub">${asset.isRentalProperty && asset.rentalMonthlyIncome ? '<span style="color:var(--accent-green);font-weight:600;">₪' + asset.rentalMonthlyIncome.toLocaleString('he-IL',{maximumFractionDigits:0}) + ' /חודש</span>' : 'הון עצמי'}</div>
+                                <div class="asset-row-sub">הון עצמי</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
