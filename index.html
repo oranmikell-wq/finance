@@ -2616,7 +2616,7 @@
                             </div>
                         </div>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));gap:10px;margin-bottom:14px;">
+                    <div id="stockExtraFields" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));gap:10px;margin-bottom:14px;">
                         <div class="form-group" style="margin:0;">
                             <label>תשואה (%)</label>
                             <input type="text" inputmode="decimal" id="assetReturn" placeholder="0" oninput="formatNumberInput(this)">
@@ -2799,16 +2799,19 @@
             var manualFlds  = document.getElementById('stockManualModeFields');
             var activeStyle   = ';flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,0,110,0.55);background:rgba(255,0,110,0.15);color:#ff006e;cursor:pointer;transition:all 0.2s;font-family:inherit;';
             var inactiveStyle = ';flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;';
+            var extraFields = document.getElementById('stockExtraFields');
             if (mode === 'ticker') {
                 if (tickerBtn)  tickerBtn.style.cssText  = activeStyle;
                 if (manualBtn)  manualBtn.style.cssText  = inactiveStyle;
                 if (tickerFlds) tickerFlds.style.display = '';
                 if (manualFlds) manualFlds.style.display = 'none';
+                if (extraFields) extraFields.style.display = '';
             } else {
                 if (tickerBtn)  tickerBtn.style.cssText  = inactiveStyle;
                 if (manualBtn)  manualBtn.style.cssText  = activeStyle;
                 if (tickerFlds) tickerFlds.style.display = 'none';
                 if (manualFlds) manualFlds.style.display = '';
+                if (extraFields) extraFields.style.display = 'none';
                 // clear ticker data
                 var stEl = document.getElementById('stockTicker'); if (stEl) stEl.value = '';
                 var suEl = document.getElementById('stockUnits');  if (suEl) suEl.value = '';
@@ -5298,6 +5301,7 @@
                             }
                         } else {
                             selectStockMode('manual');
+                            var ef = document.getElementById('stockExtraFields'); if (ef) ef.style.display = 'none';
                             var savedCurr = asset.stockManualCurrency || 'ILS';
                             selectStockManualCurrency(savedCurr);
                             if (asset.stockManualAmount) {
@@ -6798,9 +6802,10 @@
                     const sc = (v) => v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                     const ss = (v) => v >= 0 ? '+' : '';
                     const amtStr  = mCurr === 'ILS' ? '₪' + mAmt.toLocaleString('he-IL',{maximumFractionDigits:0}) : '$' + mAmt.toLocaleString('he-IL',{maximumFractionDigits:0}) + ' (₪' + Math.round(mValueILS).toLocaleString('he-IL') + ')';
-                    const subLine = mBasis > 0
-                        ? `<span style="color:${sc(mPct)};font-weight:600;">${ss(mPct)}${mPct.toFixed(1)}% (${ss(mDiffILS)}₪${Math.abs(Math.round(mDiffILS)).toLocaleString('he-IL')})</span>`
-                        : `<span style="color:var(--text-secondary);">${amtStr}</span>`;
+                    // Daily change: for USD use USD/ILS rate change, for ILS nothing (no live price)
+                    const mDayPct = (mCurr === 'USD' && exchangeRatePrevClose > 0)
+                        ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 : null;
+                    const mDayILS = mDayPct !== null ? mValueILS * (mDayPct / 100) : 0;
 
                     return `
                     <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
@@ -6808,11 +6813,12 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name}</div>
-                                <div class="asset-row-provider">${asset.provider}${mBasis > 0 ? ' • <span style="color:'+sc(mPct)+';font-weight:600;">'+ss(mPct)+mPct.toFixed(1)+'%</span>' : ''}</div>
+                                <div class="asset-row-provider">${asset.provider}${mDayPct !== null ? ' • <span style="color:'+sc(mDayPct)+';font-weight:600;">'+ss(mDayPct)+mDayPct.toFixed(2)+'%</span> יומי' : ''}</div>
                             </div>
+                            ${mDayPct !== null ? `<div class="asset-row-return ${mDayPct >= 0 ? 'positive' : 'negative'}">${ss(mDayPct)}${mDayPct.toFixed(2)}%</div>` : ''}
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${Math.round(mValueILS).toLocaleString('he-IL')}</div>
-                                <div class="asset-row-sub">${mCurr === 'USD' ? '<span style="color:var(--text-secondary);">$'+mAmt.toLocaleString('he-IL',{maximumFractionDigits:0})+'</span>' : (mBasis > 0 ? subLine : '')}</div>
+                                <div class="asset-row-sub">${mCurr === 'USD' ? '<span style="color:var(--text-secondary);">$'+mAmt.toLocaleString('he-IL',{maximumFractionDigits:0})+'</span>' : ''}</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
