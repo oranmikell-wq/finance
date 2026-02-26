@@ -7011,9 +7011,9 @@
                                 <div class="asset-row-name">${asset.name}</div>
                                 <div class="asset-row-provider">${asset.provider} • <span style="color:${fc(fDaily)};font-weight:600;">${fs(fDaily)}${fDaily.toFixed(2)}%</span> יומי</div>
                             </div>
+                            ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
-                                <div class="asset-row-sub"><span style="color:${fc(fYearly)};font-weight:600;">${fs(fYearly)}${fYearly.toFixed(1)}%</span> <span style="color:var(--text-secondary);font-size:0.8em;">שנתי</span></div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
