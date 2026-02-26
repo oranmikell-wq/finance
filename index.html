@@ -6730,6 +6730,8 @@
                     const mg = asset.mortgage || 0;
                     const eq = asset.value;
                     const pctOwned = pv > 0 ? ((eq / pv) * 100) : 0;
+                    const rentalYield = (asset.isRentalProperty && asset.rentalMonthlyIncome && pv > 0)
+                        ? (asset.rentalMonthlyIncome * 12 / pv * 100) : null;
                     return `
                     <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
                         <div class="asset-row-main">
@@ -6739,6 +6741,7 @@
                                 <div class="asset-row-provider">${asset.provider}</div>
                             </div>
                             <div class="asset-row-values">
+                                ${rentalYield !== null ? `<div class="asset-row-return positive">${rentalYield.toFixed(1)}%</div>` : ''}
                                 <div class="asset-row-amount">₪${eq.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 <div class="asset-row-sub">${asset.isRentalProperty && asset.rentalMonthlyIncome ? '<span style="color:var(--accent-green);font-weight:600;">₪' + asset.rentalMonthlyIncome.toLocaleString('he-IL',{maximumFractionDigits:0}) + ' /חודש</span>' : 'הון עצמי'}</div>
                             </div>
@@ -6763,6 +6766,11 @@
                                     <span class="asset-row-detail-value">${typeName}</span>
                                 </div>
                                 ${asset.isRentalProperty && asset.rentalMonthlyIncome ? `
+                                ${rentalYield !== null ? `
+                                <div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">תשואת שכירות</span>
+                                    <span class="asset-row-detail-value" style="color:var(--accent-green);font-weight:700;">${rentalYield.toFixed(2)}%</span>
+                                </div>` : ''}
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">🏘️ שכ"ד חודשי</span>
                                     <span class="asset-row-detail-value" style="color:var(--accent-green);font-weight:700;">₪${asset.rentalMonthlyIncome.toLocaleString('he-IL',{maximumFractionDigits:0})}</span>
