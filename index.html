@@ -140,6 +140,13 @@
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
         }
         .last-update div::-webkit-scrollbar { display: none; }
+        @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+        .skeleton-row {
+            height: 64px; border-radius: 14px; margin-bottom: 8px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+            background-size: 400px 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
         .spinning { animation: spin 0.7s linear infinite; }
         .donut-side-card { flex-shrink:0; width:130px; }
@@ -1539,6 +1546,41 @@
     </style>
 </head>
 <body>
+<script>
+// Pre-load localStorage data synchronously before first paint — eliminates blank flash
+(function() {
+    try {
+        var _assets = localStorage.getItem('portfolio-assets');
+        if (_assets) window._preloadedAssets = JSON.parse(_assets);
+    } catch(e) {}
+    try {
+        var _rate = localStorage.getItem('exchange-rate');
+        if (_rate) window._preloadedRate = parseFloat(_rate);
+    } catch(e) {}
+    try {
+        var _btc = localStorage.getItem('btc-rate');
+        if (_btc) window._preloadedBtc = parseFloat(_btc);
+    } catch(e) {}
+    try {
+        var _eth = localStorage.getItem('eth-rate');
+        if (_eth) window._preloadedEth = parseFloat(_eth);
+    } catch(e) {}
+    try {
+        var _theme = localStorage.getItem('app-theme');
+        if (_theme === 'light') document.body.classList.add('light-mode');
+    } catch(e) {}
+    // Pre-fill total amount immediately if cached
+    try {
+        var _snap = localStorage.getItem('total-worth-snapshot');
+        if (_snap) {
+            document.addEventListener('DOMContentLoaded', function() {
+                var el = document.getElementById('totalWorth');
+                if (el && el.textContent === '₪0') el.textContent = _snap;
+            });
+        }
+    } catch(e) {}
+})();
+</script>
     <div class="container">
         <div class="header">
             <div class="header-top" style="display:flex;direction:ltr;align-items:center;justify-content:space-between;gap:12px;">
@@ -1644,7 +1686,9 @@
             </div>
         </div>
         <div class="assets-grid" id="assetsGrid">
-            <!-- Assets will be dynamically added here -->
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row" style="opacity:0.6;"></div>
         </div>
 
         <!-- legend kept for JS compat, hidden -->
@@ -5001,14 +5045,15 @@
         };
 
         async function loadAssets() {
+            // Use pre-loaded globals (read synchronously before first paint)
             try {
-                const data = localStorage.getItem('portfolio-assets');
-                if (data) {
-                    assets = JSON.parse(data);
-                }
-            } catch (e) {
-                assets = [];
-            }
+                if (window._preloadedAssets) assets = window._preloadedAssets;
+            } catch(e) { assets = []; }
+            try {
+                if (window._preloadedRate > 0) exchangeRate = window._preloadedRate;
+                if (window._preloadedBtc > 0) btcRate = window._preloadedBtc;
+                if (window._preloadedEth > 0) ethRate = window._preloadedEth;
+            } catch(e) {}
             
             try {
                 const rateData = localStorage.getItem('exchange-rate');
@@ -5109,7 +5154,7 @@
                 if (JSON.stringify(assets) !== _beforeFetch) {
                     updateUI();
                 }
-            }, 200);
+            }, 0);
         }
 
         async function saveAssets() {
@@ -5714,6 +5759,8 @@
                 calcRetirement();
                 checkAlerts();
             }, 150);
+            // Snapshot for instant display on next load
+            try { var tw = document.getElementById('totalWorth'); if(tw) localStorage.setItem('total-worth-snapshot', tw.textContent); } catch(e) {}
         }
 
         function updateTotalWorth() {
