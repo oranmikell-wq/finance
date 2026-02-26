@@ -1580,8 +1580,8 @@
                 </div>
                 <div id="chipUpdate" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="triggerRateRefresh()" title="לחץ לעדכון שערים">
                     <span id="rateUpdateIndicator" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
-                    <span id="refreshIcon" style="font-size:0.9rem;line-height:1;display:inline-block;transition:transform 0.3s;">↻</span>
                     <span id="lastUpdate" style="color:var(--text-primary);font-weight:600;font-size:0.7rem;">--</span>
+                    <span id="refreshIcon" style="font-size:0.9rem;line-height:1;display:inline-block;transition:transform 0.3s;">↻</span>
                 </div>
             </div>
         </div>
@@ -5170,7 +5170,7 @@
 
         function updateLastUpdate() {
             const now = new Date();
-            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('lastUpdate').textContent = now.toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit'}) + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
         }
 
         var typeIcons = { pension:'🏛️', gemel:'🏦', fund:'📚', savings:'📊', deposit:'💵', trade:'📈', crypto:'₿', real_estate:'🏠', other:'📋' };
