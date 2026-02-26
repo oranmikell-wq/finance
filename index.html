@@ -140,6 +140,8 @@
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
         }
         .last-update div::-webkit-scrollbar { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinning { animation: spin 0.7s linear infinite; }
         .donut-side-card { flex-shrink:0; width:130px; }
         .donut-size-wrap { width:100px; height:100px; }
         .donut-size-svg  { width:100px; height:100px; }
@@ -1576,9 +1578,10 @@
                         <span id="ta125Change" style="font-size:0.72rem;"></span>
                     </div>
                 </div>
-                <div id="chipUpdate" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="updateExchangeRate()" title="לחץ לעדכון שערים">
+                <div id="chipUpdate" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;cursor:pointer;flex-shrink:0;" onclick="triggerRateRefresh()" title="לחץ לעדכון שערים">
                     <span id="rateUpdateIndicator" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
-                    <span style="color:var(--text-secondary);">עדכון: <span id="lastUpdate" style="color:var(--text-primary);font-weight:600;">--</span></span>
+                    <span id="refreshIcon" style="font-size:0.9rem;line-height:1;display:inline-block;transition:transform 0.3s;">↻</span>
+                    <span id="lastUpdate" style="color:var(--text-primary);font-weight:600;font-size:0.7rem;">--</span>
                 </div>
             </div>
         </div>
@@ -5167,7 +5170,7 @@
 
         function updateLastUpdate() {
             const now = new Date();
-            document.getElementById('lastUpdate').textContent = now.toLocaleString('he-IL');
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
         }
 
         var typeIcons = { pension:'🏛️', gemel:'🏦', fund:'📚', savings:'📊', deposit:'💵', trade:'📈', crypto:'₿', real_estate:'🏠', other:'📋' };
@@ -7240,6 +7243,15 @@
             };
             grid.addEventListener('click', grid._delegationHandler);
             grid._delegationAttached = true;
+        }
+
+        function triggerRateRefresh() {
+            var icon = document.getElementById('refreshIcon');
+            if (icon) icon.classList.add('spinning');
+            updateExchangeRate();
+            setTimeout(function() {
+                if (icon) icon.classList.remove('spinning');
+            }, 2000);
         }
 
         var _donutDetailOpen = false;
