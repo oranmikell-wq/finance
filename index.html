@@ -7275,36 +7275,29 @@
 
             var fetched = false;
 
-            // Source 1: OECD STES — monthly Y/Y CPI for Israel (~2 month lag, most recent)
+            // Source 1: IMF DataMapper — annual CPI for Israel (most recent year available)
             if (!fetched) {
                 try {
-                    var oeResp = await fetch('https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_KEI@DF_KEI,4.0/ISR.CPALTT01.ML.?lastNObservations=3&format=jsondata');
-                    if (oeResp.ok) {
-                        var oeData = await oeResp.json();
-                        var obs = oeData && oeData.dataSets && oeData.dataSets[0] && oeData.dataSets[0].series;
-                        if (obs) {
-                            var seriesKey = Object.keys(obs)[0];
-                            var observations = obs[seriesKey] && obs[seriesKey].observations;
-                            var periods = oeData.structure && oeData.structure.dimensions && oeData.structure.dimensions.observation;
-                            if (observations && periods) {
-                                var timeValues = periods.find(function(d) { return d.id === 'TIME_PERIOD'; });
-                                if (timeValues && timeValues.values) {
-                                    var lastIdx = Object.keys(observations).reduce(function(a, b) { return parseInt(a) > parseInt(b) ? a : b; });
-                                    var val = observations[lastIdx][0];
-                                    var period = timeValues.values[parseInt(lastIdx)] && timeValues.values[parseInt(lastIdx)].id;
-                                    if (val !== null && val !== undefined) {
-                                        document.getElementById('cgInflation').value = parseFloat(val).toFixed(1);
-                                        if (info) info.textContent = '📊 שינוי שנתי ' + (period || '') + ' — ' + parseFloat(val).toFixed(2) + '%';
-                                        fetched = true;
-                                    }
-                                }
+                    var imfResp = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://www.imf.org/external/datamapper/api/v1/PCPIPCH/ISR'));
+                    if (imfResp.ok) {
+                        var imfData = await imfResp.json();
+                        var values = imfData && imfData.values && imfData.values.PCPIPCH && imfData.values.PCPIPCH.ISR;
+                        if (values) {
+                            var currentYear = new Date().getFullYear();
+                            var years = Object.keys(values).map(Number).sort((a,b)=>b-a);
+                            // Take most recent completed year (current year - 1) or current year if available
+                            var bestYear = years.find(function(y) { return y <= currentYear - 1 && values[y] !== null; });
+                            if (bestYear && values[bestYear] !== null) {
+                                document.getElementById('cgInflation').value = parseFloat(values[bestYear]).toFixed(1);
+                                if (info) info.textContent = '📊 IMF ' + bestYear + ' — ' + parseFloat(values[bestYear]).toFixed(2) + '%';
+                                fetched = true;
                             }
                         }
                     }
                 } catch(e) {}
             }
 
-            // Source 2: World Bank API — annual CPI for Israel (fallback, ~1 year lag)
+            // Source 2: World Bank API — annual CPI for Israel (fallback)
             if (!fetched) {
                 try {
                     var wbResp = await fetch('https://api.worldbank.org/v2/country/ISR/indicator/FP.CPI.TOTL.ZG?format=json&mrv=3');
@@ -7314,7 +7307,7 @@
                             var entry = wbData[1].find(function(e) { return e.value !== null && e.value !== undefined; });
                             if (entry) {
                                 document.getElementById('cgInflation').value = entry.value.toFixed(1);
-                                if (info) info.textContent = '📊 שינוי שנתי ' + entry.date + ' — ' + entry.value.toFixed(2) + '%';
+                                if (info) info.textContent = '📊 World Bank ' + entry.date + ' — ' + entry.value.toFixed(2) + '%';
                                 fetched = true;
                             }
                         }
