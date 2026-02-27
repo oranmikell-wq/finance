@@ -3779,6 +3779,7 @@
                 var gotUSD = false;
 
                 // Source 0: Yahoo Finance (real-time market rate, USDILS=X)
+                var gotPrevClose = false;
                 if (!gotUSD) {
                     try {
                         const yUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USDILS%3DX');
@@ -3793,7 +3794,14 @@
                             if (rate > 0) {
                                 exchangeRate = rate;
                                 gotUSD = true;
-                                console.log('[Rate] Yahoo Finance USD/ILS:', exchangeRate);
+                                if (meta.previousClose > 0) {
+                                    exchangeRatePrevClose = meta.previousClose;
+                                    gotPrevClose = true;
+                                    var todayStr = new Date().toISOString().split('T')[0];
+                                    localStorage.setItem('usdils-prev-close', exchangeRatePrevClose.toString());
+                                    localStorage.setItem('usdils-prev-date', todayStr);
+                                }
+                                console.log('[Rate] Yahoo Finance USD/ILS:', exchangeRate, '| prevClose:', exchangeRatePrevClose);
                             }
                         }
                     } catch(e) { console.warn('[Rate] Yahoo Finance failed:', e.message); }
@@ -3891,25 +3899,27 @@
                     return false;
                 }
 
-                // Store previous close for daily change
-                try {
-                    var savedPrev = localStorage.getItem('usdils-prev-close');
-                    var savedPrevDate = localStorage.getItem('usdils-prev-date');
-                    var today = new Date().toISOString().split('T')[0];
-                    if (savedPrevDate === today && savedPrev) {
-                        exchangeRatePrevClose = parseFloat(savedPrev);
-                    } else {
-                        // New day - use old cached rate as prev close
-                        var oldRate = parseFloat(localStorage.getItem('exchange-rate') || '0');
-                        if (oldRate > 0 && Math.abs(oldRate - exchangeRate) > 0.001) {
-                            exchangeRatePrevClose = oldRate;
+                // Store previous close for daily change (skip if already got from Yahoo)
+                if (!gotPrevClose) {
+                    try {
+                        var savedPrev = localStorage.getItem('usdils-prev-close');
+                        var savedPrevDate = localStorage.getItem('usdils-prev-date');
+                        var today = new Date().toISOString().split('T')[0];
+                        if (savedPrevDate === today && savedPrev) {
+                            exchangeRatePrevClose = parseFloat(savedPrev);
                         } else {
-                            exchangeRatePrevClose = prevRate > 1 ? prevRate : exchangeRate;
+                            // New day - use old cached rate as prev close
+                            var oldRate = parseFloat(localStorage.getItem('exchange-rate') || '0');
+                            if (oldRate > 0 && Math.abs(oldRate - exchangeRate) > 0.001) {
+                                exchangeRatePrevClose = oldRate;
+                            } else {
+                                exchangeRatePrevClose = prevRate > 1 ? prevRate : exchangeRate;
+                            }
+                            localStorage.setItem('usdils-prev-close', exchangeRatePrevClose.toString());
+                            localStorage.setItem('usdils-prev-date', today);
                         }
-                        localStorage.setItem('usdils-prev-close', exchangeRatePrevClose.toString());
-                        localStorage.setItem('usdils-prev-date', today);
-                    }
-                } catch(e) {}
+                    } catch(e) {}
+                }
 
                 // Fetch crypto rates (BTC and ETH in USD)
                 try {
