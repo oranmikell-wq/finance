@@ -7587,6 +7587,29 @@
             }
         });
 
+        // Fix mouse wheel scroll on desktop: horizontal-overflow containers
+        // can "eat" vertical wheel events and prevent page scroll.
+        document.addEventListener('wheel', function(e) {
+            if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+            var el = e.target;
+            while (el && el !== document.documentElement) {
+                var style = window.getComputedStyle(el);
+                var ofx = style.overflowX;
+                var ofy = style.overflowY;
+                var canScrollV = (ofy === 'auto' || ofy === 'scroll') && el.scrollHeight > el.clientHeight;
+                if (canScrollV) return; // element can scroll vertically — let it
+                var canScrollH = (ofx === 'auto' || ofx === 'scroll');
+                if (canScrollH && !canScrollV) {
+                    // horizontal-only scroll container — redirect to page
+                    document.documentElement.scrollTop += e.deltaY;
+                    document.body.scrollTop += e.deltaY;
+                    e.preventDefault();
+                    return;
+                }
+                el = el.parentElement;
+            }
+        }, { passive: false });
+
         // Initialize
         loadAssets();
         loadProfile();
