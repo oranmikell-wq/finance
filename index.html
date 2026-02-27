@@ -5985,6 +5985,12 @@
                 updateGreeting();
             }
 
+            // Render personal tab calculators
+            if (tabName === 'Personal') {
+                calcRetirement();
+                renderCapitalGains();
+            }
+
             // Scroll to top
             window.scrollTo(0, 0);
             document.body.scrollTop = 0;
