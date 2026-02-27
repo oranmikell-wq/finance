@@ -2023,7 +2023,11 @@
                     </div>
                     <div>
                         <div class="retire-label">ניכוי מדד אינפלציה (%)</div>
-                        <input type="text" inputmode="decimal" id="cgInflation" value="0" maxlength="5" class="retire-input" placeholder="0" oninput="renderCapitalGains()">
+                        <div style="display:flex;gap:5px;align-items:center;">
+                            <input type="text" inputmode="decimal" id="cgInflation" value="0" maxlength="5" class="retire-input" placeholder="0" oninput="renderCapitalGains()" style="flex:1;">
+                            <button type="button" id="cgInflationFetchBtn" onclick="fetchCPIRate()" title="שלוף מדד אינפלציה" style="padding:6px 8px;background:rgba(0,217,255,0.1);border:1px solid rgba(0,217,255,0.25);border-radius:8px;color:var(--accent-cyan);font-size:0.72rem;cursor:pointer;white-space:nowrap;font-family:inherit;">🔄</button>
+                        </div>
+                        <div id="cgInflationInfo" style="font-size:0.63rem;color:var(--text-secondary);margin-top:3px;min-height:14px;"></div>
                     </div>
                 </div>
                 <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:12px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
@@ -7263,6 +7267,70 @@
         }
 
         // ============ Capital Gains Tax ============
+        async function fetchCPIRate() {
+            var btn = document.getElementById('cgInflationFetchBtn');
+            var info = document.getElementById('cgInflationInfo');
+            if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+            if (info) info.textContent = '';
+
+            var fetched = false;
+
+            // Source 1: World Bank API — annual CPI for Israel
+            if (!fetched) {
+                try {
+                    var wbResp = await fetch('https://api.worldbank.org/v2/country/ISR/indicator/FP.CPI.TOTL.ZG?format=json&mrv=3');
+                    if (wbResp.ok) {
+                        var wbData = await wbResp.json();
+                        if (wbData && wbData[1]) {
+                            var entry = wbData[1].find(function(e) { return e.value !== null && e.value !== undefined; });
+                            if (entry) {
+                                document.getElementById('cgInflation').value = entry.value.toFixed(1);
+                                if (info) info.textContent = '📊 שינוי שנתי ' + entry.date + ' — ' + entry.value.toFixed(2) + '%';
+                                fetched = true;
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Source 2: OECD API — annual CPI for Israel
+            if (!fetched) {
+                try {
+                    var oeResp = await fetch('https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_KEI@DF_KEI,4.0/ISR.CPALTT01.ML.?lastNObservations=13&format=jsondata');
+                    if (oeResp.ok) {
+                        var oeData = await oeResp.json();
+                        var obs = oeData && oeData.dataSets && oeData.dataSets[0] && oeData.dataSets[0].series;
+                        if (obs) {
+                            var seriesKey = Object.keys(obs)[0];
+                            var observations = obs[seriesKey] && obs[seriesKey].observations;
+                            var periods = oeData.structure && oeData.structure.dimensions && oeData.structure.dimensions.observation;
+                            if (observations && periods) {
+                                var timeValues = periods.find(function(d) { return d.id === 'TIME_PERIOD'; });
+                                if (timeValues && timeValues.values) {
+                                    var lastIdx = Object.keys(observations).reduce(function(a, b) { return parseInt(a) > parseInt(b) ? a : b; });
+                                    var val = observations[lastIdx][0];
+                                    var period = timeValues.values[parseInt(lastIdx)] && timeValues.values[parseInt(lastIdx)].id;
+                                    if (val !== null && val !== undefined) {
+                                        document.getElementById('cgInflation').value = parseFloat(val).toFixed(1);
+                                        if (info) info.textContent = '📊 שינוי שנתי ' + (period || '') + ' — ' + parseFloat(val).toFixed(2) + '%';
+                                        fetched = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            if (fetched) {
+                renderCapitalGains();
+                if (btn) { btn.textContent = '✅'; btn.disabled = false; setTimeout(function() { if (btn) btn.textContent = '🔄'; }, 2000); }
+            } else {
+                if (info) info.textContent = '⚠️ לא ניתן לשלוף — הזן ידנית';
+                if (btn) { btn.textContent = '❌'; btn.disabled = false; setTimeout(function() { if (btn) btn.textContent = '🔄'; }, 2000); }
+            }
+        }
+
         function renderCapitalGains() {
             var el = document.getElementById('capitalGainsContent');
             if (!el) return;
