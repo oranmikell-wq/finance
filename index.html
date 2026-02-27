@@ -2012,29 +2012,6 @@
                 </div>
             </div>
 
-            <!-- Capital Gains Tax Calculator -->
-            <div class="section-title" style="margin-top:16px;">מס רווחי הון</div>
-            <div class="chart-card" style="padding:20px;" id="capitalGainsCard">
-                <!-- Tax rate input -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-                    <div>
-                        <div class="retire-label">שיעור מס (%)</div>
-                        <input type="text" inputmode="decimal" id="cgTaxRate" value="25" maxlength="5" class="retire-input" oninput="renderCapitalGains()">
-                    </div>
-                    <div>
-                        <div class="retire-label">ניכוי מדד אינפלציה (%)</div>
-                        <div style="display:flex;gap:5px;align-items:center;">
-                            <input type="text" inputmode="decimal" id="cgInflation" value="0" maxlength="5" class="retire-input" placeholder="0" oninput="renderCapitalGains()" style="flex:1;">
-                            <button type="button" id="cgInflationFetchBtn" onclick="fetchCPIRate()" title="שלוף מדד אינפלציה" style="padding:6px 8px;background:rgba(0,217,255,0.1);border:1px solid rgba(0,217,255,0.25);border-radius:8px;color:var(--accent-cyan);font-size:0.72rem;cursor:pointer;white-space:nowrap;font-family:inherit;">🔄</button>
-                        </div>
-                        <div id="cgInflationInfo" style="font-size:0.63rem;color:var(--text-secondary);margin-top:3px;min-height:14px;"></div>
-                    </div>
-                </div>
-                <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:12px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
-                    💡 <strong>מס רווחי הון בישראל:</strong> 25% על רווח ריאלי ממניות/קריפטו. מחיר הרכישה (עלות בסיס) מוזן בכל נכס. אינו מהווה ייעוץ מס.
-                </div>
-                <div id="capitalGainsContent"></div>
-            </div>
 
         </div>
 
@@ -5919,7 +5896,6 @@
                 updateFeeAnalysis();
                 calcRetirement();
                 checkAlerts();
-                renderCapitalGains();
             }, 150);
             // Snapshot for instant display on next load
             try { var tw = document.getElementById('totalWorth'); if(tw) localStorage.setItem('total-worth-snapshot', tw.textContent); } catch(e) {}
@@ -6008,7 +5984,6 @@
             // Render personal tab calculators
             if (tabName === 'Personal') {
                 calcRetirement();
-                renderCapitalGains();
             }
 
             // Scroll to top
@@ -7266,155 +7241,7 @@
             alert('✅ יובאו ' + imported + ' נכסים בהצלחה!' + (skipped > 0 ? '\n⚠️ דולגו ' + skipped + ' שורות ריקות.' : ''));
         }
 
-        // ============ Capital Gains Tax ============
-        async function fetchCPIRate() {
-            var btn = document.getElementById('cgInflationFetchBtn');
-            var info = document.getElementById('cgInflationInfo');
-            if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
-            if (info) info.textContent = '';
 
-            var fetched = false;
-
-            // Source 1: IMF DataMapper — annual CPI for Israel (most recent year available)
-            if (!fetched) {
-                try {
-                    var imfResp = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://www.imf.org/external/datamapper/api/v1/PCPIPCH/ISR'));
-                    if (imfResp.ok) {
-                        var imfData = await imfResp.json();
-                        var values = imfData && imfData.values && imfData.values.PCPIPCH && imfData.values.PCPIPCH.ISR;
-                        if (values) {
-                            var currentYear = new Date().getFullYear();
-                            var years = Object.keys(values).map(Number).sort((a,b)=>b-a);
-                            // Take most recent completed year (current year - 1) or current year if available
-                            var bestYear = years.find(function(y) { return y <= currentYear - 1 && values[y] !== null; });
-                            if (bestYear && values[bestYear] !== null) {
-                                document.getElementById('cgInflation').value = parseFloat(values[bestYear]).toFixed(1);
-                                if (info) info.textContent = '📊 IMF ' + bestYear + ' — ' + parseFloat(values[bestYear]).toFixed(2) + '%';
-                                fetched = true;
-                            }
-                        }
-                    }
-                } catch(e) {}
-            }
-
-            // Source 2: World Bank API — annual CPI for Israel (fallback)
-            if (!fetched) {
-                try {
-                    var wbResp = await fetch('https://api.worldbank.org/v2/country/ISR/indicator/FP.CPI.TOTL.ZG?format=json&mrv=3');
-                    if (wbResp.ok) {
-                        var wbData = await wbResp.json();
-                        if (wbData && wbData[1]) {
-                            var entry = wbData[1].find(function(e) { return e.value !== null && e.value !== undefined; });
-                            if (entry) {
-                                document.getElementById('cgInflation').value = entry.value.toFixed(1);
-                                if (info) info.textContent = '📊 World Bank ' + entry.date + ' — ' + entry.value.toFixed(2) + '%';
-                                fetched = true;
-                            }
-                        }
-                    }
-                } catch(e) {}
-            }
-
-            if (fetched) {
-                renderCapitalGains();
-                if (btn) { btn.textContent = '✅'; btn.disabled = false; setTimeout(function() { if (btn) btn.textContent = '🔄'; }, 2000); }
-            } else {
-                if (info) info.textContent = '⚠️ לא ניתן לשלוף — הזן ידנית';
-                if (btn) { btn.textContent = '❌'; btn.disabled = false; setTimeout(function() { if (btn) btn.textContent = '🔄'; }, 2000); }
-            }
-        }
-
-        function renderCapitalGains() {
-            var el = document.getElementById('capitalGainsContent');
-            if (!el) return;
-
-            var taxRate = parseFloat((document.getElementById('cgTaxRate') || {value:'25'}).value) || 25;
-            var inflation = parseFloat((document.getElementById('cgInflation') || {value:'0'}).value) || 0;
-
-            // Only assets with costBasis
-            var taxableAssets = assets.filter(function(a) { return a.costBasis > 0; });
-
-            if (taxableAssets.length === 0) {
-                el.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;">הוסף <strong>עלות בסיס</strong> לנכסים כדי לחשב מס רווחי הון.<br><span style="font-size:0.7rem;opacity:0.7;">ניתן לעשות זאת בעריכת כל נכס.</span></div>';
-                return;
-            }
-
-            var totalGain = 0, totalTax = 0, totalLoss = 0;
-            var rows = '';
-
-            taxableAssets.forEach(function(a) {
-                var valueILS = toILS(a.value, a.currency || 'ILS');
-                // Determine cost basis currency:
-                // - New saves: costBasisCurrency is explicitly set to 'ILS'
-                // - Legacy stock assets: costBasis may be in stockCurrency (e.g. USD)
-                // - All others: use asset currency
-                var costCurrency = a.costBasisCurrency ||
-                    (a.type === 'trade' && (a.stockCurrency || a.stockManualCurrency)) ||
-                    (a.currency || 'ILS');
-                var costILS = toILS(a.costBasis, costCurrency);
-                var rawGain = valueILS - costILS;
-                // Apply inflation adjustment
-                var inflationAdj = costILS * (inflation / 100);
-                var realGain = rawGain - inflationAdj;
-                var tax = realGain > 0 ? realGain * (taxRate / 100) : 0;
-                var gainColor = realGain >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                var icon = assetTypeIcons[a.type] || '📋';
-
-                if (realGain > 0) totalGain += realGain;
-                else totalLoss += Math.abs(realGain);
-                totalTax += tax;
-
-                var gainPct = costILS > 0 ? ((rawGain / costILS) * 100).toFixed(1) : '0.0';
-
-                rows += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">';
-                rows += '<span style="font-size:1.1rem;">' + icon + '</span>';
-                rows += '<div style="flex:1;min-width:0;">';
-                rows += '<div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + a.name + '</div>';
-                rows += '<div style="font-size:0.68rem;color:var(--text-secondary);">עלות: ' + costILS.toLocaleString('he-IL',{maximumFractionDigits:0}) + '₪</div>';
-                rows += '</div>';
-                rows += '<div style="text-align:left;flex-shrink:0;">';
-                rows += '<div style="font-size:0.78rem;font-weight:600;color:' + gainColor + ';">' + (realGain >= 0 ? '+' : '') + Math.round(realGain).toLocaleString('he-IL') + '₪ (' + gainPct + '%)</div>';
-                rows += '<div style="font-size:0.68rem;color:var(--accent-red);">מס: ' + (tax > 0 ? Math.round(tax).toLocaleString('he-IL') + '₪' : '—') + '</div>';
-                rows += '</div>';
-                rows += '</div>';
-            });
-
-            var netTaxableGain = totalGain - totalLoss;
-            var summaryBg = netTaxableGain >= 0 ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)';
-            var summaryBorder = netTaxableGain >= 0 ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.18)';
-
-            var html = rows;
-            html += '<div style="margin-top:14px;padding:14px;background:' + summaryBg + ';border:1px solid ' + summaryBorder + ';border-radius:12px;">';
-            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
-            html += '<span style="font-size:0.78rem;color:var(--text-secondary);">רווח כולל (לפני מס)</span>';
-            html += '<span style="font-weight:700;color:var(--accent-green);">+' + Math.round(totalGain).toLocaleString('he-IL') + '₪</span>';
-            html += '</div>';
-            if (totalLoss > 0) {
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
-                html += '<span style="font-size:0.78rem;color:var(--text-secondary);">הפסד כולל (לקיזוז)</span>';
-                html += '<span style="font-weight:700;color:var(--accent-red);">-' + Math.round(totalLoss).toLocaleString('he-IL') + '₪</span>';
-                html += '</div>';
-            }
-            if (inflation > 0) {
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
-                html += '<span style="font-size:0.78rem;color:var(--text-secondary);">ניכוי מדד (' + inflation + '%)</span>';
-                var inflationDeduction = taxableAssets.reduce(function(s,a){
-                    var cc = a.costBasisCurrency || (a.type === 'trade' && (a.stockCurrency || a.stockManualCurrency)) || (a.currency || 'ILS');
-                    return s + toILS(a.costBasis, cc) * (inflation / 100);
-                }, 0);
-                html += '<span style="font-weight:700;color:var(--accent-cyan);">-' + Math.round(inflationDeduction).toLocaleString('he-IL') + '₪</span>';
-                html += '</div>';
-            }
-            html += '<div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0;"></div>';
-            html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-            html += '<span style="font-size:0.9rem;font-weight:700;">מס רווחי הון משוער</span>';
-            html += '<span style="font-size:1.15rem;font-weight:700;color:var(--accent-red);">' + Math.round(totalTax).toLocaleString('he-IL') + '₪</span>';
-            html += '</div>';
-            html += '<div style="font-size:0.65rem;color:var(--text-secondary);margin-top:6px;text-align:center;">אומדן בלבד • שיעור ' + taxRate + '% • אינו מהווה ייעוץ מס</div>';
-            html += '</div>';
-
-            el.innerHTML = html;
-        }
 
         function toggleAssetExpand(assetId, event) {
             if (event) event.stopPropagation();
