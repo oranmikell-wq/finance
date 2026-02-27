@@ -2012,6 +2012,26 @@
                 </div>
             </div>
 
+            <!-- Capital Gains Tax Calculator -->
+            <div class="section-title" style="margin-top:16px;">מס רווחי הון</div>
+            <div class="chart-card" style="padding:20px;" id="capitalGainsCard">
+                <!-- Tax rate input -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                    <div>
+                        <div class="retire-label">שיעור מס (%)</div>
+                        <input type="text" inputmode="decimal" id="cgTaxRate" value="25" maxlength="5" class="retire-input" oninput="renderCapitalGains()">
+                    </div>
+                    <div>
+                        <div class="retire-label">ניכוי מדד אינפלציה (%)</div>
+                        <input type="text" inputmode="decimal" id="cgInflation" value="0" maxlength="5" class="retire-input" placeholder="0" oninput="renderCapitalGains()">
+                    </div>
+                </div>
+                <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:12px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
+                    💡 <strong>מס רווחי הון בישראל:</strong> 25% על רווח ריאלי ממניות/קריפטו. מחיר הרכישה (עלות בסיס) מוזן בכל נכס. אינו מהווה ייעוץ מס.
+                </div>
+                <div id="capitalGainsContent"></div>
+            </div>
+
         </div>
 
         <!-- TAB 4: Settings -->
@@ -2113,7 +2133,26 @@
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
+                <button onclick="closeDataMenu();importCSV()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);">📂</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">ייבוא CSV מבנק / ברוקר</div>
+                        <div class="settings-row-desc" style="font-size:0.72rem;color:var(--text-secondary);">ייבוא נכסים מקובץ גיליון אלקטרוני</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
             </div>
+        </div>
+    </div>
+
+    <!-- CSV Import Modal -->
+    <div id="csvImportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeCSVModal()">
+        <div style="background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:20px 16px 32px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div style="font-size:1rem;font-weight:700;">📂 ייבוא CSV מבנק / ברוקר</div>
+                <button onclick="closeCSVModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
+            </div>
+            <div id="csvImportBody"></div>
         </div>
     </div>
 
@@ -5860,6 +5899,7 @@
                 updateFeeAnalysis();
                 calcRetirement();
                 checkAlerts();
+                renderCapitalGains();
             }, 150);
             // Snapshot for instant display on next load
             try { var tw = document.getElementById('totalWorth'); if(tw) localStorage.setItem('total-worth-snapshot', tw.textContent); } catch(e) {}
@@ -6978,6 +7018,309 @@
             document.body.appendChild(input);
             input.click();
             document.body.removeChild(input);
+        }
+
+        // ============ CSV Import (Bank / Broker) ============
+        function importCSV() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv,.txt';
+            input.style.display = 'none';
+
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    try {
+                        var text = ev.target.result;
+                        // Normalize line endings
+                        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                        var lines = text.split('\n').filter(function(l) { return l.trim().length > 0; });
+                        if (lines.length < 2) { alert('❌ הקובץ ריק או לא תקין.'); return; }
+
+                        // Parse CSV helper (handles quoted fields)
+                        function parseCSVLine(line) {
+                            var result = [];
+                            var cur = '';
+                            var inQuotes = false;
+                            for (var i = 0; i < line.length; i++) {
+                                var ch = line[i];
+                                if (ch === '"') {
+                                    inQuotes = !inQuotes;
+                                } else if ((ch === ',' || ch === '\t') && !inQuotes) {
+                                    result.push(cur.trim());
+                                    cur = '';
+                                } else {
+                                    cur += ch;
+                                }
+                            }
+                            result.push(cur.trim());
+                            return result;
+                        }
+
+                        var headers = parseCSVLine(lines[0]);
+                        var rows = [];
+                        for (var i = 1; i < lines.length; i++) {
+                            var row = parseCSVLine(lines[i]);
+                            if (row.length < 2) continue;
+                            var obj = {};
+                            headers.forEach(function(h, idx) { obj[h.trim()] = (row[idx] || '').trim(); });
+                            rows.push(obj);
+                        }
+
+                        if (rows.length === 0) { alert('❌ לא נמצאו שורות נתונים בקובץ.'); return; }
+
+                        // Auto-detect column mapping
+                        function findCol(candidates) {
+                            for (var c = 0; c < candidates.length; c++) {
+                                for (var h = 0; h < headers.length; h++) {
+                                    if (headers[h].trim().toLowerCase().includes(candidates[c].toLowerCase())) return headers[h].trim();
+                                }
+                            }
+                            return null;
+                        }
+
+                        var colName = findCol(['שם','name','נכס','נייר','נייר ערך','תיאור','security','asset','description','fund','קרן']);
+                        var colValue = findCol(['שווי','value','סכום','amount','יתרה','balance','שווי שוק','market']);
+                        var colCost = findCol(['עלות','cost','basis','מחיר קנייה','purchase','buy price','עלות בסיס','עלות ממוצעת']);
+                        var colType = findCol(['סוג','type','category','קטגוריה']);
+                        var colProvider = findCol(['ספק','provider','חברה','company','בנק','broker','issuer']);
+                        var colCurrency = findCol(['מטבע','currency','curr']);
+                        var colReturn = findCol(['תשואה','return','yield','רווח %','gain %']);
+
+                        // Show mapping modal
+                        showCSVMappingModal(headers, rows, {
+                            colName: colName,
+                            colValue: colValue,
+                            colCost: colCost,
+                            colType: colType,
+                            colProvider: colProvider,
+                            colCurrency: colCurrency,
+                            colReturn: colReturn
+                        });
+
+                    } catch(err) {
+                        alert('❌ שגיאה בקריאת הקובץ:\n' + err.message);
+                    }
+                };
+                reader.readAsText(file, 'UTF-8');
+            };
+
+            document.body.appendChild(input);
+            input.click();
+            document.body.removeChild(input);
+        }
+
+        var _csvImportRows = [];
+        var _csvImportHeaders = [];
+
+        function closeCSVModal() {
+            document.getElementById('csvImportModal').style.display = 'none';
+        }
+
+        function showCSVMappingModal(headers, rows, detected) {
+            _csvImportRows = rows;
+            _csvImportHeaders = headers;
+
+            function optionsHtml(selected) {
+                var opts = '<option value="">— לא ממופה —</option>';
+                headers.forEach(function(h) {
+                    opts += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + h + '</option>';
+                });
+                return opts;
+            }
+
+            var previewRows = rows.slice(0, 4);
+            var previewHtml = '<div style="overflow-x:auto;margin-bottom:14px;border-radius:8px;border:1px solid var(--border-color);"><table style="width:100%;border-collapse:collapse;font-size:0.68rem;">';
+            previewHtml += '<tr>' + headers.map(function(h) { return '<th style="padding:5px 7px;border-bottom:1px solid var(--border-color);color:var(--text-secondary);text-align:right;background:rgba(255,255,255,0.03);">' + h + '</th>'; }).join('') + '</tr>';
+            previewRows.forEach(function(row) {
+                previewHtml += '<tr>' + headers.map(function(h) { return '<td style="padding:5px 7px;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;">' + (row[h] || '') + '</td>'; }).join('') + '</tr>';
+            });
+            previewHtml += '</table></div>';
+
+            var html = '<div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:10px;">זוהו <strong style="color:var(--text-primary);">' + rows.length + ' שורות</strong>. מפה עמודות לשדות הנכס:</div>';
+            html += previewHtml;
+
+            function mapRow(label, id, selected) {
+                return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+                    '<span style="font-size:0.78rem;color:var(--text-secondary);width:110px;flex-shrink:0;text-align:right;">' + label + '</span>' +
+                    '<select id="' + id + '" style="flex:1;padding:7px 8px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.75rem;">' + optionsHtml(selected) + '</select>' +
+                    '</div>';
+            }
+
+            html += mapRow('שם הנכס *', 'csvMapName', detected.colName);
+            html += mapRow('שווי (₪/$)', 'csvMapValue', detected.colValue);
+            html += mapRow('עלות בסיס', 'csvMapCost', detected.colCost);
+            html += mapRow('סוג נכס', 'csvMapType', detected.colType);
+            html += mapRow('ספק', 'csvMapProvider', detected.colProvider);
+            html += mapRow('מטבע', 'csvMapCurrency', detected.colCurrency);
+            html += mapRow('תשואה %', 'csvMapReturn', detected.colReturn);
+
+            html += '<div style="margin:12px 0 10px;">';
+            html += '<div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:6px;">סוג ברירת מחדל (אם אין עמודת סוג):</div>';
+            html += '<select id="csvDefaultType" style="width:100%;padding:9px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;">';
+            html += '<option value="trade">מניות</option><option value="savings">קרן נאמנות</option><option value="deposit">חיסכון/פיקדון</option><option value="pension">פנסיה</option><option value="gemel">גמל</option><option value="fund">השתלמות</option><option value="crypto">קריפטו</option><option value="other">אחר</option>';
+            html += '</select></div>';
+
+            html += '<div style="display:flex;gap:8px;margin-top:14px;">';
+            html += '<button onclick="confirmCSVImport()" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--accent-gold),#ffd700);color:#0a0e27;border:none;border-radius:10px;font-weight:700;font-family:inherit;font-size:0.85rem;cursor:pointer;">ייבא ' + rows.length + ' נכסים</button>';
+            html += '<button onclick="closeCSVModal()" style="padding:13px 16px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;cursor:pointer;font-size:0.85rem;">ביטול</button>';
+            html += '</div>';
+
+            document.getElementById('csvImportBody').innerHTML = html;
+            document.getElementById('csvImportModal').style.display = 'flex';
+        }
+
+        function confirmCSVImport() {
+            var colName = document.getElementById('csvMapName').value;
+            var colValue = document.getElementById('csvMapValue').value;
+            var colCost = document.getElementById('csvMapCost').value;
+            var colType = document.getElementById('csvMapType').value;
+            var colProvider = document.getElementById('csvMapProvider').value;
+            var colCurrency = document.getElementById('csvMapCurrency').value;
+            var colReturn = document.getElementById('csvMapReturn').value;
+            var defaultType = document.getElementById('csvDefaultType').value;
+
+            if (!colName) { alert('חובה לבחור עמודת שם נכס'); return; }
+
+            var typeMap = {
+                'פנסיה':'pension','pension':'pension','גמל':'gemel','gemel':'gemel',
+                'השתלמות':'fund','fund':'fund','קרן נאמנות':'savings','savings':'savings',
+                'חיסכון':'deposit','פיקדון':'deposit','deposit':'deposit',
+                'מניות':'trade','trade':'trade','stocks':'trade',
+                'קריפטו':'crypto','crypto':'crypto','ביטקוין':'crypto',
+                'נדל"ן':'real_estate','real_estate':'real_estate'
+            };
+
+            var maxId = assets.reduce(function(m, a) { return Math.max(m, a.id || 0); }, 0);
+            var imported = 0;
+            var skipped = 0;
+
+            _csvImportRows.forEach(function(row) {
+                var name = colName ? row[colName] : '';
+                if (!name || name.length < 1) { skipped++; return; }
+
+                var rawVal = colValue ? row[colValue] : '';
+                var numVal = parseFloat((rawVal || '0').replace(/[^0-9.\-]/g, '')) || 0;
+                var rawCost = colCost ? row[colCost] : '';
+                var numCost = parseFloat((rawCost || '0').replace(/[^0-9.\-]/g, '')) || 0;
+                var rawReturn = colReturn ? row[colReturn] : '';
+                var numReturn = parseFloat((rawReturn || '0').replace(/[^0-9.\-]/g, '')) || 0;
+
+                var typeRaw = (colType ? row[colType] : '') || '';
+                var assetType = typeMap[typeRaw.trim()] || typeMap[typeRaw.trim().toLowerCase()] || defaultType;
+
+                var currency = (colCurrency ? row[colCurrency] : '') || 'ILS';
+                currency = currency.toUpperCase();
+                if (!['ILS','USD','EUR','GBP','BTC','ETH'].includes(currency)) currency = 'ILS';
+
+                maxId++;
+                var asset = {
+                    id: maxId,
+                    name: name,
+                    type: assetType,
+                    provider: (colProvider ? row[colProvider] : '') || '',
+                    currency: currency,
+                    value: numVal,
+                    costBasis: numCost > 0 ? numCost : undefined,
+                    return: numReturn || 0,
+                    monthly: 0,
+                    fee: 0
+                };
+                if (!asset.costBasis) delete asset.costBasis;
+                assets.push(asset);
+                imported++;
+            });
+
+            closeCSVModal();
+
+            saveAssets();
+            updateUI();
+            alert('✅ יובאו ' + imported + ' נכסים בהצלחה!' + (skipped > 0 ? '\n⚠️ דולגו ' + skipped + ' שורות ריקות.' : ''));
+        }
+
+        // ============ Capital Gains Tax ============
+        function renderCapitalGains() {
+            var el = document.getElementById('capitalGainsContent');
+            if (!el) return;
+
+            var taxRate = parseFloat((document.getElementById('cgTaxRate') || {value:'25'}).value) || 25;
+            var inflation = parseFloat((document.getElementById('cgInflation') || {value:'0'}).value) || 0;
+
+            // Only assets with costBasis
+            var taxableAssets = assets.filter(function(a) { return a.costBasis > 0; });
+
+            if (taxableAssets.length === 0) {
+                el.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;">הוסף <strong>עלות בסיס</strong> לנכסים כדי לחשב מס רווחי הון.<br><span style="font-size:0.7rem;opacity:0.7;">ניתן לעשות זאת בעריכת כל נכס.</span></div>';
+                return;
+            }
+
+            var totalGain = 0, totalTax = 0, totalLoss = 0;
+            var rows = '';
+
+            taxableAssets.forEach(function(a) {
+                var valueILS = toILS(a.value, a.currency || 'ILS');
+                var costILS = toILS(a.costBasis, a.currency || 'ILS');
+                var rawGain = valueILS - costILS;
+                // Apply inflation adjustment
+                var inflationAdj = costILS * (inflation / 100);
+                var realGain = rawGain - inflationAdj;
+                var tax = realGain > 0 ? realGain * (taxRate / 100) : 0;
+                var gainColor = realGain >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                var icon = assetTypeIcons[a.type] || '📋';
+
+                if (realGain > 0) totalGain += realGain;
+                else totalLoss += Math.abs(realGain);
+                totalTax += tax;
+
+                var gainPct = costILS > 0 ? ((rawGain / costILS) * 100).toFixed(1) : '0.0';
+
+                rows += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">';
+                rows += '<span style="font-size:1.1rem;">' + icon + '</span>';
+                rows += '<div style="flex:1;min-width:0;">';
+                rows += '<div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + a.name + '</div>';
+                rows += '<div style="font-size:0.68rem;color:var(--text-secondary);">עלות: ' + costILS.toLocaleString('he-IL',{maximumFractionDigits:0}) + '₪</div>';
+                rows += '</div>';
+                rows += '<div style="text-align:left;flex-shrink:0;">';
+                rows += '<div style="font-size:0.78rem;font-weight:600;color:' + gainColor + ';">' + (realGain >= 0 ? '+' : '') + Math.round(realGain).toLocaleString('he-IL') + '₪ (' + gainPct + '%)</div>';
+                rows += '<div style="font-size:0.68rem;color:var(--accent-red);">מס: ' + (tax > 0 ? Math.round(tax).toLocaleString('he-IL') + '₪' : '—') + '</div>';
+                rows += '</div>';
+                rows += '</div>';
+            });
+
+            var netTaxableGain = totalGain - totalLoss;
+            var summaryBg = netTaxableGain >= 0 ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)';
+            var summaryBorder = netTaxableGain >= 0 ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.18)';
+
+            var html = rows;
+            html += '<div style="margin-top:14px;padding:14px;background:' + summaryBg + ';border:1px solid ' + summaryBorder + ';border-radius:12px;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+            html += '<span style="font-size:0.78rem;color:var(--text-secondary);">רווח כולל (לפני מס)</span>';
+            html += '<span style="font-weight:700;color:var(--accent-green);">+' + Math.round(totalGain).toLocaleString('he-IL') + '₪</span>';
+            html += '</div>';
+            if (totalLoss > 0) {
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+                html += '<span style="font-size:0.78rem;color:var(--text-secondary);">הפסד כולל (לקיזוז)</span>';
+                html += '<span style="font-weight:700;color:var(--accent-red);">-' + Math.round(totalLoss).toLocaleString('he-IL') + '₪</span>';
+                html += '</div>';
+            }
+            if (inflation > 0) {
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+                html += '<span style="font-size:0.78rem;color:var(--text-secondary);">ניכוי מדד (' + inflation + '%)</span>';
+                var inflationDeduction = taxableAssets.reduce(function(s,a){ return s + toILS(a.costBasis, a.currency || 'ILS') * (inflation / 100); }, 0);
+                html += '<span style="font-weight:700;color:var(--accent-cyan);">-' + Math.round(inflationDeduction).toLocaleString('he-IL') + '₪</span>';
+                html += '</div>';
+            }
+            html += '<div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0;"></div>';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+            html += '<span style="font-size:0.9rem;font-weight:700;">מס רווחי הון משוער</span>';
+            html += '<span style="font-size:1.15rem;font-weight:700;color:var(--accent-red);">' + Math.round(totalTax).toLocaleString('he-IL') + '₪</span>';
+            html += '</div>';
+            html += '<div style="font-size:0.65rem;color:var(--text-secondary);margin-top:6px;text-align:center;">אומדן בלבד • שיעור ' + taxRate + '% • אינו מהווה ייעוץ מס</div>';
+            html += '</div>';
+
+            el.innerHTML = html;
         }
 
         function toggleAssetExpand(assetId, event) {
