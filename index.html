@@ -79,13 +79,13 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             overscroll-behavior-y: contain;
-            overflow-x: hidden;
+            overflow-x: clip;
+            overflow-y: auto;
         }
 
         html {
             min-height: -webkit-fill-available;
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow-x: clip;
         }
 
         body::before {
