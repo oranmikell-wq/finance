@@ -2012,6 +2012,13 @@
                 </div>
             </div>
 
+            <!-- Economic Price Indices -->
+            <div class="section-title" style="margin-top:16px;">מדדי מחירים</div>
+            <div class="chart-card" style="padding:20px;" id="economicIndicesCard">
+                <div id="economicIndicesContent">
+                    <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען...</div>
+                </div>
+            </div>
 
         </div>
 
@@ -5984,6 +5991,7 @@
             // Render personal tab calculators
             if (tabName === 'Personal') {
                 calcRetirement();
+                fetchEconomicIndices();
             }
 
             // Scroll to top
@@ -8877,6 +8885,245 @@
             try { localStorage.removeItem('pensia-kup-' + kupahNum); } catch(e){}
             document.getElementById('pensiaSearchResult').style.display = 'none';
             searchPensiaFund();
+        }
+
+        // ============ ECONOMIC INDICES ============
+
+        async function fetchEconomicIndices() {
+            var el = document.getElementById('economicIndicesContent');
+            if (!el) return;
+
+            // Cache in localStorage for 6 hours (monthly data)
+            try {
+                var cached = JSON.parse(localStorage.getItem('economic-indices-v2') || 'null');
+                if (cached && Date.now() - cached.ts < 21600000) {
+                    renderEconomicIndices(cached.data);
+                    return;
+                }
+            } catch(e) {}
+
+            el.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען נתונים...</div>';
+
+            var [cpiRes, constrRes] = await Promise.allSettled([
+                fetchCPISeries(),
+                fetchConstructionSeries()
+            ]);
+
+            var data = {
+                cpi: cpiRes.status === 'fulfilled' ? cpiRes.value : null,
+                construction: constrRes.status === 'fulfilled' ? constrRes.value : null
+            };
+
+            try { localStorage.setItem('economic-indices-v2', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
+            renderEconomicIndices(data);
+        }
+
+        // Parse OECD SDMX-CSV: returns [{date:"2024-01", value:119.5}, ...]
+        function parseOECDCsv(text) {
+            var lines = text.trim().split('\n');
+            // Find header line (contains TIME_PERIOD and OBS_VALUE)
+            var headerIdx = -1;
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].includes('TIME_PERIOD') && lines[i].includes('OBS_VALUE')) { headerIdx = i; break; }
+            }
+            if (headerIdx < 0) return [];
+            var headers = lines[headerIdx].split(',').map(h => h.replace(/"/g, '').trim());
+            var timeCol = headers.indexOf('TIME_PERIOD');
+            var valCol = headers.indexOf('OBS_VALUE');
+            if (timeCol < 0 || valCol < 0) return [];
+            var points = [];
+            for (var i = headerIdx + 1; i < lines.length; i++) {
+                var cols = lines[i].split(',').map(c => c.replace(/"/g, '').trim());
+                if (!cols[timeCol] || !cols[valCol]) continue;
+                var v = parseFloat(cols[valCol]);
+                if (!isNaN(v)) points.push({ date: cols[timeCol], value: v });
+            }
+            points.sort((a, b) => a.date.localeCompare(b.date));
+            return points;
+        }
+
+        // Parse OECD SDMX-JSON: returns [{date, value}]
+        function parseOECDJson(j) {
+            var ds = j.data.dataSets[0];
+            var struct = j.data.structure;
+            var timeDim = struct.dimensions.observation.find(function(d) { return d.id === 'TIME_PERIOD'; });
+            if (!timeDim) return [];
+            var dates = timeDim.values.map(function(v) { return v.id; });
+            var seriesKey = Object.keys(ds.series)[0];
+            var obs = ds.series[seriesKey].observations;
+            var points = [];
+            Object.keys(obs).forEach(function(idx) {
+                var val = obs[idx][0];
+                if (val !== null && !isNaN(val)) points.push({ date: dates[+idx], value: val });
+            });
+            points.sort(function(a, b) { return a.date.localeCompare(b.date); });
+            return points;
+        }
+
+        async function fetchCPISeries() {
+            var urls = [
+                // OECD new SDMX API - CSV (easiest to parse)
+                'https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/M.ISR.CPI.PA._T.N.IX.?lastNObservations=14&format=csvfile',
+                // OECD new SDMX API - JSON
+                'https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/M.ISR.CPI.PA._T.N.IX.?lastNObservations=14&format=jsondata',
+            ];
+            for (var i = 0; i < urls.length; i++) {
+                try {
+                    var proxy = 'https://corsproxy.io/?' + encodeURIComponent(urls[i]);
+                    var r = await fetch(proxy, { signal: AbortSignal.timeout(9000) });
+                    if (!r.ok) continue;
+                    var text = await r.text();
+                    var points;
+                    if (urls[i].includes('csvfile')) {
+                        points = parseOECDCsv(text);
+                    } else {
+                        points = parseOECDJson(JSON.parse(text));
+                    }
+                    if (points.length >= 2) { console.log('[CPI] ✅ got', points.length, 'points'); return points; }
+                } catch(e) { console.warn('[CPI] source', i, 'failed:', e.message); }
+            }
+            throw new Error('All CPI sources failed');
+        }
+
+        async function fetchConstructionSeries() {
+            // Search data.gov.il for CBS construction input index package
+            var q = encodeURIComponent('מדד תשומות הבניה');
+            var searchUrl = 'https://data.gov.il/api/3/action/package_search?q=' + q + '&fq=organization:cbs&rows=5';
+            var sr = await fetch(searchUrl, { signal: AbortSignal.timeout(8000) });
+            var sd = await sr.json();
+            if (!sd.result || !sd.result.results || !sd.result.results.length) throw new Error('No construction package');
+
+            for (var pkg of sd.result.results) {
+                for (var res of (pkg.resources || [])) {
+                    if (!res.datastore_active) continue;
+                    try {
+                        var dsUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=' + res.id + '&limit=20&sort=_id desc';
+                        var dr = await fetch(dsUrl, { signal: AbortSignal.timeout(8000) });
+                        var dd = await dr.json();
+                        if (!dd.success || !dd.result || !dd.result.records || !dd.result.records.length) continue;
+
+                        var records = dd.result.records;
+                        var fieldNames = (dd.result.fields || []).map(function(f) { return f.id; }).filter(function(f) { return f !== '_id'; });
+
+                        // Identify date and value columns
+                        var dateField = fieldNames.find(function(f) { return /תאריך|תקופה|חודש|date|period|month|year/i.test(f); }) || fieldNames[0];
+                        var valField = fieldNames.find(function(f) { return f !== dateField && /ערך|מדד|index|value|נקודות/i.test(f); }) || fieldNames[1];
+
+                        var points = records.map(function(rec) {
+                            var d = String(rec[dateField] || '').trim();
+                            var v = parseFloat(String(rec[valField] || '').replace(/,/g, ''));
+                            return { date: d, value: v };
+                        }).filter(function(p) { return p.date && !isNaN(p.value) && p.value > 0; });
+
+                        if (points.length >= 2) {
+                            points.sort(function(a, b) { return a.date.localeCompare(b.date); });
+                            console.log('[Construction] ✅ got', points.length, 'points from', res.id);
+                            return points;
+                        }
+                    } catch(e) { console.warn('[Construction] resource failed:', e.message); }
+                }
+            }
+            throw new Error('No usable construction data');
+        }
+
+        function calcChanges(points) {
+            if (!points || points.length < 2) return null;
+            var n = points.length;
+            var latest = points[n - 1];
+            var prev = points[n - 2];
+            var prev12 = n >= 13 ? points[n - 13] : null;
+            return {
+                latest: latest,
+                prev: prev,
+                prev12: prev12,
+                monthly: ((latest.value / prev.value) - 1) * 100,
+                annual: prev12 ? ((latest.value / prev12.value) - 1) * 100 : null
+            };
+        }
+
+        function renderEconomicIndices(data) {
+            var el = document.getElementById('economicIndicesContent');
+            if (!el) return;
+
+            var HE_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+            function heDate(dateStr) {
+                if (!dateStr) return '';
+                var m = String(dateStr).match(/(\d{4})[-\/](\d{1,2})/);
+                if (m) return HE_MONTHS[parseInt(m[2]) - 1] + ' ' + m[1];
+                return dateStr;
+            }
+
+            function pctChip(val) {
+                if (val === null || val === undefined) return '<span style="color:var(--text-secondary);">—</span>';
+                var sign = val > 0 ? '+' : '';
+                // For inflation/cost indices: up = bad = red, down = good = green
+                var color = val > 0.05 ? 'var(--accent-red)' : val < -0.05 ? 'var(--accent-green)' : 'var(--text-secondary)';
+                return '<span style="color:' + color + ';font-weight:700;">' + sign + val.toFixed(1) + '%</span>';
+            }
+
+            function indexRow(emoji, title, subtitle, monthlyVal, annualVal) {
+                return '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border-color);">'
+                    + '<div style="font-size:1.3rem;flex-shrink:0;">' + emoji + '</div>'
+                    + '<div style="flex:1;min-width:0;">'
+                    +   '<div style="font-size:0.78rem;font-weight:600;color:var(--text-primary);">' + title + '</div>'
+                    +   (subtitle ? '<div style="font-size:0.65rem;color:var(--text-secondary);margin-top:1px;">' + subtitle + '</div>' : '')
+                    + '</div>'
+                    + '<div style="text-align:center;min-width:60px;">'
+                    +   '<div style="font-size:0.62rem;color:var(--text-secondary);margin-bottom:2px;">חודשי</div>'
+                    +   '<div style="font-size:0.95rem;">' + pctChip(monthlyVal) + '</div>'
+                    + '</div>'
+                    + '<div style="text-align:center;min-width:68px;">'
+                    +   '<div style="font-size:0.62rem;color:var(--text-secondary);margin-bottom:2px;">12 חודשים</div>'
+                    +   '<div style="font-size:0.95rem;">' + pctChip(annualVal) + '</div>'
+                    + '</div>'
+                    + '</div>';
+            }
+
+            var cpiCh = calcChanges(data.cpi);
+            var constrCh = calcChanges(data.construction);
+
+            var cpiDate = cpiCh ? heDate(cpiCh.latest.date) : null;
+            var cpiVal = cpiCh ? cpiCh.latest.value.toFixed(2) + ' נקודות' : null;
+            var constrDate = constrCh ? heDate(constrCh.latest.date) : null;
+
+            var html = '<div>';
+
+            // Header: CPI value + date
+            if (cpiCh) {
+                html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">'
+                    + '<div style="font-size:0.72rem;color:var(--text-secondary);">מד"מ · ' + cpiDate + '</div>'
+                    + '<div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);">' + cpiCh.latest.value.toFixed(2) + ' <span style="font-size:0.7rem;font-weight:400;color:var(--text-secondary);">נקודות</span></div>'
+                    + '</div>';
+            }
+
+            // Column headers
+            html += '<div style="display:flex;align-items:center;gap:10px;padding-bottom:6px;border-bottom:1px solid var(--border-color);opacity:0.5;">'
+                + '<div style="flex:1;font-size:0.62rem;color:var(--text-secondary);">מדד</div>'
+                + '<div style="min-width:60px;text-align:center;font-size:0.62rem;color:var(--text-secondary);">חודשי</div>'
+                + '<div style="min-width:68px;text-align:center;font-size:0.62rem;color:var(--text-secondary);">12 חודשים</div>'
+                + '</div>';
+
+            if (cpiCh) {
+                html += indexRow('💹', 'אינפלציה', cpiDate, cpiCh.monthly, cpiCh.annual);
+                html += indexRow('📊', 'מדד מחירים לצרכן', cpiDate, cpiCh.monthly, cpiCh.annual);
+            } else {
+                html += '<div style="padding:12px 0;color:var(--text-secondary);font-size:0.8rem;">מד"מ: נתונים לא זמינים</div>';
+            }
+
+            if (constrCh) {
+                html += indexRow('🏗️', 'מדד תשומות הבניה', constrDate, constrCh.monthly, constrCh.annual);
+            } else {
+                // Last row without bottom border
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;">'
+                    + '<div style="font-size:1.3rem;">🏗️</div>'
+                    + '<div style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text-primary);">מדד תשומות הבניה</div>'
+                    + '<div style="font-size:0.75rem;color:var(--text-secondary);">לא זמין</div>'
+                    + '</div>';
+            }
+
+            html += '</div>';
+            el.innerHTML = html;
         }
 
         // ============ API DIAGNOSTICS ============
