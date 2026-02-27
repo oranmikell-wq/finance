@@ -5800,6 +5800,15 @@
                             asset.stockLastUpdate = sd.date;
                             var priceILS = sd.currency === 'ILS' ? sd.price : sd.price * exchangeRate;
                             if (units > 0) asset.value = units * priceILS;
+                            // Store costBasis in ILS (consistent with currency='ILS')
+                            if (avgBuy > 0 && units > 0) {
+                                var avgBuyILS = sd.currency === 'ILS' ? avgBuy : avgBuy * exchangeRate;
+                                asset.costBasis = Math.round(units * avgBuyILS);
+                                asset.costBasisCurrency = 'ILS';
+                            } else {
+                                delete asset.costBasis;
+                                delete asset.costBasisCurrency;
+                            }
                         }
                         asset.currency = 'ILS';
                     }
@@ -5811,7 +5820,15 @@
                     if (manualAmt > 0) {
                         asset.stockManualAmount   = manualAmt;
                         asset.stockManualCurrency = manualCurr;
-                        if (manualBasis > 0) asset.stockManualCostBasis = manualBasis;
+                        if (manualBasis > 0) {
+                            asset.stockManualCostBasis = manualBasis;
+                            // Store costBasis in ILS for capital gains calculator
+                            asset.costBasis = manualCurr === 'ILS' ? manualBasis : Math.round(manualBasis * exchangeRate);
+                            asset.costBasisCurrency = 'ILS';
+                        } else {
+                            delete asset.costBasis;
+                            delete asset.costBasisCurrency;
+                        }
                         asset.value = manualCurr === 'ILS' ? manualAmt : manualAmt * exchangeRate;
                         asset.currency = 'ILS';
                     }
@@ -7266,7 +7283,14 @@
 
             taxableAssets.forEach(function(a) {
                 var valueILS = toILS(a.value, a.currency || 'ILS');
-                var costILS = toILS(a.costBasis, a.currency || 'ILS');
+                // Determine cost basis currency:
+                // - New saves: costBasisCurrency is explicitly set to 'ILS'
+                // - Legacy stock assets: costBasis may be in stockCurrency (e.g. USD)
+                // - All others: use asset currency
+                var costCurrency = a.costBasisCurrency ||
+                    (a.type === 'trade' && (a.stockCurrency || a.stockManualCurrency)) ||
+                    (a.currency || 'ILS');
+                var costILS = toILS(a.costBasis, costCurrency);
                 var rawGain = valueILS - costILS;
                 // Apply inflation adjustment
                 var inflationAdj = costILS * (inflation / 100);
@@ -7313,7 +7337,10 @@
             if (inflation > 0) {
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
                 html += '<span style="font-size:0.78rem;color:var(--text-secondary);">ניכוי מדד (' + inflation + '%)</span>';
-                var inflationDeduction = taxableAssets.reduce(function(s,a){ return s + toILS(a.costBasis, a.currency || 'ILS') * (inflation / 100); }, 0);
+                var inflationDeduction = taxableAssets.reduce(function(s,a){
+                    var cc = a.costBasisCurrency || (a.type === 'trade' && (a.stockCurrency || a.stockManualCurrency)) || (a.currency || 'ILS');
+                    return s + toILS(a.costBasis, cc) * (inflation / 100);
+                }, 0);
                 html += '<span style="font-weight:700;color:var(--accent-cyan);">-' + Math.round(inflationDeduction).toLocaleString('he-IL') + '₪</span>';
                 html += '</div>';
             }
@@ -7374,6 +7401,13 @@
             grid.innerHTML = assets.map((asset, idx) => {
                 const currency = asset.currency || 'ILS';
                 const valueInILS = toILS(asset.value, currency);
+                // costBasis may be in a different currency than asset.currency (e.g. legacy USD stock stored as ILS)
+                const costBasisCurr = asset.costBasisCurrency ||
+                    (asset.type === 'trade' && (asset.stockCurrency || asset.stockManualCurrency)) ||
+                    currency;
+                const costBasisILS = toILS(asset.costBasis || 0, costBasisCurr);
+                const profitLossILS = valueInILS - costBasisILS;
+                const profitLossPct = costBasisILS > 0 ? (profitLossILS / costBasisILS * 100) : 0;
                 const retPct = asset.return || 0;
                 const retClass = retPct >= 0 ? 'positive' : 'negative';
                 const retSign = retPct > 0 ? '+' : '';
@@ -7817,11 +7851,11 @@
                             </div>` : ''}
                             ${asset.costBasis > 0 ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">עלות בסיס</span>
-                                <span class="asset-row-detail-value">${formatAmount(asset.costBasis, currency)}</span>
+                                <span class="asset-row-detail-value">₪${costBasisILS.toLocaleString('he-IL', {maximumFractionDigits:0})}</span>
                             </div>
                             <div class="asset-row-detail">
                                 <span class="asset-row-detail-label">רווח/הפסד</span>
-                                <span class="asset-row-detail-value" style="color:${(asset.value - asset.costBasis) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${(asset.value - asset.costBasis) >= 0 ? '+' : ''}${formatAmount(asset.value - asset.costBasis, currency)} (${((asset.value - asset.costBasis) / asset.costBasis * 100).toFixed(1)}%)</span>
+                                <span class="asset-row-detail-value" style="color:${profitLossILS >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${profitLossILS >= 0 ? '+' : ''}₪${Math.abs(Math.round(profitLossILS)).toLocaleString('he-IL')} (${profitLossPct >= 0 ? '+' : ''}${profitLossPct.toFixed(1)}%)</span>
                             </div>` : ''}
                             ${asset.monthly > 0 ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">הפקדה חודשית</span>
