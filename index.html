@@ -5804,8 +5804,10 @@
                             if (avgBuy > 0 && units > 0) {
                                 var avgBuyILS = sd.currency === 'ILS' ? avgBuy : avgBuy * exchangeRate;
                                 asset.costBasis = Math.round(units * avgBuyILS);
+                                asset.costBasisCurrency = 'ILS';
                             } else {
                                 delete asset.costBasis;
+                                delete asset.costBasisCurrency;
                             }
                         }
                         asset.currency = 'ILS';
@@ -5822,8 +5824,10 @@
                             asset.stockManualCostBasis = manualBasis;
                             // Store costBasis in ILS for capital gains calculator
                             asset.costBasis = manualCurr === 'ILS' ? manualBasis : Math.round(manualBasis * exchangeRate);
+                            asset.costBasisCurrency = 'ILS';
                         } else {
                             delete asset.costBasis;
+                            delete asset.costBasisCurrency;
                         }
                         asset.value = manualCurr === 'ILS' ? manualAmt : manualAmt * exchangeRate;
                         asset.currency = 'ILS';
@@ -7279,7 +7283,14 @@
 
             taxableAssets.forEach(function(a) {
                 var valueILS = toILS(a.value, a.currency || 'ILS');
-                var costILS = toILS(a.costBasis, a.currency || 'ILS');
+                // Determine cost basis currency:
+                // - New saves: costBasisCurrency is explicitly set to 'ILS'
+                // - Legacy stock assets: costBasis may be in stockCurrency (e.g. USD)
+                // - All others: use asset currency
+                var costCurrency = a.costBasisCurrency ||
+                    (a.type === 'trade' && (a.stockCurrency || a.stockManualCurrency)) ||
+                    (a.currency || 'ILS');
+                var costILS = toILS(a.costBasis, costCurrency);
                 var rawGain = valueILS - costILS;
                 // Apply inflation adjustment
                 var inflationAdj = costILS * (inflation / 100);
