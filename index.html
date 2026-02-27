@@ -5800,6 +5800,13 @@
                             asset.stockLastUpdate = sd.date;
                             var priceILS = sd.currency === 'ILS' ? sd.price : sd.price * exchangeRate;
                             if (units > 0) asset.value = units * priceILS;
+                            // Store costBasis in ILS (consistent with currency='ILS')
+                            if (avgBuy > 0 && units > 0) {
+                                var avgBuyILS = sd.currency === 'ILS' ? avgBuy : avgBuy * exchangeRate;
+                                asset.costBasis = Math.round(units * avgBuyILS);
+                            } else {
+                                delete asset.costBasis;
+                            }
                         }
                         asset.currency = 'ILS';
                     }
@@ -5811,7 +5818,13 @@
                     if (manualAmt > 0) {
                         asset.stockManualAmount   = manualAmt;
                         asset.stockManualCurrency = manualCurr;
-                        if (manualBasis > 0) asset.stockManualCostBasis = manualBasis;
+                        if (manualBasis > 0) {
+                            asset.stockManualCostBasis = manualBasis;
+                            // Store costBasis in ILS for capital gains calculator
+                            asset.costBasis = manualCurr === 'ILS' ? manualBasis : Math.round(manualBasis * exchangeRate);
+                        } else {
+                            delete asset.costBasis;
+                        }
                         asset.value = manualCurr === 'ILS' ? manualAmt : manualAmt * exchangeRate;
                         asset.currency = 'ILS';
                     }
