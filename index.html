@@ -7275,28 +7275,10 @@
 
             var fetched = false;
 
-            // Source 1: World Bank API — annual CPI for Israel
+            // Source 1: OECD STES — monthly Y/Y CPI for Israel (~2 month lag, most recent)
             if (!fetched) {
                 try {
-                    var wbResp = await fetch('https://api.worldbank.org/v2/country/ISR/indicator/FP.CPI.TOTL.ZG?format=json&mrv=3');
-                    if (wbResp.ok) {
-                        var wbData = await wbResp.json();
-                        if (wbData && wbData[1]) {
-                            var entry = wbData[1].find(function(e) { return e.value !== null && e.value !== undefined; });
-                            if (entry) {
-                                document.getElementById('cgInflation').value = entry.value.toFixed(1);
-                                if (info) info.textContent = '📊 שינוי שנתי ' + entry.date + ' — ' + entry.value.toFixed(2) + '%';
-                                fetched = true;
-                            }
-                        }
-                    }
-                } catch(e) {}
-            }
-
-            // Source 2: OECD API — annual CPI for Israel
-            if (!fetched) {
-                try {
-                    var oeResp = await fetch('https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_KEI@DF_KEI,4.0/ISR.CPALTT01.ML.?lastNObservations=13&format=jsondata');
+                    var oeResp = await fetch('https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_KEI@DF_KEI,4.0/ISR.CPALTT01.ML.?lastNObservations=3&format=jsondata');
                     if (oeResp.ok) {
                         var oeData = await oeResp.json();
                         var obs = oeData && oeData.dataSets && oeData.dataSets[0] && oeData.dataSets[0].series;
@@ -7316,6 +7298,24 @@
                                         fetched = true;
                                     }
                                 }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Source 2: World Bank API — annual CPI for Israel (fallback, ~1 year lag)
+            if (!fetched) {
+                try {
+                    var wbResp = await fetch('https://api.worldbank.org/v2/country/ISR/indicator/FP.CPI.TOTL.ZG?format=json&mrv=3');
+                    if (wbResp.ok) {
+                        var wbData = await wbResp.json();
+                        if (wbData && wbData[1]) {
+                            var entry = wbData[1].find(function(e) { return e.value !== null && e.value !== undefined; });
+                            if (entry) {
+                                document.getElementById('cgInflation').value = entry.value.toFixed(1);
+                                if (info) info.textContent = '📊 שינוי שנתי ' + entry.date + ' — ' + entry.value.toFixed(2) + '%';
+                                fetched = true;
                             }
                         }
                     }
