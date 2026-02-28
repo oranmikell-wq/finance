@@ -4529,6 +4529,7 @@
                 var text = item.textContent.toLowerCase();
                 item.style.display = text.includes(query) || query === '' ? '' : 'none';
             });
+            fillViewportGap();
         }
 
         // ============ Theme Toggle ============
@@ -5934,6 +5935,7 @@
                 updateFeeAnalysis();
                 calcRetirement();
                 checkAlerts();
+                fillViewportGap();
             }, 150);
             // Snapshot for instant display on next load
             try { var tw = document.getElementById('totalWorth'); if(tw) localStorage.setItem('total-worth-snapshot', tw.textContent); } catch(e) {}
@@ -6028,10 +6030,17 @@
                 fetchEconomicIndices();
             }
 
+            // Show search only on dashboard tab
+            var sw = document.getElementById('searchWrapper');
+            if (sw) sw.style.display = (tabName === 'Dashboard') ? '' : 'none';
+
             // Scroll to top
             window.scrollTo(0, 0);
             document.body.scrollTop = 0;
             document.documentElement.scrollTop = 0;
+
+            // Fill empty space below last element
+            fillViewportGap();
         }
 
         function updateTrendsTab() {
@@ -7964,6 +7973,46 @@
             }
         }, { passive: false });
 
+        // ---- Fill empty viewport space below last element ----
+        function fillViewportGap() {
+            // Clear any previously-set gap fill padding
+            document.querySelectorAll('[data-gf]').forEach(function(el) {
+                el.style.paddingBottom = el.dataset.gfOrig || '';
+                el.removeAttribute('data-gf');
+                el.removeAttribute('data-gf-orig');
+            });
+            var tabBar = document.querySelector('.tab-bar');
+            if (!tabBar) return;
+            var activeTab = document.querySelector('.tab-content.active');
+            if (!activeTab) return;
+
+            // Find last VISIBLE target: asset-row (dashboard) or chart-card (other tabs)
+            var target = null;
+            var rows = activeTab.querySelectorAll('.asset-row');
+            if (rows.length > 0) {
+                for (var i = rows.length - 1; i >= 0; i--) {
+                    if (rows[i].style.display !== 'none') { target = rows[i]; break; }
+                }
+            }
+            if (!target) {
+                var cards = activeTab.querySelectorAll('.chart-card');
+                if (cards.length > 0) target = cards[cards.length - 1];
+            }
+            if (!target) return;
+
+            setTimeout(function() {
+                var tabBarTop = tabBar.getBoundingClientRect().top;
+                var rect = target.getBoundingClientRect();
+                var gap = Math.floor(tabBarTop - rect.bottom - 8);
+                if (gap > 20) {
+                    var origPb = parseFloat(window.getComputedStyle(target).paddingBottom) || 0;
+                    target.dataset.gf = '1';
+                    target.dataset.gfOrig = target.style.paddingBottom || '';
+                    target.style.paddingBottom = (origPb + gap) + 'px';
+                }
+            }, 60);
+        }
+
         // ---- Card collapse/expand toggle ----
         function initCardToggles() {
             var st = {};
@@ -8013,6 +8062,7 @@
                             if (ev.propertyName !== 'height') return;
                             body.style.height = 'auto'; // allow natural resize
                             body.removeEventListener('transitionend', onEnd);
+                            fillViewportGap();
                         });
                         cur[id] = true;
                     } else {
@@ -8024,6 +8074,11 @@
                         body.style.transition = 'height 0.32s ease, opacity 0.25s ease';
                         body.style.height = '0';
                         body.style.opacity = '0';
+                        body.addEventListener('transitionend', function onCloseEnd(ev) {
+                            if (ev.propertyName !== 'height') return;
+                            body.removeEventListener('transitionend', onCloseEnd);
+                            fillViewportGap();
+                        });
                         delete cur[id];
                     }
                     localStorage.setItem('cc-toggle-state', JSON.stringify(cur));
@@ -8036,6 +8091,7 @@
         loadProfile();
         loadRetirementInputs();
         initCardToggles();
+        setTimeout(fillViewportGap, 400); // initial gap fill after first render
         setTimeout(fetchEconomicIndices, 2000);
 
         // Register Service Worker for PWA — with auto-update
