@@ -71,8 +71,9 @@
             font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #0a0e27 0%, #141829 50%, #0a0e27 100%);
             color: var(--text-primary);
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
             padding: 20px;
             padding-top: calc(20px + env(safe-area-inset-top, 0px));
             padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
@@ -109,9 +110,13 @@
 
         .container {
             max-width: 1400px;
+            width: 100%;
             margin: 0 auto;
             position: relative;
             z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
@@ -1144,7 +1149,9 @@
             padding-top: 12px;
         }
         .tab-content.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
             animation: fadeIn 0.3s ease;
             overflow-x: hidden;
         }
