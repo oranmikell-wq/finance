@@ -9003,9 +9003,63 @@
             };
         }
 
+        var _cpiPointsForCalc = null;
+
+        function calcInflationBetween() {
+            var HEM = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+            var fromM = document.getElementById('inflCalcFromMonth').value;
+            var fromY = document.getElementById('inflCalcFromYear').value;
+            var toM   = document.getElementById('inflCalcToMonth').value;
+            var toY   = document.getElementById('inflCalcToYear').value;
+            var resEl = document.getElementById('inflCalcResult');
+            var pts   = _cpiPointsForCalc;
+            if (!pts || !resEl) return;
+            var fromKey = fromY + '-' + (fromM.length < 2 ? '0' : '') + fromM;
+            var toKey   = toY   + '-' + (toM.length   < 2 ? '0' : '') + toM;
+            var fromIdx = -1, toIdx = -1;
+            for (var i = 0; i < pts.length; i++) {
+                if (pts[i].date === fromKey) fromIdx = i;
+                if (pts[i].date === toKey)   toIdx   = i;
+            }
+            if (fromIdx < 0 || toIdx < 0) {
+                resEl.innerHTML = '<span style="font-size:0.78rem;color:var(--text-secondary);">תקופה לא זמינה בנתונים</span>';
+                return;
+            }
+            if (fromIdx === toIdx) {
+                resEl.innerHTML = '<span style="font-size:0.78rem;color:var(--text-secondary);">בחר תקופות שונות</span>';
+                return;
+            }
+            var start = Math.min(fromIdx, toIdx);
+            var end   = Math.max(fromIdx, toIdx);
+            var reversed = fromIdx > toIdx;
+            // Chain monthly % changes (avoids base-year inconsistencies in CBS absolute values)
+            var allHaveMonthly = true;
+            for (var j = start + 1; j <= end; j++) {
+                if (pts[j].monthly === null || pts[j].monthly === undefined) { allHaveMonthly = false; break; }
+            }
+            var change;
+            if (allHaveMonthly) {
+                var cumul = 1;
+                for (var k = start + 1; k <= end; k++) cumul *= (1 + pts[k].monthly / 100);
+                change = (cumul - 1) * 100;
+            } else {
+                // FRED fallback: consistent absolute values
+                change = ((pts[end].value / pts[start].value) - 1) * 100;
+            }
+            if (reversed) change = -change;
+            var sign  = change > 0 ? '+' : '';
+            var color = change > 0.05 ? 'var(--accent-red)' : change < -0.05 ? 'var(--accent-green)' : 'var(--text-secondary)';
+            var fromHe = HEM[parseInt(fromM)-1] + ' ' + fromY;
+            var toHe   = HEM[parseInt(toM)-1]   + ' ' + toY;
+            resEl.innerHTML = '<span style="font-weight:700;font-size:1.15rem;color:' + color + ';">' + sign + change.toFixed(2) + '%</span>'
+                + ' <span style="font-size:0.7rem;color:var(--text-secondary);">' + fromHe + ' → ' + toHe + '</span>';
+        }
+
         function renderEconomicIndices(data) {
             var el = document.getElementById('economicIndicesContent');
             if (!el) return;
+
+            _cpiPointsForCalc = data.cpi;
 
             var HE_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 
@@ -9019,13 +9073,13 @@
             function pctChip(val) {
                 if (val === null || val === undefined) return '<span style="color:var(--text-secondary);">—</span>';
                 var sign = val > 0 ? '+' : '';
-                // For inflation/cost indices: up = bad = red, down = good = green
                 var color = val > 0.05 ? 'var(--accent-red)' : val < -0.05 ? 'var(--accent-green)' : 'var(--text-secondary)';
                 return '<span style="color:' + color + ';font-weight:700;">' + sign + val.toFixed(1) + '%</span>';
             }
 
-            function indexRow(emoji, title, subtitle, monthlyVal, annualVal) {
-                return '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border-color);">'
+            function indexRow(emoji, title, subtitle, monthlyVal, annualVal, last) {
+                var border = last ? '' : 'border-bottom:1px solid var(--border-color);';
+                return '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;' + border + '">'
                     + '<div style="font-size:1.3rem;flex-shrink:0;">' + emoji + '</div>'
                     + '<div style="flex:1;min-width:0;">'
                     +   '<div style="font-size:0.78rem;font-weight:600;color:var(--text-primary);">' + title + '</div>'
@@ -9042,11 +9096,9 @@
                     + '</div>';
             }
 
-            var cpiCh = calcChanges(data.cpi);
+            var cpiCh    = calcChanges(data.cpi);
             var constrCh = calcChanges(data.construction);
-
-            var cpiDate = cpiCh ? heDate(cpiCh.latest.date) : null;
-            var cpiVal = cpiCh ? cpiCh.latest.value.toFixed(2) + ' נקודות' : null;
+            var cpiDate  = cpiCh    ? heDate(cpiCh.latest.date)    : null;
             var constrDate = constrCh ? heDate(constrCh.latest.date) : null;
 
             var html = '<div>';
@@ -9067,20 +9119,65 @@
                 + '</div>';
 
             if (cpiCh) {
-                html += indexRow('💹', 'אינפלציה', cpiDate, cpiCh.monthly, cpiCh.annual);
-                html += indexRow('📊', 'מדד מחירים לצרכן', cpiDate, cpiCh.monthly, cpiCh.annual);
+                html += indexRow('📊', 'מדד מחירים לצרכן (אינפלציה)', cpiDate, cpiCh.monthly, cpiCh.annual, !constrCh);
             } else {
                 html += '<div style="padding:12px 0;color:var(--text-secondary);font-size:0.8rem;">מד"מ: נתונים לא זמינים</div>';
             }
 
             if (constrCh) {
-                html += indexRow('🏗️', 'מדד תשומות הבניה', constrDate, constrCh.monthly, constrCh.annual);
+                html += indexRow('🏗️', 'מדד תשומות הבניה', constrDate, constrCh.monthly, constrCh.annual, true);
             } else {
-                // Last row without bottom border
                 html += '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;">'
                     + '<div style="font-size:1.3rem;">🏗️</div>'
                     + '<div style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text-primary);">מדד תשומות הבניה</div>'
                     + '<div style="font-size:0.75rem;color:var(--text-secondary);">לא זמין</div>'
+                    + '</div>';
+            }
+
+            // Period calculator (only if CPI data available)
+            if (data.cpi && data.cpi.length >= 2) {
+                var years = [];
+                var seen = {};
+                for (var i = 0; i < data.cpi.length; i++) {
+                    var y = data.cpi[i].date.substring(0,4);
+                    if (!seen[y]) { seen[y] = true; years.push(y); }
+                }
+                years.sort();
+
+                var selStyle = 'border:1px solid var(--border-color);background:var(--input-bg,var(--card-bg));color:var(--text-primary);border-radius:6px;padding:3px 5px;font-size:0.75rem;font-family:inherit;';
+
+                function monthOpts(selVal) {
+                    var s = '';
+                    var mn = ['ינו','פבר','מרץ','אפר','מאי','יוני','יולי','אוג','ספט','אוק','נוב','דצמ'];
+                    for (var mi = 1; mi <= 12; mi++) {
+                        var v = String(mi);
+                        s += '<option value="' + v + '"' + (v === selVal ? ' selected' : '') + '>' + mn[mi-1] + '</option>';
+                    }
+                    return s;
+                }
+                function yearOpts(selVal) {
+                    var s = '';
+                    for (var yi = 0; yi < years.length; yi++) {
+                        s += '<option value="' + years[yi] + '"' + (years[yi] === selVal ? ' selected' : '') + '>' + years[yi] + '</option>';
+                    }
+                    return s;
+                }
+
+                var defFromY = years.indexOf('2023') >= 0 ? '2023' : years[0];
+                var defToY   = years.indexOf('2025') >= 0 ? '2025' : years[years.length-1];
+
+                html += '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-color);">'
+                    + '<div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">חישוב שינוי מצטבר</div>'
+                    + '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">'
+                    + '<span style="font-size:0.75rem;color:var(--text-secondary);">מ:</span>'
+                    + '<select id="inflCalcFromMonth" style="' + selStyle + '">' + monthOpts('1') + '</select>'
+                    + '<select id="inflCalcFromYear"  style="' + selStyle + '">' + yearOpts(defFromY) + '</select>'
+                    + '<span style="font-size:0.75rem;color:var(--text-secondary);margin-right:4px;">עד:</span>'
+                    + '<select id="inflCalcToMonth" style="' + selStyle + '">' + monthOpts('1') + '</select>'
+                    + '<select id="inflCalcToYear"  style="' + selStyle + '">' + yearOpts(defToY) + '</select>'
+                    + '<button onclick="calcInflationBetween()" style="border:none;background:var(--accent-color,#4e8ef7);color:#fff;border-radius:6px;padding:4px 12px;font-size:0.75rem;font-family:inherit;cursor:pointer;">חשב</button>'
+                    + '</div>'
+                    + '<div id="inflCalcResult" style="margin-top:8px;min-height:22px;"></div>'
                     + '</div>';
             }
 
