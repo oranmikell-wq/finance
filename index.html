@@ -1863,9 +1863,9 @@
             </div>
 
             <div class="chart-card budget-card" style="overflow:hidden;">
-                <h3 style="padding:14px 14px 0;margin-bottom:12px;">💰 תקציב חודשי</h3>
+                <h3 style="margin-bottom:12px;">💰 תקציב חודשי</h3>
                 <!-- Salary + Summary -->
-                <div style="padding:0 14px 14px;">
+                <div style="padding:0 0 12px;margin-top:12px;">
                     <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">💵 שכר חודשי נטו</div>
                     <input type="text" inputmode="decimal" id="profileSalary" placeholder="₪ 0" style="width:100%;box-sizing:border-box;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:12px;color:var(--text-primary);font-family:inherit;font-size:1.05rem;font-weight:700;text-align:right;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
                     <input type="hidden" id="profileExpenses">
@@ -1889,7 +1889,7 @@
                 <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
 
                 <!-- Expense breakdown -->
-                <div style="padding:12px 14px 14px;">
+                <div style="padding:12px 16px 16px;">
                     <div style="font-size:0.7rem;color:var(--text-secondary);font-weight:600;letter-spacing:0.03em;margin-bottom:4px;">פירוט הוצאות</div>
                     <div>
                         <div class="budget-row">
@@ -1930,7 +1930,7 @@
                 </div>
 
                 <!-- Actual savings (salary - expenses - deposits) -->
-                <div id="actualSavingsDisplay" style="display:none;margin:0 14px 14px;padding:10px 14px;border-radius:12px;text-align:center;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);">
+                <div id="actualSavingsDisplay" style="display:none;margin:0 16px 16px;padding:10px 14px;border-radius:12px;text-align:center;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);">
                     <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">אחרי הפקדות לנכסים:</div>
                     <div style="font-size:1.1rem;font-weight:700;" id="actualSavingsAmount">₪0</div>
                 </div>
