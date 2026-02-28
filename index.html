@@ -8895,7 +8895,7 @@
 
             // Cache in localStorage for 6 hours (monthly data)
             try {
-                var cached = JSON.parse(localStorage.getItem('economic-indices-v3') || 'null');
+                var cached = JSON.parse(localStorage.getItem('economic-indices-v4') || 'null');
                 if (cached && Date.now() - cached.ts < 21600000) {
                     renderEconomicIndices(cached.data);
                     return;
@@ -8914,70 +8914,74 @@
                 construction: constrRes.status === 'fulfilled' ? constrRes.value : null
             };
 
-            try { localStorage.setItem('economic-indices-v3', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
+            try { localStorage.setItem('economic-indices-v4', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
             renderEconomicIndices(data);
         }
 
-        // Parse FRED CSV: "DATE,VALUE\n2024-01-01,116.5\n..." → [{date:"2024-01", value:116.5}]
-        function parseFredCsv(text) {
-            var lines = text.trim().split('\n');
-            var points = [];
-            for (var i = 1; i < lines.length; i++) {
-                var parts = lines[i].split(',');
-                if (parts.length < 2) continue;
-                var d = parts[0].trim();
-                var v = parseFloat(parts[1]);
-                if (!isNaN(v) && d.length >= 7) points.push({ date: d.substring(0, 7), value: v });
-            }
+        // Parse CBS Israel API response → [{date:"2026-01", value, monthly, annual, monthDesc, year}]
+        function parseCbsApi(d) {
+            var series = (d.month || [])[0];
+            if (!series || !series.date || !series.date.length) return null;
+            var points = series.date.map(function(item) {
+                return {
+                    date: item.year + '-' + (item.month < 10 ? '0' : '') + item.month,
+                    value: item.currBase ? item.currBase.value : null,
+                    monthly: item.percent,
+                    annual: item.percentYear,
+                    monthDesc: item.monthDesc,
+                    year: item.year
+                };
+            }).filter(function(p) { return p.value !== null; });
             points.sort(function(a, b) { return a.date.localeCompare(b.date); });
             return points;
         }
 
+        // Fetch a CBS price index series by ID
+        // API: api.cbs.gov.il/index/data/price — no CORS, no auth needed
+        async function fetchCbsSeries(id) {
+            var url = 'https://api.cbs.gov.il/index/data/price?id=' + id + '&format=json&download=false';
+            var r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+            if (!r.ok) throw new Error('CBS HTTP ' + r.status);
+            var d = await r.json();
+            var points = parseCbsApi(d);
+            if (!points || points.length < 2) throw new Error('CBS id=' + id + ' no data');
+            return points;
+        }
+
         async function fetchCPISeries() {
-            // FRED ISRCPIALLMINMEI = Israel CPI All Items, Monthly, OECD MEI (2015=100)
-            var fredUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=ISRCPIALLMINMEI';
-            var proxies = [
-                'https://api.codetabs.com/v1/proxy/?quest=' + fredUrl,
-                'https://api.allorigins.win/raw?url=' + encodeURIComponent(fredUrl),
-            ];
-            for (var i = 0; i < proxies.length; i++) {
-                try {
-                    var r = await fetch(proxies[i], { signal: AbortSignal.timeout(10000) });
-                    if (!r.ok) continue;
+            // CBS id=120010: מדד המחירים לצרכן - כללי (CPI General)
+            try {
+                var pts = await fetchCbsSeries(120010);
+                console.log('[CPI] ✅ CBS', pts.length, 'points, latest:', pts[pts.length-1].date);
+                return pts;
+            } catch(e) { console.warn('[CPI] CBS failed:', e.message); }
+            // Fallback: FRED via codetabs
+            try {
+                var fredUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=ISRCPIALLMINMEI';
+                var r = await fetch('https://api.codetabs.com/v1/proxy/?quest=' + fredUrl, { signal: AbortSignal.timeout(10000) });
+                if (r.ok) {
                     var text = await r.text();
-                    if (!text || text.includes('"Error"') || text.startsWith('<')) continue;
-                    var points = parseFredCsv(text);
-                    if (points.length >= 14) { console.log('[CPI] ✅', points.length, 'points via proxy', i); return points; }
-                } catch(e) { console.warn('[CPI] proxy', i, 'failed:', e.message); }
-            }
+                    if (!text.startsWith('<') && !text.includes('"Error"')) {
+                        var lines = text.trim().split('\n');
+                        var pts2 = [];
+                        for (var i = 1; i < lines.length; i++) {
+                            var p = lines[i].split(',');
+                            var v = parseFloat(p[1]);
+                            if (!isNaN(v)) pts2.push({ date: p[0].substring(0,7), value: v, monthly: null, annual: null });
+                        }
+                        pts2.sort(function(a,b){return a.date.localeCompare(b.date);});
+                        if (pts2.length >= 13) { console.log('[CPI] ✅ FRED fallback'); return pts2; }
+                    }
+                }
+            } catch(e) { console.warn('[CPI] FRED fallback failed:', e.message); }
             throw new Error('All CPI sources failed');
         }
 
         async function fetchConstructionSeries() {
-            // FRED ISRPPDMMINMEI = Israel Producer Price Index Manufacturing (monthly, OECD MEI 2015=100)
-            var fredUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=ISRPPDMMINMEI';
-            var proxies = [
-                'https://api.codetabs.com/v1/proxy/?quest=' + fredUrl,
-                'https://api.allorigins.win/raw?url=' + encodeURIComponent(fredUrl),
-            ];
-            for (var i = 0; i < proxies.length; i++) {
-                try {
-                    var r = await fetch(proxies[i], { signal: AbortSignal.timeout(10000) });
-                    if (!r.ok) continue;
-                    var text = await r.text();
-                    if (!text || text.includes('"Error"') || text.startsWith('<')) continue;
-                    var points = parseFredCsv(text);
-                    if (points.length < 14) continue;
-                    // Only use if data is recent (within 18 months)
-                    var lastDate = points[points.length - 1].date;
-                    var monthsOld = (new Date().getFullYear() * 12 + new Date().getMonth()) -
-                                    (parseInt(lastDate.substring(0,4)) * 12 + parseInt(lastDate.substring(5,7)) - 1);
-                    if (monthsOld > 18) { console.warn('[Construction] data too old:', lastDate); throw new Error('Stale PPI data'); }
-                    console.log('[Construction] ✅', points.length, 'points via proxy', i);
-                    return points;
-                } catch(e) { console.warn('[Construction] proxy', i, 'failed:', e.message); }
-            }
-            throw new Error('Construction index not available');
+            // CBS id=200010: מדד מחירי תשומה בבנייה למגורים - כללי
+            var pts = await fetchCbsSeries(200010);
+            console.log('[Construction] ✅ CBS', pts.length, 'points, latest:', pts[pts.length-1].date);
+            return pts;
         }
 
         function calcChanges(points) {
@@ -8986,12 +8990,16 @@
             var latest = points[n - 1];
             var prev = points[n - 2];
             var prev12 = n >= 13 ? points[n - 13] : null;
+            // Use pre-calculated CBS values if available, else compute
             return {
                 latest: latest,
                 prev: prev,
-                prev12: prev12,
-                monthly: ((latest.value / prev.value) - 1) * 100,
-                annual: prev12 ? ((latest.value / prev12.value) - 1) * 100 : null
+                monthly: latest.monthly !== null && latest.monthly !== undefined
+                    ? latest.monthly
+                    : ((latest.value / prev.value) - 1) * 100,
+                annual: latest.annual !== null && latest.annual !== undefined
+                    ? latest.annual
+                    : (prev12 ? ((latest.value / prev12.value) - 1) * 100 : null)
             };
         }
 
@@ -9066,12 +9074,12 @@
             }
 
             if (constrCh) {
-                html += indexRow('🏗️', 'מדד מחירי יצרן', constrDate, constrCh.monthly, constrCh.annual);
+                html += indexRow('🏗️', 'מדד תשומות הבניה', constrDate, constrCh.monthly, constrCh.annual);
             } else {
                 // Last row without bottom border
                 html += '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;">'
                     + '<div style="font-size:1.3rem;">🏗️</div>'
-                    + '<div style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text-primary);">מדד מחירי יצרן</div>'
+                    + '<div style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text-primary);">מדד תשומות הבניה</div>'
                     + '<div style="font-size:0.75rem;color:var(--text-secondary);">לא זמין</div>'
                     + '</div>';
             }
