@@ -751,18 +751,40 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 20px;
-        }
-
-        /* Trends / Personal / Settings tabs — compact spacing */
-        #tabTrends .chart-card,
-        #tabPersonal .chart-card,
-        #tabMore .chart-card {
-            padding: 14px;
+            padding: 16px;
             margin-bottom: 10px;
         }
         /* Budget card keeps its own padding scheme */
         #tabPersonal .chart-card.budget-card { padding: 0; }
+
+        /* ---- Card collapse/expand ---- */
+        .chart-card > h3 {
+            margin-bottom: 10px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chart-card.cc-collapsed > h3 { margin-bottom: 0; }
+        .card-toggle-chevron {
+            display: inline-block;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+        .chart-card:hover .card-toggle-chevron { opacity: 1; }
+        .chart-card.cc-collapsed .card-toggle-chevron { transform: rotate(-90deg); }
+        .card-body {
+            overflow: hidden;
+            max-height: 3000px;
+            opacity: 1;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+        }
+        .chart-card.cc-collapsed .card-body { max-height: 0; opacity: 0; }
 
         .chart-container {
             height: 300px;
@@ -1742,7 +1764,7 @@
 
             <!-- Economic Price Indices -->
             <div class="chart-card" id="economicIndicesCard">
-                <h3 style="margin-bottom:12px;">📊 מדדי מחירים</h3>
+                <h3>📊 מדדי מחירים</h3>
                 <div id="economicIndicesContent">
                     <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען...</div>
                 </div>
@@ -1750,18 +1772,18 @@
 
             <!-- Geographic Exposure -->
             <div class="chart-card">
-                <h3 style="margin-bottom:12px;">🌍 חשיפה גיאוגרפית</h3>
+                <h3>🌍 חשיפה גיאוגרפית</h3>
                 <div id="exposureContent"></div>
             </div>
 
             <div class="chart-card">
-                <h3 style="margin-bottom:8px;">💡 תובנות</h3>
+                <h3>💡 תובנות</h3>
                 <div id="trendsInsights" style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:12px 0;">טוען...</div>
             </div>
 
             <!-- Gemel Rankings -->
             <div class="chart-card" style="padding:16px 12px;">
-                <h3 style="margin-bottom:12px;">🏆 דירוג קרנות</h3>
+                <h3>🏆 דירוג קרנות</h3>
 
                 <!-- Product type dropdown -->
                 <div style="position:relative;margin-bottom:14px;" id="gemelDropdownWrap">
@@ -1829,7 +1851,7 @@
 
             <!-- Fee Analysis (moved from Personal tab) -->
             <div class="chart-card">
-                <h3 style="margin-bottom:12px;">📋 ניתוח דמי ניהול</h3>
+                <h3>📋 ניתוח דמי ניהול</h3>
                 <div id="feeAnalysisContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף דמי ניהול לנכסים כדי לראות ניתוח</div>
             </div>
 
@@ -1840,7 +1862,7 @@
             <!-- Summary Cards removed per user request -->
 
             <div class="chart-card">
-                <h3 style="margin-bottom:12px;">👤 פרטים אישיים</h3>
+                <h3>👤 פרטים אישיים</h3>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם פרטי</label>
@@ -1869,7 +1891,7 @@
             </div>
 
             <div class="chart-card budget-card" style="overflow:hidden;">
-                <h3 style="padding:12px 14px 0;margin-bottom:10px;">💰 תקציב חודשי</h3>
+                <h3 style="padding:12px 14px 0;">💰 תקציב חודשי</h3>
                 <!-- Salary + Summary -->
                 <div style="padding:0 14px 10px;margin-top:8px;">
                     <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">💵 שכר חודשי נטו</div>
@@ -1945,7 +1967,7 @@
 
             <!-- Pension / Retirement Calculator -->
             <div class="chart-card">
-                <h3 style="margin-bottom:12px;">🧮 מחשבון פרישה</h3>
+                <h3>🧮 מחשבון פרישה</h3>
                 <!-- Inputs -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                     <div>
@@ -7943,10 +7965,47 @@
             }
         }, { passive: false });
 
+        // ---- Card collapse/expand toggle ----
+        function initCardToggles() {
+            var st = {};
+            try { st = JSON.parse(localStorage.getItem('cc-toggle-state') || '{}'); } catch(e) {}
+            document.querySelectorAll('.chart-card').forEach(function(card, idx) {
+                var firstEl = card.firstElementChild;
+                if (!firstEl || firstEl.tagName !== 'H3') return;
+                var h3 = firstEl;
+                // Stable ID from Hebrew title text
+                var title = (h3.textContent || '').replace(/[^א-ת]/g,'').substring(0,12) || ('c'+idx);
+                var id = 'cc_' + title;
+                card.dataset.ccId = id;
+                // Add chevron to h3
+                var chev = document.createElement('span');
+                chev.className = 'card-toggle-chevron';
+                chev.textContent = '▼';
+                h3.appendChild(chev);
+                // Wrap all siblings after h3 in .card-body
+                var body = document.createElement('div');
+                body.className = 'card-body';
+                Array.from(card.children).slice(1).forEach(function(el){ body.appendChild(el); });
+                card.appendChild(body);
+                // Restore saved collapsed state
+                if (st[id]) card.classList.add('cc-collapsed');
+                // Toggle on h3 click (ignore clicks on form elements)
+                h3.addEventListener('click', function(e) {
+                    if (e.target.closest('button,select,input,a')) return;
+                    var collapsed = card.classList.toggle('cc-collapsed');
+                    var cur = {};
+                    try { cur = JSON.parse(localStorage.getItem('cc-toggle-state') || '{}'); } catch(ex) {}
+                    if (collapsed) { cur[id] = true; } else { delete cur[id]; }
+                    localStorage.setItem('cc-toggle-state', JSON.stringify(cur));
+                });
+            });
+        }
+
         // Initialize
         loadAssets();
         loadProfile();
         loadRetirementInputs();
+        initCardToggles();
         setTimeout(fetchEconomicIndices, 2000);
 
         // Register Service Worker for PWA — with auto-update
