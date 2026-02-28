@@ -70,7 +70,7 @@
             min-height: -webkit-fill-available;
             padding: 20px;
             padding-top: calc(20px + env(safe-area-inset-top, 0px));
-            padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
             padding-left: calc(20px + env(safe-area-inset-left, 0px));
             padding-right: calc(20px + env(safe-area-inset-right, 0px));
             -webkit-overflow-scrolling: touch;
@@ -454,7 +454,7 @@
             body {
                 padding: 14px;
                 padding-top: calc(14px + env(safe-area-inset-top, 0px));
-                padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
             }
 
             /* Header */
@@ -664,7 +664,7 @@
 
         /* ============ IPHONE SE / Mini (375px) ============ */
         @media (max-width: 375px) {
-            body { padding: 10px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
+            body { padding: 10px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
             .header h1 { font-size: 1.3rem; }
             .total-amount { font-size: 2.1rem; }
             .total-worth-card { padding: 18px 12px; }
@@ -702,8 +702,8 @@
         @media all and (display-mode: standalone) {
             body {
                 padding-top: calc(20px + env(safe-area-inset-top, 0px));
-                /* Extra bottom padding for home indicator */
-                padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+                /* Must clear custom tab bar (59px) + card (59px) + buffer */
+                padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
             }
             /* Disable text selection on interactive elements */
             .asset-row, .stat-card, .action-button, .secondary-button, .sort-btn {
@@ -7999,21 +7999,20 @@
                     var cur = {};
                     try { cur = JSON.parse(localStorage.getItem('cc-toggle-state') || '{}'); } catch(ex) {}
                     if (isCollapsed) {
-                        // Opening: measure full height first (auto), then animate from 0
+                        // Opening: measure full height (via auto), then animate from 0
                         card.classList.remove('cc-collapsed');
                         body.style.transition = 'none';
                         body.style.height = 'auto'; // briefly set auto to measure
                         var fullH = body.scrollHeight;
                         body.style.height = '0'; // snap back to 0 (opacity still 0 = invisible)
-                        requestAnimationFrame(function() {
-                            body.style.transition = 'height 0.32s ease, opacity 0.25s ease';
-                            body.style.height = fullH + 'px';
-                            body.style.opacity = '1';
-                            body.addEventListener('transitionend', function onEnd(ev) {
-                                if (ev.propertyName !== 'height') return;
-                                body.style.height = 'auto'; // allow natural resize
-                                body.removeEventListener('transitionend', onEnd);
-                            });
+                        void body.offsetHeight; // force reflow - reliable on iOS Safari
+                        body.style.transition = 'height 0.32s ease, opacity 0.25s ease';
+                        body.style.height = fullH + 'px';
+                        body.style.opacity = '1';
+                        body.addEventListener('transitionend', function onEnd(ev) {
+                            if (ev.propertyName !== 'height') return;
+                            body.style.height = 'auto'; // allow natural resize
+                            body.removeEventListener('transitionend', onEnd);
                         });
                         cur[id] = true;
                     } else {
@@ -8021,13 +8020,10 @@
                         card.classList.add('cc-collapsed');
                         body.style.transition = 'none';
                         body.style.height = body.scrollHeight + 'px';
-                        requestAnimationFrame(function() {
-                            requestAnimationFrame(function() {
-                                body.style.transition = 'height 0.32s ease, opacity 0.25s ease';
-                                body.style.height = '0';
-                                body.style.opacity = '0';
-                            });
-                        });
+                        void body.offsetHeight; // force reflow - reliable on iOS Safari
+                        body.style.transition = 'height 0.32s ease, opacity 0.25s ease';
+                        body.style.height = '0';
+                        body.style.opacity = '0';
                         delete cur[id];
                     }
                     localStorage.setItem('cc-toggle-state', JSON.stringify(cur));
