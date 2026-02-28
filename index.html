@@ -70,7 +70,7 @@
             min-height: -webkit-fill-available;
             padding: 20px;
             padding-top: calc(20px + env(safe-area-inset-top, 0px));
-            padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px));
             padding-left: calc(20px + env(safe-area-inset-left, 0px));
             padding-right: calc(20px + env(safe-area-inset-right, 0px));
             -webkit-overflow-scrolling: touch;
@@ -454,7 +454,7 @@
             body {
                 padding: 14px;
                 padding-top: calc(14px + env(safe-area-inset-top, 0px));
-                padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px));
             }
 
             /* Header */
@@ -664,7 +664,7 @@
 
         /* ============ IPHONE SE / Mini (375px) ============ */
         @media (max-width: 375px) {
-            body { padding: 10px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)); }
+            body { padding: 10px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)); }
             .header h1 { font-size: 1.3rem; }
             .total-amount { font-size: 2.1rem; }
             .total-worth-card { padding: 18px 12px; }
@@ -703,7 +703,7 @@
             body {
                 padding-top: calc(20px + env(safe-area-inset-top, 0px));
                 /* Must clear custom tab bar (59px) + small buffer */
-                padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px));
             }
             /* Disable text selection on interactive elements */
             .asset-row, .stat-card, .action-button, .secondary-button, .sort-btn {
@@ -1142,6 +1142,26 @@
             display: block;
             animation: fadeIn 0.3s ease;
             overflow-x: hidden;
+        }
+
+        /* ---- Fixed category bar above tab bar ---- */
+        #totalBreakdown {
+            position: fixed !important;
+            bottom: calc(59px + env(safe-area-inset-bottom, 0px)) !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 8990;
+            background: rgba(10, 14, 39, 0.96) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255,255,255,0.1) !important;
+            margin-top: 0 !important;
+            padding: 8px 16px !important;
+            justify-content: center;
+        }
+        body.light-mode #totalBreakdown {
+            background: rgba(240,242,245,0.97) !important;
+            border-top-color: #d1d5db !important;
         }
 
         .tab-bar {
@@ -1678,7 +1698,7 @@
                         <span>+₪0 (0%)</span>
                         <span>החודש</span>
                     </div>
-                    <div id="totalBreakdown" style="display:flex;justify-content:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);flex-wrap:wrap;">
+                    <div id="totalBreakdown" style="display:flex;gap:8px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.15);border-radius:10px;padding:6px 10px;">
                             <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">💰 נזילים</span>
                             <span id="totalLiquid" style="font-size:0.95rem;font-weight:600;color:#00d9ff;white-space:nowrap;">₪0</span>
