@@ -781,11 +781,8 @@
         .chart-card.cc-collapsed .card-toggle-chevron { transform: rotate(-90deg); }
         .card-body {
             overflow: hidden;
-            max-height: 3000px;
-            opacity: 1;
-            transition: max-height 0.4s ease, opacity 0.3s ease;
+            /* height & opacity animated by JS for reliable iOS layout */
         }
-        .chart-card.cc-collapsed .card-body { max-height: 0; opacity: 0; }
 
         .chart-container {
             height: 300px;
@@ -7989,15 +7986,50 @@
                 body.className = 'card-body';
                 Array.from(card.children).slice(1).forEach(function(el){ body.appendChild(el); });
                 card.appendChild(body);
-                // Restore saved collapsed state
-                if (st[id]) card.classList.add('cc-collapsed');
+                // Default: collapsed. Only expand if user explicitly opened it (st[id] === true)
+                if (!st[id]) {
+                    card.classList.add('cc-collapsed');
+                    body.style.height = '0';
+                    body.style.opacity = '0';
+                }
                 // Toggle on h3 click (ignore clicks on form elements)
                 h3.addEventListener('click', function(e) {
                     if (e.target.closest('button,select,input,a')) return;
-                    var collapsed = card.classList.toggle('cc-collapsed');
+                    var isCollapsed = card.classList.contains('cc-collapsed');
                     var cur = {};
                     try { cur = JSON.parse(localStorage.getItem('cc-toggle-state') || '{}'); } catch(ex) {}
-                    if (collapsed) { cur[id] = true; } else { delete cur[id]; }
+                    if (isCollapsed) {
+                        // Opening: measure full height first (auto), then animate from 0
+                        card.classList.remove('cc-collapsed');
+                        body.style.transition = 'none';
+                        body.style.height = 'auto'; // briefly set auto to measure
+                        var fullH = body.scrollHeight;
+                        body.style.height = '0'; // snap back to 0 (opacity still 0 = invisible)
+                        requestAnimationFrame(function() {
+                            body.style.transition = 'height 0.32s ease, opacity 0.25s ease';
+                            body.style.height = fullH + 'px';
+                            body.style.opacity = '1';
+                            body.addEventListener('transitionend', function onEnd(ev) {
+                                if (ev.propertyName !== 'height') return;
+                                body.style.height = 'auto'; // allow natural resize
+                                body.removeEventListener('transitionend', onEnd);
+                            });
+                        });
+                        cur[id] = true;
+                    } else {
+                        // Closing: add class immediately (chevron rotates), pin height, animate to 0
+                        card.classList.add('cc-collapsed');
+                        body.style.transition = 'none';
+                        body.style.height = body.scrollHeight + 'px';
+                        requestAnimationFrame(function() {
+                            requestAnimationFrame(function() {
+                                body.style.transition = 'height 0.32s ease, opacity 0.25s ease';
+                                body.style.height = '0';
+                                body.style.opacity = '0';
+                            });
+                        });
+                        delete cur[id];
+                    }
                     localStorage.setItem('cc-toggle-state', JSON.stringify(cur));
                 });
             });
