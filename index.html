@@ -64,6 +64,7 @@
 
         html {
             background: #0a0e27; /* prevents black strip below tab bar on iOS */
+            scrollbar-gutter: stable; /* prevents layout shift when scrollbar appears/disappears */
         }
 
         body {
@@ -1163,6 +1164,9 @@
             padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
             z-index: 9000;
             overflow: hidden;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            will-change: transform;
         }
 
         .tab-btn {
