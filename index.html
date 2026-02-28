@@ -759,10 +759,6 @@
             padding: 14px;
             margin-bottom: 10px;
         }
-        #tabTrends .section-title {
-            margin-bottom: 8px;
-            margin-top: 8px;
-        }
 
         .chart-container {
             height: 300px;
@@ -1716,11 +1712,9 @@
 
         <!-- TAB 2: Trends -->
         <div class="tab-content" id="tabTrends">
-            <div class="section-title">מגמות ותובנות</div>
-
             <div class="chart-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-                    <h3 style="margin:0;">מגמת שווי לאורך זמן</h3>
+                    <h3 style="margin:0;">📈 מגמת שווי לאורך זמן</h3>
                     <div style="display:flex;gap:4px;" id="chartRangeBtns">
                         <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
                         <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
@@ -1743,8 +1737,8 @@
             </div>
 
             <!-- Economic Price Indices -->
-            <div class="section-title">מדדי מחירים</div>
             <div class="chart-card" id="economicIndicesCard">
+                <h3 style="margin-bottom:12px;">📊 מדדי מחירים</h3>
                 <div id="economicIndicesContent">
                     <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען...</div>
                 </div>
@@ -1762,8 +1756,8 @@
             </div>
 
             <!-- Gemel Rankings -->
-            <div class="section-title">דירוג קרנות</div>
             <div class="chart-card" style="padding:16px 12px;">
+                <h3 style="margin-bottom:12px;">🏆 דירוג קרנות</h3>
 
                 <!-- Product type dropdown -->
                 <div style="position:relative;margin-bottom:14px;" id="gemelDropdownWrap">
