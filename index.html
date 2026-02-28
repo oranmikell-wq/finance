@@ -8895,7 +8895,7 @@
 
             // Cache in localStorage for 6 hours (monthly data)
             try {
-                var cached = JSON.parse(localStorage.getItem('economic-indices-v2') || 'null');
+                var cached = JSON.parse(localStorage.getItem('economic-indices-v3') || 'null');
                 if (cached && Date.now() - cached.ts < 21600000) {
                     renderEconomicIndices(cached.data);
                     return;
@@ -8914,116 +8914,70 @@
                 construction: constrRes.status === 'fulfilled' ? constrRes.value : null
             };
 
-            try { localStorage.setItem('economic-indices-v2', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
+            try { localStorage.setItem('economic-indices-v3', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
             renderEconomicIndices(data);
         }
 
-        // Parse OECD SDMX-CSV: returns [{date:"2024-01", value:119.5}, ...]
-        function parseOECDCsv(text) {
+        // Parse FRED CSV: "DATE,VALUE\n2024-01-01,116.5\n..." → [{date:"2024-01", value:116.5}]
+        function parseFredCsv(text) {
             var lines = text.trim().split('\n');
-            // Find header line (contains TIME_PERIOD and OBS_VALUE)
-            var headerIdx = -1;
-            for (var i = 0; i < lines.length; i++) {
-                if (lines[i].includes('TIME_PERIOD') && lines[i].includes('OBS_VALUE')) { headerIdx = i; break; }
-            }
-            if (headerIdx < 0) return [];
-            var headers = lines[headerIdx].split(',').map(h => h.replace(/"/g, '').trim());
-            var timeCol = headers.indexOf('TIME_PERIOD');
-            var valCol = headers.indexOf('OBS_VALUE');
-            if (timeCol < 0 || valCol < 0) return [];
             var points = [];
-            for (var i = headerIdx + 1; i < lines.length; i++) {
-                var cols = lines[i].split(',').map(c => c.replace(/"/g, '').trim());
-                if (!cols[timeCol] || !cols[valCol]) continue;
-                var v = parseFloat(cols[valCol]);
-                if (!isNaN(v)) points.push({ date: cols[timeCol], value: v });
+            for (var i = 1; i < lines.length; i++) {
+                var parts = lines[i].split(',');
+                if (parts.length < 2) continue;
+                var d = parts[0].trim();
+                var v = parseFloat(parts[1]);
+                if (!isNaN(v) && d.length >= 7) points.push({ date: d.substring(0, 7), value: v });
             }
-            points.sort((a, b) => a.date.localeCompare(b.date));
-            return points;
-        }
-
-        // Parse OECD SDMX-JSON: returns [{date, value}]
-        function parseOECDJson(j) {
-            var ds = j.data.dataSets[0];
-            var struct = j.data.structure;
-            var timeDim = struct.dimensions.observation.find(function(d) { return d.id === 'TIME_PERIOD'; });
-            if (!timeDim) return [];
-            var dates = timeDim.values.map(function(v) { return v.id; });
-            var seriesKey = Object.keys(ds.series)[0];
-            var obs = ds.series[seriesKey].observations;
-            var points = [];
-            Object.keys(obs).forEach(function(idx) {
-                var val = obs[idx][0];
-                if (val !== null && !isNaN(val)) points.push({ date: dates[+idx], value: val });
-            });
             points.sort(function(a, b) { return a.date.localeCompare(b.date); });
             return points;
         }
 
         async function fetchCPISeries() {
-            var urls = [
-                // OECD new SDMX API - CSV (easiest to parse)
-                'https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/M.ISR.CPI.PA._T.N.IX.?lastNObservations=14&format=csvfile',
-                // OECD new SDMX API - JSON
-                'https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/M.ISR.CPI.PA._T.N.IX.?lastNObservations=14&format=jsondata',
+            // FRED ISRCPIALLMINMEI = Israel CPI All Items, Monthly, OECD MEI (2015=100)
+            var fredUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=ISRCPIALLMINMEI';
+            var proxies = [
+                'https://api.codetabs.com/v1/proxy/?quest=' + fredUrl,
+                'https://api.allorigins.win/raw?url=' + encodeURIComponent(fredUrl),
             ];
-            for (var i = 0; i < urls.length; i++) {
+            for (var i = 0; i < proxies.length; i++) {
                 try {
-                    var proxy = 'https://corsproxy.io/?' + encodeURIComponent(urls[i]);
-                    var r = await fetch(proxy, { signal: AbortSignal.timeout(9000) });
+                    var r = await fetch(proxies[i], { signal: AbortSignal.timeout(10000) });
                     if (!r.ok) continue;
                     var text = await r.text();
-                    var points;
-                    if (urls[i].includes('csvfile')) {
-                        points = parseOECDCsv(text);
-                    } else {
-                        points = parseOECDJson(JSON.parse(text));
-                    }
-                    if (points.length >= 2) { console.log('[CPI] ✅ got', points.length, 'points'); return points; }
-                } catch(e) { console.warn('[CPI] source', i, 'failed:', e.message); }
+                    if (!text || text.includes('"Error"') || text.startsWith('<')) continue;
+                    var points = parseFredCsv(text);
+                    if (points.length >= 14) { console.log('[CPI] ✅', points.length, 'points via proxy', i); return points; }
+                } catch(e) { console.warn('[CPI] proxy', i, 'failed:', e.message); }
             }
             throw new Error('All CPI sources failed');
         }
 
         async function fetchConstructionSeries() {
-            // Search data.gov.il for CBS construction input index package
-            var q = encodeURIComponent('מדד תשומות הבניה');
-            var searchUrl = 'https://data.gov.il/api/3/action/package_search?q=' + q + '&fq=organization:cbs&rows=5';
-            var sr = await fetch(searchUrl, { signal: AbortSignal.timeout(8000) });
-            var sd = await sr.json();
-            if (!sd.result || !sd.result.results || !sd.result.results.length) throw new Error('No construction package');
-
-            for (var pkg of sd.result.results) {
-                for (var res of (pkg.resources || [])) {
-                    if (!res.datastore_active) continue;
-                    try {
-                        var dsUrl = 'https://data.gov.il/api/3/action/datastore_search?resource_id=' + res.id + '&limit=20&sort=_id desc';
-                        var dr = await fetch(dsUrl, { signal: AbortSignal.timeout(8000) });
-                        var dd = await dr.json();
-                        if (!dd.success || !dd.result || !dd.result.records || !dd.result.records.length) continue;
-
-                        var records = dd.result.records;
-                        var fieldNames = (dd.result.fields || []).map(function(f) { return f.id; }).filter(function(f) { return f !== '_id'; });
-
-                        // Identify date and value columns
-                        var dateField = fieldNames.find(function(f) { return /תאריך|תקופה|חודש|date|period|month|year/i.test(f); }) || fieldNames[0];
-                        var valField = fieldNames.find(function(f) { return f !== dateField && /ערך|מדד|index|value|נקודות/i.test(f); }) || fieldNames[1];
-
-                        var points = records.map(function(rec) {
-                            var d = String(rec[dateField] || '').trim();
-                            var v = parseFloat(String(rec[valField] || '').replace(/,/g, ''));
-                            return { date: d, value: v };
-                        }).filter(function(p) { return p.date && !isNaN(p.value) && p.value > 0; });
-
-                        if (points.length >= 2) {
-                            points.sort(function(a, b) { return a.date.localeCompare(b.date); });
-                            console.log('[Construction] ✅ got', points.length, 'points from', res.id);
-                            return points;
-                        }
-                    } catch(e) { console.warn('[Construction] resource failed:', e.message); }
-                }
+            // FRED ISRPPDMMINMEI = Israel Producer Price Index Manufacturing (monthly, OECD MEI 2015=100)
+            var fredUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=ISRPPDMMINMEI';
+            var proxies = [
+                'https://api.codetabs.com/v1/proxy/?quest=' + fredUrl,
+                'https://api.allorigins.win/raw?url=' + encodeURIComponent(fredUrl),
+            ];
+            for (var i = 0; i < proxies.length; i++) {
+                try {
+                    var r = await fetch(proxies[i], { signal: AbortSignal.timeout(10000) });
+                    if (!r.ok) continue;
+                    var text = await r.text();
+                    if (!text || text.includes('"Error"') || text.startsWith('<')) continue;
+                    var points = parseFredCsv(text);
+                    if (points.length < 14) continue;
+                    // Only use if data is recent (within 18 months)
+                    var lastDate = points[points.length - 1].date;
+                    var monthsOld = (new Date().getFullYear() * 12 + new Date().getMonth()) -
+                                    (parseInt(lastDate.substring(0,4)) * 12 + parseInt(lastDate.substring(5,7)) - 1);
+                    if (monthsOld > 18) { console.warn('[Construction] data too old:', lastDate); throw new Error('Stale PPI data'); }
+                    console.log('[Construction] ✅', points.length, 'points via proxy', i);
+                    return points;
+                } catch(e) { console.warn('[Construction] proxy', i, 'failed:', e.message); }
             }
-            throw new Error('No usable construction data');
+            throw new Error('Construction index not available');
         }
 
         function calcChanges(points) {
@@ -9112,12 +9066,12 @@
             }
 
             if (constrCh) {
-                html += indexRow('🏗️', 'מדד תשומות הבניה', constrDate, constrCh.monthly, constrCh.annual);
+                html += indexRow('🏗️', 'מדד מחירי יצרן', constrDate, constrCh.monthly, constrCh.annual);
             } else {
                 // Last row without bottom border
                 html += '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;">'
                     + '<div style="font-size:1.3rem;">🏗️</div>'
-                    + '<div style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text-primary);">מדד תשומות הבניה</div>'
+                    + '<div style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text-primary);">מדד מחירי יצרן</div>'
                     + '<div style="font-size:0.75rem;color:var(--text-secondary);">לא זמין</div>'
                     + '</div>';
             }
