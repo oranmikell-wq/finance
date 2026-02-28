@@ -1696,7 +1696,7 @@
         <div class="tab-content active" id="tabDashboard">
 
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;direction:rtl;min-width:0;">
-            <div class="section-title" style="margin-bottom:0;white-space:nowrap;flex-shrink:0;">הנכסים שלי</div>
+            <div style="white-space:nowrap;flex-shrink:0;"></div>
             <div style="display:flex;gap:4px;flex-wrap:nowrap;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;">
                 <button onclick="sortAssets('value', event)" class="sort-btn active-sort" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:clamp(0.6rem,2.5vw,0.75rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">שווי ↓</button>
                 <button onclick="sortAssets('type', event)" class="sort-btn" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.6rem,2.5vw,0.75rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">סוג</button>
@@ -1865,7 +1865,7 @@
             <div class="chart-card budget-card" style="overflow:hidden;">
                 <h3 style="margin-bottom:12px;">💰 תקציב חודשי</h3>
                 <!-- Salary + Summary -->
-                <div style="padding:0 0 12px;">
+                <div style="padding:0 0 12px;margin-top:12px;">
                     <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">💵 שכר חודשי נטו</div>
                     <input type="text" inputmode="decimal" id="profileSalary" placeholder="₪ 0" style="width:100%;box-sizing:border-box;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:12px;color:var(--text-primary);font-family:inherit;font-size:1.05rem;font-weight:700;text-align:right;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
                     <input type="hidden" id="profileExpenses">
@@ -2035,7 +2035,6 @@
         <!-- TAB 4: Settings -->
         <div class="tab-content" id="tabMore">
             <div class="chart-card">
-                <h3 style="margin-bottom:12px;">⚙️ הגדרות</h3>
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <!-- Light/Dark toggle -->
                 <button onclick="toggleTheme()" class="settings-row" id="themeToggleRow">
