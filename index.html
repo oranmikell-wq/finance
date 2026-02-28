@@ -1863,7 +1863,7 @@
             </div>
 
             <div class="chart-card budget-card" style="overflow:hidden;">
-                <h3 style="padding-top:14px;margin-bottom:12px;">💰 תקציב חודשי</h3>
+                <h3 style="padding:14px 14px 0;margin-bottom:12px;">💰 תקציב חודשי</h3>
                 <!-- Salary + Summary -->
                 <div style="padding:0 14px 12px;margin-top:12px;">
                     <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">💵 שכר חודשי נטו</div>
@@ -7947,6 +7947,7 @@
         loadAssets();
         loadProfile();
         loadRetirementInputs();
+        setTimeout(fetchEconomicIndices, 2000);
 
         // Register Service Worker for PWA — with auto-update
         if ('serviceWorker' in navigator) {
@@ -8907,13 +8908,12 @@
             if (!el) return;
 
             // Cache in localStorage for 6 hours (monthly data)
-            try {
-                var cached = JSON.parse(localStorage.getItem('economic-indices-v4') || 'null');
-                if (cached && Date.now() - cached.ts < 21600000) {
-                    renderEconomicIndices(cached.data);
-                    return;
-                }
-            } catch(e) {}
+            var cached = null;
+            try { cached = JSON.parse(localStorage.getItem('economic-indices-v4') || 'null'); } catch(e) {}
+            if (cached && Date.now() - cached.ts < 21600000) {
+                renderEconomicIndices(cached.data);
+                return;
+            }
 
             el.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען נתונים...</div>';
 
