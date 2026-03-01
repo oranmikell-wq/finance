@@ -2148,13 +2148,14 @@
             <!-- Capital Gains Tax Calculator -->
             <div class="chart-card">
                 <h3>🧾 מחשבון מס רווח הון</h3>
-                <div style="margin-bottom:12px;">
-                    <div class="retire-label">סוג נכס</div>
-                    <select id="taxAssetType" onchange="calcTax()" style="width:100%;max-width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.85rem;direction:rtl;text-align:right;">
-                        <option value="capital">מניות / קריפטו / קרן נאמנות — 25%</option>
-                        <option value="deposit">פיקדון / חיסכון — מס ריבית 15%</option>
-                        <option value="exempt">קרן השתלמות / פנסיה — פטור</option>
-                    </select>
+                <div style="margin-bottom:14px;">
+                    <div class="retire-label" style="margin-bottom:8px;">סוג נכס</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;" id="taxTypeButtons">
+                        <button onclick="setTaxType('capital',this)" class="tax-type-btn tax-type-active" style="padding:8px 4px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">מניות/<br>קריפטו<br><span style="font-size:0.65rem;opacity:0.8;">25%</span></button>
+                        <button onclick="setTaxType('deposit',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פיקדון/<br>חיסכון<br><span style="font-size:0.65rem;opacity:0.8;">15%</span></button>
+                        <button onclick="setTaxType('exempt',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">ק׳ השתל׳/<br>פנסיה<br><span style="font-size:0.65rem;opacity:0.8;">פטור</span></button>
+                    </div>
+                    <input type="hidden" id="taxAssetType" value="capital">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
                     <div>
@@ -5164,11 +5165,36 @@
             resultEl.style.display = 'block';
         }
 
+        function setTaxType(type, btn) {
+            document.getElementById('taxAssetType').value = type;
+            document.querySelectorAll('.tax-type-btn').forEach(function(b) {
+                b.style.border      = '1px solid var(--border-color)';
+                b.style.background  = 'transparent';
+                b.style.color       = 'var(--text-secondary)';
+            });
+            btn.style.border     = '1px solid var(--accent-gold)';
+            btn.style.background = 'rgba(244,196,48,0.12)';
+            btn.style.color      = 'var(--accent-gold)';
+            calcTax();
+        }
+
         function resetTax() {
-            document.getElementById('taxSaleValue').value  = '';
-            document.getElementById('taxCostBasis').value  = '';
-            document.getElementById('taxAssetType').value  = 'capital';
+            document.getElementById('taxSaleValue').value = '';
+            document.getElementById('taxCostBasis').value = '';
+            document.getElementById('taxAssetType').value = 'capital';
             document.getElementById('taxResult').style.display = 'none';
+            // Reset button styles
+            var btns = document.querySelectorAll('.tax-type-btn');
+            btns.forEach(function(b) {
+                b.style.border     = '1px solid var(--border-color)';
+                b.style.background = 'transparent';
+                b.style.color      = 'var(--text-secondary)';
+            });
+            if (btns[0]) {
+                btns[0].style.border     = '1px solid var(--accent-gold)';
+                btns[0].style.background = 'rgba(244,196,48,0.12)';
+                btns[0].style.color      = 'var(--accent-gold)';
+            }
         }
 
         // ============ Compound Interest Calculator ============
