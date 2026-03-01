@@ -6732,7 +6732,7 @@
             overlay.width  = canvas.width;
             overlay.height = canvas.height;
             var octx = overlay.getContext('2d');
-            octx.scale(dpr, dpr);
+            octx.setTransform(dpr, 0, 0, dpr, 0, 0); // reset + set (never accumulate)
 
             // Store chart state for tooltip use
             canvas._chartPts    = pts;
@@ -6786,8 +6786,9 @@
                     if (!ov) return;
                     var oc = ov.getContext('2d');
                     var dpr2 = window.devicePixelRatio || 1;
-                    oc.clearRect(0, 0, ov.width, ov.height);
-                    oc.save(); oc.scale(dpr2, dpr2);
+                    // setTransform resets any accumulated scales before drawing
+                    oc.setTransform(dpr2, 0, 0, dpr2, 0, 0);
+                    oc.clearRect(0, 0, ov.width / dpr2, ov.height / dpr2);
                     oc.strokeStyle = 'rgba(255,255,255,0.2)';
                     oc.lineWidth = 1;
                     oc.setLineDash([4,4]);
@@ -6803,7 +6804,6 @@
                     oc.shadowBlur = 12;
                     oc.fill();
                     oc.shadowBlur = 0;
-                    oc.restore();
                 }
 
                 function _hideTip() {
@@ -6811,7 +6811,11 @@
                     if (tip) tip.style.display = 'none';
                     canvas._prevIdx = -1;
                     var ov = canvas.parentElement.querySelector('canvas.chart-overlay');
-                    if (ov) ov.getContext('2d').clearRect(0, 0, ov.width, ov.height);
+                    if (ov) {
+                        var oc2 = ov.getContext('2d');
+                        oc2.setTransform(1, 0, 0, 1, 0, 0); // reset to identity
+                        oc2.clearRect(0, 0, ov.width, ov.height);
+                    }
                 }
 
                 canvas.addEventListener('mousemove', function(e) { _showTip(e.clientX); });
