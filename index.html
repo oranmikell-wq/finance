@@ -1652,28 +1652,6 @@
 </head>
 <body data-tab="Dashboard">
 
-<!-- ── Loading / Splash Overlay ──────────────────────────────────── -->
-<div id="app-splash" style="
-    position:fixed;inset:0;z-index:99999;
-    background:#ebebE6;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;
-    transition:opacity 0.5s ease;
-">
-    <img src="./icon-light.png" style="width:140px;height:140px;border-radius:31px;" alt="">
-</div>
-<script>
-    // Hide splash after 2.2s with fade
-    window.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            var s = document.getElementById('app-splash');
-            if (s) {
-                s.style.opacity = '0';
-                setTimeout(function() { s.remove(); }, 500);
-            }
-        }, 2200);
-    });
-</script>
-
 <script>
 // Pre-load localStorage data synchronously before first paint — eliminates blank flash
 (function() {
