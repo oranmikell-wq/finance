@@ -1637,8 +1637,11 @@
 </script>
     <div class="container">
         <div class="header">
-            <div class="header-top" style="display:flex;direction:rtl;align-items:center;justify-content:flex-start;gap:12px;">
+            <div class="header-top" style="display:flex;direction:rtl;align-items:center;justify-content:space-between;gap:12px;">
                 <div id="greetingBanner" style="display:none;text-align:right;direction:rtl;font-size:1rem;font-weight:600;"></div>
+                <div class="search-wrapper" id="searchWrapper" style="flex-shrink:0;max-width:90px;">
+                    <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש..." oninput="filterAssets(this.value)" style="padding:8px 12px;font-size:0.82rem;height:36px;text-align:right;direction:rtl;">
+                </div>
             </div>
             <div class="last-update" style="display:flex;align-items:center;gap:8px;padding:8px 14px;direction:ltr;overflow:hidden;">
                 <div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;flex:1;cursor:pointer;-webkit-overflow-scrolling:touch;scrollbar-width:none;" onclick="updateExchangeRate()" title="לחץ לעדכון שערים">
@@ -1727,10 +1730,7 @@
         <!-- TAB 1: Dashboard -->
         <div class="tab-content active" id="tabDashboard">
 
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;direction:rtl;min-width:0;">
-            <div class="search-wrapper" id="searchWrapper" style="flex-shrink:0;max-width:90px;">
-                <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש..." oninput="filterAssets(this.value)" style="padding:8px 12px;font-size:0.82rem;height:36px;text-align:right;direction:rtl;">
-            </div>
+        <div style="display:flex;justify-content:flex-start;align-items:center;gap:8px;margin-bottom:10px;direction:rtl;min-width:0;">
             <div style="display:flex;gap:4px;flex-wrap:nowrap;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;">
                 <button onclick="sortAssets('value', event)" class="sort-btn active-sort" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">שווי ↓</button>
                 <button onclick="sortAssets('type', event)" class="sort-btn" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">סוג</button>
@@ -6040,10 +6040,12 @@
                 fetchEconomicIndices();
             }
 
-            // Reset search when entering dashboard
-            if (tabName === 'Dashboard') {
+            // Show search only on Dashboard, reset when leaving
+            var sw = document.getElementById('searchWrapper');
+            if (sw) sw.style.display = tabName === 'Dashboard' ? '' : 'none';
+            if (tabName !== 'Dashboard') {
                 var searchEl = document.getElementById('assetSearch');
-                if (searchEl) { searchEl.value = ''; filterAssets(''); }
+                if (searchEl && searchEl.value) { searchEl.value = ''; filterAssets(''); }
             }
 
             // Scroll to top
@@ -8093,26 +8095,6 @@
             });
         }
 
-        // iOS keyboard fix — hide tab bar when input is focused
-        // mousedown fires after tap is recognized (no double-tap issue) but before keyboard animation
-        function _hideTabBar() {
-            var tb = document.querySelector('.tab-bar');
-            if (tb) tb.style.visibility = 'hidden';
-        }
-        function _showTabBar() {
-            var tb = document.querySelector('.tab-bar');
-            if (tb) tb.style.visibility = 'visible';
-        }
-        document.addEventListener('mousedown', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                _hideTabBar();
-            }
-        });
-        document.addEventListener('focusout', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                setTimeout(_showTabBar, 150);
-            }
-        });
 
         // iOS install hint (beforeinstallprompt not supported on iOS)
         if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone && !localStorage.getItem('pwa-installed')) {
