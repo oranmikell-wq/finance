@@ -1492,6 +1492,52 @@
         body.light-mode .type-tile.selected { background: rgba(244,196,48,0.15) !important; border-color: var(--accent-gold) !important; }
         body.light-mode .modal-content { background: #ffffff; }
 
+        /* Modal card panels — hardcoded #1e2438 in inline styles → override to white */
+        body.light-mode #profileModal > div,
+        body.light-mode #dataMenuModal > div,
+        body.light-mode #aboutMenuModal > div,
+        body.light-mode #aboutModal > div { background: #ffffff !important; color: #1a1a2e !important; }
+        body.light-mode #profileModal > div *,
+        body.light-mode #dataMenuModal > div *,
+        body.light-mode #aboutMenuModal > div *,
+        body.light-mode #aboutModal > div * { color: inherit; }
+        /* Preserve accent/status colours inside light modals */
+        body.light-mode #profileModal button,
+        body.light-mode #dataMenuModal button,
+        body.light-mode #aboutMenuModal button,
+        body.light-mode #aboutModal button { color: var(--text-primary); }
+
+        /* Alerts modal — dynamically created, targeted by ID */
+        body.light-mode #alertsModal > div { background: #ffffff !important; color: #1a1a2e !important; }
+
+        /* Budget bar track — was rgba(255,255,255,0.06) = invisible on white */
+        body.light-mode .budget-bar-track { background: rgba(0,0,0,0.1) !important; }
+
+        /* Budget row dividers */
+        body.light-mode .budget-row { border-bottom-color: rgba(0,0,0,0.07) !important; }
+
+        /* Budget row inputs */
+        body.light-mode .budget-row-input { background: rgba(0,0,0,0.05) !important; }
+
+        /* Gains / fee table row dividers — was rgba(255,255,255,0.04) */
+        body.light-mode .gains-table td { border-bottom-color: rgba(0,0,0,0.07) !important; }
+
+        /* Settings row hover border — was rgba(255,255,255,0.15) */
+        body.light-mode .settings-row:hover { border-color: rgba(0,0,0,0.15) !important; }
+
+        /* Card inner borders / dividers that use semi-transparent white */
+        body.light-mode .summary-card { border-color: var(--border-color) !important; }
+
+        /* Skeleton shimmer — was white-based, invisible on white bg */
+        body.light-mode .skeleton { background: rgba(0,0,0,0.06) !important; }
+        body.light-mode .skeleton::after { background: linear-gradient(90deg,transparent 25%,rgba(0,0,0,0.04) 50%,transparent 75%) !important; }
+
+        /* Chart tooltip — keep dark even in light mode (easier to read on the chart) */
+        body.light-mode #chartTooltip { background: rgba(15,20,40,0.88) !important; }
+
+        /* html root bg — light mode should not show dark strip on bounce */
+        html:has(body.light-mode) { background: #f0f2f5 !important; }
+
         /* Summary cards */
         .summary-cards {
             display: grid;
@@ -5001,8 +5047,10 @@
             // Overlay ends at top of tab bar → card is centered in the visible area above it
             overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9998;display:flex;align-items:center;justify-content:center;';
             overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            var _alertsBg = document.body.classList.contains('light-mode') ? '#ffffff' : '#1e2438';
+            var _alertsColor = document.body.classList.contains('light-mode') ? '#1a1a2e' : '';
             overlay.innerHTML =
-                '<div style="background:#1e2438;border-radius:20px;width:90%;max-width:400px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.6);animation:slideUp 0.25s ease-out;">' +
+                '<div style="background:' + _alertsBg + ';color:' + _alertsColor + ';border-radius:20px;width:90%;max-width:400px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.6);animation:slideUp 0.25s ease-out;">' +
                     '<h3 style="text-align:center;margin:0 0 16px;">🔔 התראות מחיר</h3>' +
                     '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">' + itemsHtml + '</div>' +
                     '<button onclick="addAlert()" style="width:100%;padding:12px;margin-bottom:8px;background:rgba(244,196,48,0.1);border:1px solid var(--accent-gold);border-radius:10px;color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.85rem;">+ הוסף התראה</button>' +
@@ -6594,6 +6642,12 @@
             ctx.scale(dpr, dpr);
             var W = rect.width, H = rect.height;
 
+            // Theme-aware canvas colours
+            var isLight = document.body.classList.contains('light-mode');
+            var clrGrid  = isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)';
+            var clrLabel = isLight ? 'rgba(0,0,0,0.45)'  : 'rgba(255,255,255,0.28)';
+            var clrDate  = isLight ? 'rgba(0,0,0,0.4)'   : 'rgba(255,255,255,0.3)';
+
             var values = history.map(function(h) { return h.value; });
 
             // Compute change early — used for header + line colour
@@ -6634,10 +6688,10 @@
             ctx.lineWidth = 1;
             for (var g = 0; g <= gridCount; g++) {
                 var gy = padT + (chartH / gridCount) * g;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+                ctx.strokeStyle = clrGrid;
                 ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
                 var gv = maxV - (range * g / gridCount);
-                ctx.fillStyle = 'rgba(255,255,255,0.28)';
+                ctx.fillStyle = clrLabel;
                 ctx.font = '10px -apple-system,sans-serif';
                 ctx.textAlign = 'right';
                 var label = gv >= 1000000 ? '₪' + (gv/1000000).toFixed(1) + 'M' :
@@ -6709,7 +6763,7 @@
             // Deduplicate
             datesToShow = datesToShow.filter(function(v, i, a) { return a.indexOf(v) === i; });
 
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillStyle = clrDate;
             ctx.font = '10px -apple-system,sans-serif';
             ctx.textAlign = 'center';
             datesToShow.forEach(function(idx) {
@@ -6789,7 +6843,7 @@
                     // setTransform resets any accumulated scales before drawing
                     oc.setTransform(dpr2, 0, 0, dpr2, 0, 0);
                     oc.clearRect(0, 0, ov.width / dpr2, ov.height / dpr2);
-                    oc.strokeStyle = 'rgba(255,255,255,0.2)';
+                    oc.strokeStyle = document.body.classList.contains('light-mode') ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
                     oc.lineWidth = 1;
                     oc.setLineDash([4,4]);
                     oc.beginPath();
