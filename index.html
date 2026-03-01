@@ -6253,6 +6253,7 @@
         }
 
         var _updateUITimer = null;
+        var _lastGridHash = '';
         function updateUI() {
             // Debounce: batch rapid sequential calls into one render (prevents page jumps on load)
             if (_updateUITimer) clearTimeout(_updateUITimer);
@@ -7664,7 +7665,21 @@
 
         function updateAssetsGrid() {
             const grid = document.getElementById('assetsGrid');
-            
+
+            // Hash: if nothing visual changed, skip re-render entirely
+            var gridHash = assets.map(function(a) {
+                return a.id + ',' + a.value + ',' + (a.return||0) + ',' + (a.currency||'ILS') + ',' + (a.spyLinked?spyPrice:0);
+            }).join('|') + '||' + exchangeRate + '|' + btcRate + '|' + ethRate;
+            if (gridHash === _lastGridHash) return;
+            _lastGridHash = gridHash;
+
+            // Hide grid while rebuilding DOM (no visible flash)
+            var firstRender = grid.children.length === 0;
+            if (!firstRender) {
+                grid.style.transition = 'none';
+                grid.style.opacity = '0';
+            }
+
             if (assets.length === 0) {
                 grid.innerHTML = `
                     <div style="text-align: center; padding: 60px; color: var(--text-secondary);">
@@ -7673,6 +7688,7 @@
                         <p>התחל להוסיף את הנכסים הפיננסיים שלך</p>
                     </div>
                 `;
+                grid.style.opacity = '1';
                 return;
             }
 
@@ -8165,6 +8181,11 @@
             };
             grid.addEventListener('click', grid._delegationHandler);
             grid._delegationAttached = true;
+
+            // Fade in after DOM update (hides the re-render flash)
+            grid.getBoundingClientRect(); // force reflow so opacity:0 is painted
+            grid.style.transition = 'opacity 0.18s ease';
+            grid.style.opacity = '1';
         }
 
         function triggerRateRefresh() {
