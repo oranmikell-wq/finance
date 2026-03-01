@@ -66,6 +66,8 @@
             background: #141829; /* match body — prevents dark strip showing through on iOS */
             scrollbar-gutter: stable; /* prevents layout shift when scrollbar appears/disappears */
         }
+        /* Hide search on non-dashboard tabs via CSS */
+        body:not([data-tab="Dashboard"]) #searchWrapper { display: none !important; }
 
         body {
             font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1599,7 +1601,7 @@
         .alert-item { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; margin-bottom:6px; font-size:0.8rem; }
     </style>
 </head>
-<body>
+<body data-tab="Dashboard">
 <script>
 // Pre-load localStorage data synchronously before first paint — eliminates blank flash
 (function() {
@@ -6006,6 +6008,7 @@
 
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
+            document.body.setAttribute('data-tab', tabName);
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(function(t) {
                 t.classList.remove('active');
