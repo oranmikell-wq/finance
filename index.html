@@ -8093,8 +8093,8 @@
             });
         }
 
-        // iOS keyboard fix — hide tab bar before keyboard animation starts
-        // touchstart fires before iOS keyboard animation; focusin is a backup
+        // iOS keyboard fix — hide tab bar when input is focused
+        // mousedown fires after tap is recognized (no double-tap issue) but before keyboard animation
         function _hideTabBar() {
             var tb = document.querySelector('.tab-bar');
             if (tb) tb.style.visibility = 'hidden';
@@ -8103,12 +8103,7 @@
             var tb = document.querySelector('.tab-bar');
             if (tb) tb.style.visibility = 'visible';
         }
-        document.addEventListener('touchstart', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                _hideTabBar();
-            }
-        }, { passive: true });
-        document.addEventListener('focusin', function(e) {
+        document.addEventListener('mousedown', function(e) {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 _hideTabBar();
             }
