@@ -2532,7 +2532,7 @@
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label>ספק / חברה</label>
-                            <input type="text" id="assetProvider" placeholder="לדוגמה: מגדל" required>
+                            <input type="text" id="assetProvider" placeholder="לדוגמה: מגדל, Interactive Brokers">
                         </div>
                     </div>
                 
@@ -4362,6 +4362,7 @@
                 var ef2 = document.getElementById('stockExtraFields'); if (ef2) ef2.style.display = 'none';
                 currencyField.style.display = 'none';
                 valueField.style.display = 'none';
+                var provEl = document.getElementById('assetProvider'); if (provEl) provEl.placeholder = 'לדוגמה: Interactive Brokers, מיטב';
             } else {
                 currencyField.style.display = 'block';
                 valueField.style.display = 'block';
