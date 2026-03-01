@@ -11,9 +11,9 @@
     <meta name="theme-color" content="#d2d6dd" media="(prefers-color-scheme: light)">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="פיננסייר">
+    <meta name="apple-mobile-web-app-title" content="Financier">
     <meta name="color-scheme" content="light dark">
-    <title>פיננסייר - הסוכן הפיננסי שלך</title>
+    <title>Financier - הסוכן הפיננסי שלך</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./icon-dark.png">
     <link rel="apple-touch-icon" href="./icon-dark.png">
@@ -2294,7 +2294,7 @@
             </div>
 
             <div style="text-align:center;margin-top:12px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
-                פיננסייר v3.0
+                Financier v3.0
             </div>
         </div>
 
@@ -4918,9 +4918,9 @@
                     <div style="text-align:center;margin-bottom:20px;">
                         <div style="font-size:3rem;margin-bottom:10px;">👨‍💻</div>
                         <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);margin-bottom:2px;">אורן מיקל</div>
-                        <div style="font-size:0.75rem;color:var(--text-secondary);">מפתח פיננסייר v3.0</div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary);">מפתח Financier v3.0</div>
                     </div>
-                    <p>פיננסייר היא אפליקציית ניהול פיננסי אישי שנבנתה כדי לאפשר לך לצפות בכלל הנכסים שלך במקום אחד — בצורה פשוטה, בעברית ובלי עלויות.</p>
+                    <p>Financier היא אפליקציית ניהול פיננסי אישי שנבנתה כדי לאפשר לך לצפות בכלל הנכסים שלך במקום אחד — בצורה פשוטה, בעברית ובלי עלויות.</p>
                     <p>האפליקציה פותחה כפרויקט אישי, מונעת מרצון לקבל תמונה פיננסית שלמה ועדכנית בכל זמן.</p>
                     <div style="background:var(--border-color);border-radius:12px;padding:14px;margin-top:16px;font-size:0.78rem;">
                         <div style="margin-bottom:6px;">🏠 כל הנתונים שמורים <strong>מקומית על המכשיר שלך בלבד</strong></div>
@@ -4932,7 +4932,7 @@
                 title: '📋 תנאי שימוש',
                 body: `
                     <p><strong>השימוש באפליקציה</strong></p>
-                    <p>פיננסייר היא אפליקציה לניהול פיננסי אישי המיועדת למטרות מידע בלבד. המידע המוצג אינו מהווה ייעוץ השקעות, פיננסי, משפטי או מס מכל סוג שהוא.</p>
+                    <p>Financier היא אפליקציה לניהול פיננסי אישי המיועדת למטרות מידע בלבד. המידע המוצג אינו מהווה ייעוץ השקעות, פיננסי, משפטי או מס מכל סוג שהוא.</p>
 
                     <p><strong>אחריות</strong></p>
                     <p>האפליקציה מסופקת "כמות שהיא" ללא אחריות מכל סוג. המפתח אינו אחראי לכל נזק שייגרם משימוש בנתונים המוצגים, לרבות טעויות בשערי חליפין, מחירי ניירות ערך, או חישובים פנסיוניים.</p>
@@ -4948,7 +4948,7 @@
                 title: '🔒 מדיניות פרטיות',
                 body: `
                     <p><strong>איסוף נתונים</strong></p>
-                    <p>פיננסייר אינה אוספת, שומרת או משדרת כל מידע אישי לשרתים חיצוניים. כלל הנתונים שתזין — נכסים, ערכים, פרטים אישיים — נשמרים <strong>אך ורק על המכשיר שלך</strong> באמצעות localStorage.</p>
+                    <p>Financier אינה אוספת, שומרת או משדרת כל מידע אישי לשרתים חיצוניים. כלל הנתונים שתזין — נכסים, ערכים, פרטים אישיים — נשמרים <strong>אך ורק על המכשיר שלך</strong> באמצעות localStorage.</p>
 
                     <p><strong>שערי חליפין ומחירי שוק</strong></p>
                     <p>לצורך שליפת שערי חליפין ומחירי מניות, האפליקציה פונה לשירותים חיצוניים (Yahoo Finance, בנק ישראל, Frankfurter ואחרים). פניות אלו אינן כוללות כל מידע אישי.</p>
@@ -5102,7 +5102,7 @@
                 if (al.direction === 'below' && valILS <= al.target) triggered = true;
                 
                 if (triggered && Notification.permission === 'granted') {
-                    new Notification('🔔 פיננסייר — התראת מחיר', {
+                    new Notification('🔔 Financier — התראת מחיר', {
                         body: al.name + ' הגיע ל-₪' + valILS.toLocaleString('he-IL', {maximumFractionDigits: 0}),
                         icon: './logo.svg'
                     });
