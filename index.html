@@ -8093,19 +8093,29 @@
             });
         }
 
-        // iOS keyboard fix — hide tab bar when any input is focused
+        // iOS keyboard fix — hide tab bar before keyboard animation starts
+        // touchstart fires before iOS keyboard animation; focusin is a backup
+        function _hideTabBar() {
+            var tb = document.querySelector('.tab-bar');
+            if (tb) tb.style.visibility = 'hidden';
+        }
+        function _showTabBar() {
+            var tb = document.querySelector('.tab-bar');
+            if (tb) tb.style.visibility = 'visible';
+        }
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                _hideTabBar();
+            }
+        }, { passive: true });
         document.addEventListener('focusin', function(e) {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                var tb = document.querySelector('.tab-bar');
-                if (tb) tb.style.visibility = 'hidden';
+                _hideTabBar();
             }
         });
         document.addEventListener('focusout', function(e) {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                setTimeout(function() {
-                    var tb = document.querySelector('.tab-bar');
-                    if (tb) tb.style.visibility = 'visible';
-                }, 150);
+                setTimeout(_showTabBar, 150);
             }
         });
 
