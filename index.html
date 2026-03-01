@@ -1763,6 +1763,10 @@
                         <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
                     </div>
                 </div>
+                <div id="chartValueHeader" style="display:none;align-items:baseline;gap:10px;margin-bottom:10px;">
+                    <span id="chartCurrentValue" style="font-size:1.5rem;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums;"></span>
+                    <span id="chartPeriodChange" style="font-size:0.82rem;font-weight:600;padding:2px 8px;border-radius:6px;"></span>
+                </div>
                 <div style="position:relative;width:100%;">
                     <canvas id="historyChart" style="width:100%;height:240px;cursor:crosshair;"></canvas>
                     <div id="chartTooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(15,20,40,0.92);border:1px solid rgba(244,196,48,0.3);border-radius:10px;padding:8px 12px;font-size:0.78rem;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:10;direction:rtl;">
@@ -6535,7 +6539,7 @@
             try {
                 var history = JSON.parse(localStorage.getItem('portfolio-history') || '[]');
                 var total = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
-                if (total <= 0 && history.length === 0) return;
+                if (total <= 0) return; // never save a zero snapshot
 
                 var today = new Date().toISOString().split('T')[0];
                 // Only one snapshot per day
@@ -6555,6 +6559,9 @@
             var canvas = document.getElementById('historyChart');
             var emptyMsg = document.getElementById('historyEmpty');
             if (!canvas) return;
+            // Skip if trends tab is not visible — avoids 0-width canvas bugs
+            var trendsTab = document.getElementById('tabTrends');
+            if (!trendsTab || !trendsTab.classList.contains('active')) return;
 
             var history = [];
             try { history = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
@@ -6572,6 +6579,8 @@
             if (history.length < 2) {
                 canvas.style.display = 'none';
                 if (emptyMsg) emptyMsg.style.display = 'block';
+                var hdr0 = document.getElementById('chartValueHeader');
+                if (hdr0) hdr0.style.display = 'none';
                 return;
             }
             canvas.style.display = 'block';
@@ -6586,6 +6595,23 @@
             var W = rect.width, H = rect.height;
 
             var values = history.map(function(h) { return h.value; });
+
+            // Compute change early — used for header + line colour
+            var isUp = values[values.length-1] >= values[0];
+            var changePct = values[0] > 0 ? ((values[values.length-1] - values[0]) / values[0] * 100) : 0;
+
+            // Update HTML value header
+            var hdrEl = document.getElementById('chartValueHeader');
+            var cvEl  = document.getElementById('chartCurrentValue');
+            var pcEl  = document.getElementById('chartPeriodChange');
+            if (hdrEl && cvEl && pcEl) {
+                hdrEl.style.display = 'flex';
+                cvEl.textContent = '₪' + Math.round(values[values.length-1]).toLocaleString('he-IL');
+                pcEl.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(changePct).toFixed(1) + '%';
+                pcEl.style.background = isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                pcEl.style.color = isUp ? '#10b981' : '#ef4444';
+            }
+
             var minV = Math.min.apply(null, values);
             var maxV = Math.max.apply(null, values);
             var range = maxV - minV || 1;
@@ -6593,11 +6619,10 @@
             maxV += range * 0.12;
             range = maxV - minV;
 
-            var padL = 68, padR = 16, padT = 28, padB = 32;
+            var padL = 68, padR = 16, padT = 16, padB = 32;
             var chartW = W - padL - padR;
             var chartH = H - padT - padB;
 
-            var isUp = values[values.length-1] >= values[0];
             var lineColor   = isUp ? '#10b981' : '#ef4444';
             var gradStart   = isUp ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)';
             var gradEnd     = isUp ? 'rgba(16,185,129,0)' : 'rgba(239,68,68,0)';
@@ -6670,8 +6695,20 @@
             ctx.fill();
             ctx.shadowBlur = 0;
 
-            // Date labels
-            var datesToShow = [0, Math.floor(pts.length / 2), pts.length - 1];
+            // Date labels — adaptive count based on range and point count
+            var maxLabels = chartRange === 'week' ? Math.min(7, pts.length) :
+                            chartRange === 'month' ? 5 :
+                            chartRange === '3month' ? 6 : 6;
+            maxLabels = Math.max(2, Math.min(maxLabels, pts.length));
+            var datesToShow = [0];
+            if (maxLabels > 2) {
+                var dStep = (pts.length - 1) / (maxLabels - 1);
+                for (var di = 1; di < maxLabels - 1; di++) datesToShow.push(Math.round(di * dStep));
+            }
+            datesToShow.push(pts.length - 1);
+            // Deduplicate
+            datesToShow = datesToShow.filter(function(v, i, a) { return a.indexOf(v) === i; });
+
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.font = '10px -apple-system,sans-serif';
             ctx.textAlign = 'center';
@@ -6681,19 +6718,7 @@
                 ctx.fillText(d[2] + '/' + d[1], pts[idx].x, H - 6);
             });
 
-            // Change badge top-right
-            var changePct = values[0] > 0 ? ((values[values.length-1] - values[0]) / values[0] * 100) : 0;
-            var badgeTxt = (changePct >= 0 ? '+' : '') + changePct.toFixed(1) + '%';
-            ctx.font = 'bold 11px -apple-system,sans-serif';
-            var tw = ctx.measureText(badgeTxt).width;
-            var bx = W - padR - tw - 12, by = padT - 16;
-            ctx.fillStyle = isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-            ctx.beginPath();
-            ctx.roundRect ? ctx.roundRect(bx - 4, by, tw + 16, 18, 6) : ctx.rect(bx - 4, by, tw + 16, 18);
-            ctx.fill();
-            ctx.fillStyle = lineColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(badgeTxt, bx + (tw + 8) / 2, by + 13);
+            // (% change badge removed — shown in HTML header above chart)
 
             // ---- Interactive tooltip via overlay canvas ----
             var wrapper = canvas.parentElement;
@@ -6791,11 +6816,14 @@
 
                 canvas.addEventListener('mousemove', function(e) { _showTip(e.clientX); });
                 canvas.addEventListener('mouseleave', _hideTip);
+                canvas.addEventListener('touchstart', function(e) {
+                    if (e.touches[0]) _showTip(e.touches[0].clientX);
+                }, {passive: true});
                 canvas.addEventListener('touchmove', function(e) {
                     e.preventDefault();
                     if (e.touches[0]) _showTip(e.touches[0].clientX);
                 }, {passive:false});
-                canvas.addEventListener('touchend', function() { setTimeout(_hideTip, 1500); });
+                canvas.addEventListener('touchend', function() { setTimeout(_hideTip, 2500); });
             }
 
 
