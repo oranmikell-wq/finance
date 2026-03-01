@@ -1,6 +1,6 @@
 // Service Worker — Network First for HTML, Cache First for static assets
 // API calls bypass cache entirely
-var CACHE_VERSION = 'financier-v29';
+var CACHE_VERSION = 'financier-v30';
 
 var API_DOMAINS = [
     'finnhub.io',
