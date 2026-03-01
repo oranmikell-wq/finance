@@ -1,6 +1,5 @@
-// Service Worker — Network First for HTML, Cache First for static assets
-// API calls bypass cache entirely
-var CACHE_VERSION = 'financier-v31';
+// Service Worker — Cache First for HTML (instant load), Network First for API
+var CACHE_VERSION = 'financier-v32';
 
 var API_DOMAINS = [
     'finnhub.io',
@@ -21,14 +20,27 @@ var API_DOMAINS = [
     'gemelnet.cma.gov.il',
 ];
 
+var PRECACHE_URLS = [
+    './',
+    './index.html',
+    './manifest.json',
+    './logo.svg',
+];
+
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
 });
 
+// Pre-cache core files on install → instant load from first open
 self.addEventListener('install', function(event) {
     self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_VERSION).then(function(cache) {
+            return cache.addAll(PRECACHE_URLS);
+        }).catch(function() {})
+    );
 });
 
 self.addEventListener('activate', function(event) {
@@ -51,34 +63,33 @@ self.addEventListener('fetch', function(event) {
     var url;
     try { url = new URL(event.request.url); } catch(e) { return; }
 
-    // Never cache API calls — let them go straight to network
+    // Never cache API calls — pass straight to network
     var isAPI = API_DOMAINS.some(function(d) { return url.hostname.includes(d); });
-    if (isAPI) {
-        // Pass through directly, no caching, no cloning
-        return;
-    }
+    if (isAPI) return;
 
-    // For HTML/navigation — network first, cache fallback
+    // HTML / navigation — Cache First + update in background (stale-while-revalidate)
+    // Serves instantly from cache, fetches fresh version silently for next open
     if (event.request.mode === 'navigate' ||
         url.pathname.endsWith('.html') ||
         url.pathname.endsWith('/')) {
         event.respondWith(
-            fetch(event.request).then(function(response) {
-                if (response.ok) {
-                    var clone = response.clone();
-                    caches.open(CACHE_VERSION).then(function(cache) {
-                        cache.put(event.request, clone);
-                    });
-                }
-                return response;
-            }).catch(function() {
-                return caches.match(event.request);
+            caches.open(CACHE_VERSION).then(function(cache) {
+                return cache.match(event.request).then(function(cached) {
+                    // Fetch fresh version in background regardless
+                    var networkFetch = fetch(event.request).then(function(response) {
+                        if (response.ok) cache.put(event.request, response.clone());
+                        return response;
+                    }).catch(function() { return null; });
+
+                    // Serve cache instantly if available, otherwise wait for network
+                    return cached || networkFetch;
+                });
             })
         );
         return;
     }
 
-    // Static local assets — cache first
+    // Static local assets — Cache First
     if (url.origin === location.origin) {
         event.respondWith(
             caches.match(event.request).then(function(cached) {
@@ -97,6 +108,5 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
-    // Everything else (non-API external) — network only
-    // Don't cache, don't clone — avoids clone errors
+    // Everything else — network only
 });
