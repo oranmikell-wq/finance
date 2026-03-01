@@ -2067,6 +2067,65 @@
             </div>
 
 
+            <!-- Compound Interest Calculator -->
+            <div class="chart-card">
+                <h3>📈 חישוב תשואה</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div>
+                        <div class="retire-label">קרן התחלתית (₪)</div>
+                        <input type="text" inputmode="decimal" id="compPrincipal" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcCompound()">
+                    </div>
+                    <div>
+                        <div class="retire-label">הפקדה חודשית (₪)</div>
+                        <input type="text" inputmode="decimal" id="compMonthly" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcCompound()">
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                    <div>
+                        <div class="retire-label">תשואה שנתית (%)</div>
+                        <input type="text" inputmode="decimal" id="compRate" class="retire-input" placeholder="7" oninput="calcCompound()">
+                    </div>
+                    <div>
+                        <div class="retire-label">תקופה (שנים)</div>
+                        <input type="text" inputmode="decimal" id="compYears" class="retire-input" placeholder="10" oninput="calcCompound()">
+                    </div>
+                </div>
+                <div style="text-align:left;margin-bottom:14px;">
+                    <button onclick="resetCompound()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
+                </div>
+
+                <!-- Result -->
+                <div id="compoundResult" style="display:none;">
+                    <div class="retire-main-card">
+                        <div class="retire-main-label">סכום סופי</div>
+                        <div class="retire-main-amount" id="compResultTotal">₪0</div>
+                    </div>
+                    <div class="retire-stats-grid">
+                        <div class="retire-stat">
+                            <div class="retire-stat-value" id="compResultDeposited">—</div>
+                            <div class="retire-stat-label">סה״כ הפקדות</div>
+                        </div>
+                        <div class="retire-stat">
+                            <div class="retire-stat-value retire-stat-gold" id="compResultProfit">—</div>
+                            <div class="retire-stat-label">רווח</div>
+                        </div>
+                        <div class="retire-stat">
+                            <div class="retire-stat-value retire-stat-blue" id="compResultProfitPct">—</div>
+                            <div class="retire-stat-label">תשואה כוללת</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">
+                            <span>רווח מתוך סכום סופי</span>
+                            <span id="compProfitPctLabel"></span>
+                        </div>
+                        <div class="retire-progress-track">
+                            <div class="retire-progress-fill" id="compProfitBar" style="width:0%;background:var(--accent-green);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- TAB 4: Settings -->
@@ -4949,6 +5008,46 @@
                     }
                 });
             } catch(e) {}
+        }
+
+        // ============ Compound Interest Calculator ============
+        function calcCompound() {
+            var principal = parseNum(document.getElementById('compPrincipal').value) || 0;
+            var monthly   = parseNum(document.getElementById('compMonthly').value)   || 0;
+            var rate      = parseFloat((document.getElementById('compRate').value  || '').replace(/,/g,'')) || 0;
+            var years     = parseFloat((document.getElementById('compYears').value || '').replace(/,/g,'')) || 0;
+
+            var resultEl = document.getElementById('compoundResult');
+            if (rate <= 0 || years <= 0 || (principal <= 0 && monthly <= 0)) {
+                resultEl.style.display = 'none';
+                return;
+            }
+
+            var r = rate / 100 / 12;   // monthly rate
+            var n = years * 12;        // total months
+
+            var fvPrincipal = principal * Math.pow(1 + r, n);
+            var fvMonthly   = monthly > 0 ? monthly * (Math.pow(1 + r, n) - 1) / r : 0;
+            var total       = fvPrincipal + fvMonthly;
+            var deposited   = principal + monthly * n;
+            var profit      = total - deposited;
+            var profitPct   = deposited > 0 ? (profit / deposited * 100) : 0;
+            var profitRatio = total > 0 ? Math.min(profit / total * 100, 100) : 0;
+
+            document.getElementById('compResultTotal').textContent     = '₪' + Math.round(total).toLocaleString('he-IL');
+            document.getElementById('compResultDeposited').textContent = '₪' + Math.round(deposited).toLocaleString('he-IL');
+            document.getElementById('compResultProfit').textContent    = '₪' + Math.round(profit).toLocaleString('he-IL');
+            document.getElementById('compResultProfitPct').textContent = '+' + profitPct.toFixed(1) + '%';
+            document.getElementById('compProfitPctLabel').textContent  = profitRatio.toFixed(1) + '%';
+            document.getElementById('compProfitBar').style.width       = profitRatio + '%';
+            resultEl.style.display = 'block';
+        }
+
+        function resetCompound() {
+            ['compPrincipal','compMonthly','compRate','compYears'].forEach(function(id) {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('compoundResult').style.display = 'none';
         }
 
         function resetRetirementInputs() {
