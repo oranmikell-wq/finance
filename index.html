@@ -2126,6 +2126,73 @@
                 </div>
             </div>
 
+            <!-- Month-End Forecast -->
+            <div class="chart-card" id="monthForecastCard">
+                <h3>🔮 חיזוי סוף חודש</h3>
+
+                <!-- Portfolio forecast -->
+                <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;letter-spacing:0.03em;">📊 שווי תיק</div>
+                <div id="portfolioForecastContent">
+                    <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:8px 0;">אין מספיק נתוני היסטוריה — נדרשים לפחות 2 ימים</div>
+                </div>
+
+                <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
+
+                <!-- Cash forecast -->
+                <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;letter-spacing:0.03em;">💵 תזרים כספי</div>
+                <div id="cashForecastContent">
+                    <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:8px 0;">הזן שכר בתקציב החודשי כדי לראות תחזית</div>
+                </div>
+            </div>
+
+            <!-- Capital Gains Tax Calculator -->
+            <div class="chart-card">
+                <h3>🧾 מחשבון מס רווח הון</h3>
+                <div style="margin-bottom:12px;">
+                    <div class="retire-label">סוג נכס</div>
+                    <select id="taxAssetType" onchange="calcTax()" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;-webkit-appearance:none;">
+                        <option value="capital">מניות / קריפטו / קרן נאמנות (25%)</option>
+                        <option value="deposit">פיקדון / חיסכון — מס ריבית (15%)</option>
+                        <option value="exempt">קרן השתלמות / פנסיה (פטור)</option>
+                    </select>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                    <div>
+                        <div class="retire-label">שווי מכירה (₪)</div>
+                        <input type="text" inputmode="decimal" id="taxSaleValue" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
+                    </div>
+                    <div>
+                        <div class="retire-label">עלות בסיס / קרן (₪)</div>
+                        <input type="text" inputmode="decimal" id="taxCostBasis" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
+                    </div>
+                </div>
+                <div style="text-align:left;margin-bottom:14px;">
+                    <button onclick="resetTax()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
+                </div>
+
+                <div id="taxResult" style="display:none;">
+                    <div class="retire-main-card">
+                        <div class="retire-main-label" id="taxNote">25% מס רווח הון</div>
+                        <div class="retire-main-amount" id="taxResultTax">₪0</div>
+                        <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">מס לתשלום</div>
+                    </div>
+                    <div class="retire-stats-grid">
+                        <div class="retire-stat">
+                            <div class="retire-stat-value" id="taxResultGain">—</div>
+                            <div class="retire-stat-label">רווח</div>
+                        </div>
+                        <div class="retire-stat">
+                            <div class="retire-stat-value retire-stat-gold" id="taxGainPct">—</div>
+                            <div class="retire-stat-label">תשואה %</div>
+                        </div>
+                        <div class="retire-stat">
+                            <div class="retire-stat-value retire-stat-blue" id="taxResultNet">—</div>
+                            <div class="retire-stat-label">נטו לאחר מס</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- TAB 4: Settings -->
@@ -5010,6 +5077,100 @@
             } catch(e) {}
         }
 
+        // ============ Month-End Forecast ============
+        function renderMonthForecast() {
+            var now = new Date();
+            var currentMonth = now.toISOString().slice(0, 7);
+            var lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            var dayOfMonth = now.getDate();
+            var daysRemaining = lastDayOfMonth - dayOfMonth;
+
+            // --- Portfolio forecast ---
+            var history = [];
+            try { history = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
+            var monthEntries = history.filter(function(e) { return e.date.startsWith(currentMonth); });
+            var portfolioEl = document.getElementById('portfolioForecastContent');
+            if (portfolioEl) {
+                if (monthEntries.length >= 2) {
+                    var first = monthEntries[0];
+                    var last  = monthEntries[monthEntries.length - 1];
+                    var daysElapsed = monthEntries.length - 1;
+                    var dailyAvg = (last.value - first.value) / daysElapsed;
+                    var projected = last.value + dailyAvg * daysRemaining;
+                    var diff = projected - last.value;
+                    var isUp = diff >= 0;
+                    portfolioEl.innerHTML =
+                        '<div class="retire-stats-grid">' +
+                        '<div class="retire-stat"><div class="retire-stat-value">₪' + Math.round(last.value).toLocaleString('he-IL') + '</div><div class="retire-stat-label">שווי עכשיו</div></div>' +
+                        '<div class="retire-stat"><div class="retire-stat-value retire-stat-gold">₪' + Math.round(projected).toLocaleString('he-IL') + '</div><div class="retire-stat-label">צפי סוף חודש</div></div>' +
+                        '<div class="retire-stat"><div class="retire-stat-value" style="color:' + (isUp ? 'var(--accent-green)' : 'var(--accent-red)') + '">' + (isUp ? '+' : '') + Math.round(diff).toLocaleString('he-IL') + '₪</div><div class="retire-stat-label">שינוי צפוי</div></div>' +
+                        '</div>' +
+                        '<div style="font-size:0.68rem;color:var(--text-secondary);text-align:center;margin-top:6px;">בהתבסס על ' + daysElapsed + ' ימים · נותרו ' + daysRemaining + ' ימים</div>';
+                } else {
+                    portfolioEl.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:8px 0;">אין מספיק נתוני היסטוריה — נדרשים לפחות 2 ימים</div>';
+                }
+            }
+
+            // --- Cash forecast ---
+            var cashEl = document.getElementById('cashForecastContent');
+            if (cashEl) {
+                var salaryEl = document.getElementById('profileSalary');
+                var salary = salaryEl ? (parseNum(salaryEl.value) || 0) : 0;
+                if (salary > 0) {
+                    var expIds = ['expHousing','expTransport','expFood','expInsurance','expBills','expEducation','expDebt','expOther'];
+                    var totalExp = expIds.reduce(function(s, id) {
+                        var el = document.getElementById(id);
+                        return s + (el ? (parseNum(el.value) || 0) : 0);
+                    }, 0);
+                    var totalDeposits = assets.reduce(function(s, a) { return s + (parseNum(a.monthly) || 0); }, 0);
+                    var disposable = salary - totalExp - totalDeposits;
+                    var dailyDisp = disposable / lastDayOfMonth;
+                    var remaining = dailyDisp * daysRemaining;
+                    var isPos = disposable >= 0;
+                    cashEl.innerHTML =
+                        '<div class="retire-stats-grid">' +
+                        '<div class="retire-stat"><div class="retire-stat-value" style="color:' + (isPos ? 'var(--accent-green)' : 'var(--accent-red)') + '">₪' + Math.round(Math.abs(disposable)).toLocaleString('he-IL') + '</div><div class="retire-stat-label">פנוי בחודש</div></div>' +
+                        '<div class="retire-stat"><div class="retire-stat-value retire-stat-blue">₪' + Math.round(Math.abs(remaining)).toLocaleString('he-IL') + '</div><div class="retire-stat-label">נותר ל‑' + daysRemaining + ' ימים</div></div>' +
+                        '<div class="retire-stat"><div class="retire-stat-value retire-stat-gold">₪' + Math.round(Math.abs(dailyDisp)).toLocaleString('he-IL') + '</div><div class="retire-stat-label">ממוצע יומי</div></div>' +
+                        '</div>';
+                } else {
+                    cashEl.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:8px 0;">הזן שכר בתקציב החודשי כדי לראות תחזית</div>';
+                }
+            }
+        }
+
+        // ============ Capital Gains Tax Calculator ============
+        function calcTax() {
+            var type      = document.getElementById('taxAssetType').value;
+            var saleValue = parseNum(document.getElementById('taxSaleValue').value) || 0;
+            var costBasis = parseNum(document.getElementById('taxCostBasis').value) || 0;
+            var resultEl  = document.getElementById('taxResult');
+            if (saleValue <= 0 || costBasis <= 0) { resultEl.style.display = 'none'; return; }
+
+            var gain = saleValue - costBasis;
+            var taxRate = type === 'capital' ? 0.25 : type === 'deposit' ? 0.15 : 0;
+            var noteText = type === 'capital' ? '25% מס רווח הון' : type === 'deposit' ? '15% מס ריבית' : 'פטור ממס';
+            var tax = gain > 0 ? gain * taxRate : 0;
+            var net = saleValue - tax;
+            var gainPct = costBasis > 0 ? (gain / costBasis * 100) : 0;
+
+            document.getElementById('taxNote').textContent          = noteText;
+            var gainEl = document.getElementById('taxResultGain');
+            gainEl.textContent  = (gain >= 0 ? '+' : '-') + '₪' + Math.abs(Math.round(gain)).toLocaleString('he-IL');
+            gainEl.style.color  = gain >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            document.getElementById('taxGainPct').textContent       = (gainPct >= 0 ? '+' : '') + gainPct.toFixed(1) + '%';
+            document.getElementById('taxResultTax').textContent     = tax > 0 ? '₪' + Math.round(tax).toLocaleString('he-IL') : '₪0';
+            document.getElementById('taxResultNet').textContent     = '₪' + Math.round(net).toLocaleString('he-IL');
+            resultEl.style.display = 'block';
+        }
+
+        function resetTax() {
+            document.getElementById('taxSaleValue').value  = '';
+            document.getElementById('taxCostBasis').value  = '';
+            document.getElementById('taxAssetType').value  = 'capital';
+            document.getElementById('taxResult').style.display = 'none';
+        }
+
         // ============ Compound Interest Calculator ============
         function calcCompound() {
             var principal = parseNum(document.getElementById('compPrincipal').value) || 0;
@@ -6144,6 +6305,7 @@
             // Render personal tab calculators
             if (tabName === 'Personal') {
                 calcRetirement();
+                renderMonthForecast();
             }
 
             if (tabName === 'Trends') {
