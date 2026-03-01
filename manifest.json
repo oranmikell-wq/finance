@@ -14,12 +14,6 @@
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "./icon-dark.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any maskable"
     }
   ]
 }
