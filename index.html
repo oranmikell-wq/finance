@@ -8098,8 +8098,8 @@
             var _tabBar = document.querySelector('.tab-bar');
             function _fixTabBarForKeyboard() {
                 if (!_tabBar) return;
-                var keyboardHeight = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-                if (keyboardHeight > 100) {
+                var keyboardHeight = window.innerHeight - window.visualViewport.height;
+                if (keyboardHeight > 150) {
                     _tabBar.style.transform = 'translate3d(0,' + keyboardHeight + 'px,0)';
                 } else {
                     _tabBar.style.transform = 'translate3d(0,0,0)';
