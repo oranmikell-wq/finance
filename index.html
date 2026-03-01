@@ -2171,38 +2171,18 @@
         <!-- TAB 4: Settings -->
         <div class="tab-content" id="tabMore">
 
-            <!-- Personal Details -->
-            <div class="chart-card">
-                <h3>👤 פרטים אישיים</h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם פרטי</label>
-                        <input type="text" id="profileFirstName" placeholder="ישראל" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
-                    </div>
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם משפחה</label>
-                        <input type="text" id="profileLastName" placeholder="ישראלי" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
-                    </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">גיל</label>
-                        <input type="text" inputmode="numeric" id="profileAge" placeholder="30" maxlength="3" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="this.value=this.value.replace(/[^0-9]/g,''); saveProfile()">
-                    </div>
-                    <div class="form-group" style="margin:0;">
-                        <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">מין</label>
-                        <select id="profileGender" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;direction:rtl;text-align:right;" onchange="saveProfile()">
-                            <option value="">בחר</option>
-                            <option value="male">זכר</option>
-                            <option value="female">נקבה</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="profileSavedMsg" style="text-align:center;font-size:0.75rem;color:var(--accent-green);opacity:0;transition:opacity 0.3s;">✅ נשמר</div>
-            </div>
-
             <div class="chart-card">
             <div style="display:flex;flex-direction:column;gap:10px;">
+                <!-- Personal Details -->
+                <button onclick="showProfileModal()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);">👤</div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title">פרטים אישיים</div>
+                        <div class="settings-row-desc" id="profileRowDesc">לא הוגדר</div>
+                    </div>
+                    <div class="settings-row-arrow">‹</div>
+                </button>
+
                 <!-- Light/Dark toggle -->
                 <button onclick="toggleTheme()" class="settings-row" id="themeToggleRow">
                     <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);" id="themeToggleIcon">🌙</div>
@@ -2268,6 +2248,41 @@
         </div>
 
     </div> <!-- end container -->
+
+    <!-- Profile Modal -->
+    <div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeProfileModal()">
+        <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px 36px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">
+                <div style="font-size:1.1rem;font-weight:700;">👤 פרטים אישיים</div>
+                <button onclick="closeProfileModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם פרטי</label>
+                    <input type="text" id="profileFirstName" placeholder="ישראל" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">שם משפחה</label>
+                    <input type="text" id="profileLastName" placeholder="ישראלי" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="saveProfile()">
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">גיל</label>
+                    <input type="text" inputmode="numeric" id="profileAge" placeholder="30" maxlength="3" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;" oninput="this.value=this.value.replace(/[^0-9]/g,''); saveProfile()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;display:block;">מין</label>
+                    <select id="profileGender" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;-webkit-appearance:none;appearance:none;direction:rtl;" onchange="saveProfile()">
+                        <option value="">בחר</option>
+                        <option value="male">זכר</option>
+                        <option value="female">נקבה</option>
+                    </select>
+                </div>
+            </div>
+            <div id="profileSavedMsg" style="text-align:center;font-size:0.75rem;color:var(--accent-green);opacity:0;transition:opacity 0.3s;">✅ נשמר</div>
+        </div>
+    </div>
 
     <!-- Data Menu Modal -->
     <div id="dataMenuModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeDataMenu()">
@@ -4540,6 +4555,27 @@
             var msg = document.getElementById('profileSavedMsg');
             if (msg) { msg.style.opacity = '1'; setTimeout(function(){ msg.style.opacity = '0'; }, 1500); }
             updateGreeting();
+            updateProfileRowDesc();
+        }
+
+        function updateProfileRowDesc() {
+            var el = document.getElementById('profileRowDesc');
+            if (!el) return;
+            var fn = (document.getElementById('profileFirstName') || {}).value || '';
+            var ln = (document.getElementById('profileLastName') || {}).value || '';
+            var age = (document.getElementById('profileAge') || {}).value || '';
+            var name = [fn, ln].filter(Boolean).join(' ');
+            el.textContent = name ? (age ? name + ', גיל ' + age : name) : 'לא הוגדר';
+        }
+
+        function showProfileModal() {
+            var m = document.getElementById('profileModal');
+            if (m) { m.style.display = 'flex'; }
+        }
+
+        function closeProfileModal() {
+            var m = document.getElementById('profileModal');
+            if (m) m.style.display = 'none';
         }
 
         function loadProfile() {
@@ -4564,6 +4600,7 @@
                 }
             } catch(e){}
             updateGreeting();
+            updateProfileRowDesc();
             calcExpenses();
             loadTheme();
         }
