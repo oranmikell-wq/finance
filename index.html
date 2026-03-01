@@ -8093,16 +8093,21 @@
             });
         }
 
-        // iOS keyboard fix — hide tab bar when keyboard is open
-        if (window.visualViewport) {
-            var _tabBar = document.querySelector('.tab-bar');
-            function _fixTabBarForKeyboard() {
-                if (!_tabBar) return;
-                var keyboardHeight = window.innerHeight - window.visualViewport.height;
-                _tabBar.style.visibility = keyboardHeight > 150 ? 'hidden' : 'visible';
+        // iOS keyboard fix — hide tab bar when any input is focused
+        document.addEventListener('focusin', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                var tb = document.querySelector('.tab-bar');
+                if (tb) tb.style.visibility = 'hidden';
             }
-            window.visualViewport.addEventListener('resize', _fixTabBarForKeyboard);
-        }
+        });
+        document.addEventListener('focusout', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                setTimeout(function() {
+                    var tb = document.querySelector('.tab-bar');
+                    if (tb) tb.style.visibility = 'visible';
+                }, 150);
+            }
+        });
 
         // iOS install hint (beforeinstallprompt not supported on iOS)
         if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone && !localStorage.getItem('pwa-installed')) {
