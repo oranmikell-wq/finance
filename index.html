@@ -2150,20 +2150,21 @@
                 <h3>🧾 מחשבון מס רווח הון</h3>
                 <div style="margin-bottom:14px;">
                     <div class="retire-label" style="margin-bottom:8px;">סוג נכס</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;" id="taxTypeButtons">
-                        <button onclick="setTaxType('capital',this)" class="tax-type-btn tax-type-active" style="padding:8px 4px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">מניות/<br>קריפטו<br><span style="font-size:0.65rem;opacity:0.8;">25%</span></button>
-                        <button onclick="setTaxType('deposit',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פיקדון/<br>חיסכון<br><span style="font-size:0.65rem;opacity:0.8;">15%</span></button>
-                        <button onclick="setTaxType('exempt',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">ק׳ השתל׳/<br>פנסיה<br><span style="font-size:0.65rem;opacity:0.8;">פטור</span></button>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="taxTypeButtons">
+                        <button onclick="setTaxType('capital',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">מניות / קריפטו<br>קרן נאמנות<br><span style="font-size:0.65rem;opacity:0.8;">25% על רווח</span></button>
+                        <button onclick="setTaxType('deposit',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פיקדון<br>חיסכון<br><span style="font-size:0.65rem;opacity:0.8;">15% על ריבית</span></button>
+                        <button onclick="setTaxType('hashtalm',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">ק׳ השתלמות<br>משיכה מוקדמת<br><span style="font-size:0.65rem;opacity:0.8;">25% על רווח</span></button>
+                        <button onclick="setTaxType('pension',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פנסיה / גמל<br>משיכה מוקדמת<br><span style="font-size:0.65rem;opacity:0.8;">35% על הכל</span></button>
                     </div>
                     <input type="hidden" id="taxAssetType" value="capital">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
                     <div>
-                        <div class="retire-label">שווי מכירה (₪)</div>
+                        <div class="retire-label" id="taxLabel1">שווי מכירה (₪)</div>
                         <input type="text" inputmode="decimal" id="taxSaleValue" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
                     </div>
-                    <div>
-                        <div class="retire-label">עלות בסיס / קרן (₪)</div>
+                    <div id="taxField2Wrap">
+                        <div class="retire-label" id="taxLabel2">עלות בסיס / קרן (₪)</div>
                         <input type="text" inputmode="decimal" id="taxCostBasis" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
                     </div>
                 </div>
@@ -5141,40 +5142,74 @@
         }
 
         // ============ Capital Gains Tax Calculator ============
+        var TAX_CONFIG = {
+            capital:  { rate: 0.25, note: '25% מס רווח הון',           onTotal: false, label1: 'שווי מכירה (₪)',   label2: 'עלות בסיס (₪)' },
+            deposit:  { rate: 0.15, note: '15% מס ריבית',              onTotal: false, label1: 'סכום סופי (₪)',    label2: 'קרן מקורית (₪)' },
+            hashtalm: { rate: 0.25, note: '25% מס רווח הון — משיכה מוקדמת', onTotal: false, label1: 'שווי משיכה (₪)', label2: 'סה״כ הפקדות (₪)' },
+            pension:  { rate: 0.35, note: '35% ניכוי מס — משיכה מוקדמת',   onTotal: true,  label1: 'סכום משיכה (₪)', label2: 'סה״כ הפקדות (₪) — לא חובה' }
+        };
+
         function calcTax() {
             var type      = document.getElementById('taxAssetType').value;
-            var saleValue = parseNum(document.getElementById('taxSaleValue').value) || 0;
-            var costBasis = parseNum(document.getElementById('taxCostBasis').value) || 0;
+            var cfg       = TAX_CONFIG[type] || TAX_CONFIG.capital;
+            var field1    = parseNum(document.getElementById('taxSaleValue').value) || 0;
+            var field2    = parseNum(document.getElementById('taxCostBasis').value) || 0;
             var resultEl  = document.getElementById('taxResult');
-            if (saleValue <= 0 || costBasis <= 0) { resultEl.style.display = 'none'; return; }
 
-            var gain = saleValue - costBasis;
-            var taxRate = type === 'capital' ? 0.25 : type === 'deposit' ? 0.15 : 0;
-            var noteText = type === 'capital' ? '25% מס רווח הון' : type === 'deposit' ? '15% מס ריבית' : 'פטור ממס';
-            var tax = gain > 0 ? gain * taxRate : 0;
-            var net = saleValue - tax;
-            var gainPct = costBasis > 0 ? (gain / costBasis * 100) : 0;
+            // pension only needs field1; others need both
+            var needBoth = !cfg.onTotal;
+            if (field1 <= 0 || (needBoth && field2 <= 0)) { resultEl.style.display = 'none'; return; }
 
-            document.getElementById('taxNote').textContent          = noteText;
+            var taxBase, gain, gainPct;
+            if (cfg.onTotal) {
+                // פנסיה/גמל: 35% on total withdrawal
+                taxBase  = field1;
+                gain     = field2 > 0 ? field1 - field2 : null;
+                gainPct  = (field2 > 0 && gain !== null) ? (gain / field2 * 100) : null;
+            } else {
+                gain     = field1 - field2;
+                taxBase  = gain > 0 ? gain : 0;
+                gainPct  = field2 > 0 ? (gain / field2 * 100) : 0;
+            }
+
+            var tax = taxBase * cfg.rate;
+            var net = field1 - tax;
+
+            document.getElementById('taxNote').textContent = cfg.note;
+            document.getElementById('taxResultTax').textContent = '₪' + Math.round(tax).toLocaleString('he-IL');
+            document.getElementById('taxResultNet').textContent = '₪' + Math.round(net).toLocaleString('he-IL');
+
             var gainEl = document.getElementById('taxResultGain');
-            gainEl.textContent  = (gain >= 0 ? '+' : '-') + '₪' + Math.abs(Math.round(gain)).toLocaleString('he-IL');
-            gainEl.style.color  = gain >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-            document.getElementById('taxGainPct').textContent       = (gainPct >= 0 ? '+' : '') + gainPct.toFixed(1) + '%';
-            document.getElementById('taxResultTax').textContent     = tax > 0 ? '₪' + Math.round(tax).toLocaleString('he-IL') : '₪0';
-            document.getElementById('taxResultNet').textContent     = '₪' + Math.round(net).toLocaleString('he-IL');
+            if (gain !== null) {
+                gainEl.textContent = (gain >= 0 ? '+' : '-') + '₪' + Math.abs(Math.round(gain)).toLocaleString('he-IL');
+                gainEl.style.color = gain >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            } else {
+                gainEl.textContent = '—';
+                gainEl.style.color = 'var(--text-secondary)';
+            }
+            document.getElementById('taxGainPct').textContent = gainPct !== null
+                ? (gainPct >= 0 ? '+' : '') + gainPct.toFixed(1) + '%'
+                : '—';
+
             resultEl.style.display = 'block';
         }
 
         function setTaxType(type, btn) {
             document.getElementById('taxAssetType').value = type;
             document.querySelectorAll('.tax-type-btn').forEach(function(b) {
-                b.style.border      = '1px solid var(--border-color)';
-                b.style.background  = 'transparent';
-                b.style.color       = 'var(--text-secondary)';
+                b.style.border     = '1px solid var(--border-color)';
+                b.style.background = 'transparent';
+                b.style.color      = 'var(--text-secondary)';
             });
             btn.style.border     = '1px solid var(--accent-gold)';
             btn.style.background = 'rgba(244,196,48,0.12)';
             btn.style.color      = 'var(--accent-gold)';
+            // Update field labels
+            var cfg = TAX_CONFIG[type] || TAX_CONFIG.capital;
+            var l1 = document.getElementById('taxLabel1');
+            var l2 = document.getElementById('taxLabel2');
+            if (l1) l1.textContent = cfg.label1;
+            if (l2) l2.textContent = cfg.label2;
             calcTax();
         }
 
@@ -5183,7 +5218,10 @@
             document.getElementById('taxCostBasis').value = '';
             document.getElementById('taxAssetType').value = 'capital';
             document.getElementById('taxResult').style.display = 'none';
-            // Reset button styles
+            var l1 = document.getElementById('taxLabel1');
+            var l2 = document.getElementById('taxLabel2');
+            if (l1) l1.textContent = TAX_CONFIG.capital.label1;
+            if (l2) l2.textContent = TAX_CONFIG.capital.label2;
             var btns = document.querySelectorAll('.tax-type-btn');
             btns.forEach(function(b) {
                 b.style.border     = '1px solid var(--border-color)';
