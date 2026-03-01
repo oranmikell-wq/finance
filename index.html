@@ -2250,8 +2250,8 @@
     </div> <!-- end container -->
 
     <!-- Profile Modal -->
-    <div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeProfileModal()">
-        <div style="background:#1e2438;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px calc(80px + env(safe-area-inset-bottom, 16px));box-shadow:0 -8px 32px rgba(0,0,0,0.5);">
+    <div id="profileModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9998;align-items:center;justify-content:center;" onclick="if(event.target===this)closeProfileModal()">
+        <div style="background:#1e2438;border-radius:20px;width:90%;max-width:420px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.6);animation:slideUp 0.25s ease-out;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">
                 <div style="font-size:1.1rem;font-weight:700;">👤 פרטים אישיים</div>
                 <button onclick="closeProfileModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
@@ -2285,8 +2285,8 @@
     </div>
 
     <!-- Data Menu Modal -->
-    <div id="dataMenuModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeDataMenu()">
-        <div style="background:#1e2438;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px 16px calc(80px + env(safe-area-inset-bottom, 16px));box-shadow:0 -8px 32px rgba(0,0,0,0.5);">
+    <div id="dataMenuModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9998;align-items:center;justify-content:center;" onclick="if(event.target===this)closeDataMenu()">
+        <div style="background:#1e2438;border-radius:20px;width:90%;max-width:400px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.6);animation:slideUp 0.25s ease-out;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">
                 <div style="font-size:1.1rem;font-weight:700;">💾 ייצוא / ייבוא נתונים</div>
                 <button onclick="closeDataMenu()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
@@ -2336,8 +2336,8 @@
     </div>
 
     <!-- About Menu Modal -->
-    <div id="aboutMenuModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutMenu()">
-        <div style="background:#1e2438;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px calc(80px + env(safe-area-inset-bottom, 16px));box-shadow:0 -8px 32px rgba(0,0,0,0.5);">
+    <div id="aboutMenuModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9998;align-items:center;justify-content:center;" onclick="if(event.target===this)closeAboutMenu()">
+        <div style="background:#1e2438;border-radius:20px;width:90%;max-width:400px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.6);animation:slideUp 0.25s ease-out;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">
                 <div style="font-size:1.1rem;font-weight:700;">ℹ️ אודות</div>
                 <button onclick="closeAboutMenu()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
@@ -2369,8 +2369,8 @@
     </div>
 
     <!-- About Modal -->
-    <div id="aboutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeAboutModal()">
-        <div style="background:#1e2438;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:24px 24px calc(80px + env(safe-area-inset-bottom, 16px));box-shadow:0 -8px 32px rgba(0,0,0,0.5);" id="aboutModalContent">
+    <div id="aboutModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeAboutModal()">
+        <div style="background:#1e2438;border-radius:20px;width:90%;max-width:420px;max-height:80vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.6);animation:slideUp 0.25s ease-out;" id="aboutModalContent">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                 <div id="aboutModalTitle" style="font-size:1.1rem;font-weight:700;"></div>
                 <button onclick="closeAboutModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
