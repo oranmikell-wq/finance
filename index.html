@@ -6019,6 +6019,14 @@
             if (tab) tab.classList.add('active');
             if (btn) btn.classList.add('active');
 
+            // Show/hide search — must run before any other calls that might throw
+            var sw = document.getElementById('searchWrapper');
+            if (sw) sw.style.display = tabName === 'Dashboard' ? '' : 'none';
+            if (tabName !== 'Dashboard') {
+                var searchEl = document.getElementById('assetSearch');
+                if (searchEl && searchEl.value) { searchEl.value = ''; filterAssets(''); }
+            }
+
             // Render trends content when switching to trends
             if (tabName === 'Trends') {
                 renderHistoryChart();
@@ -6038,14 +6046,6 @@
 
             if (tabName === 'Trends') {
                 fetchEconomicIndices();
-            }
-
-            // Show search only on Dashboard, reset when leaving
-            var sw = document.getElementById('searchWrapper');
-            if (sw) sw.style.display = tabName === 'Dashboard' ? '' : 'none';
-            if (tabName !== 'Dashboard') {
-                var searchEl = document.getElementById('assetSearch');
-                if (searchEl && searchEl.value) { searchEl.value = ''; filterAssets(''); }
             }
 
             // Scroll to top
