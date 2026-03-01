@@ -9505,7 +9505,7 @@
 
             // Cache in localStorage for 6 hours (monthly data)
             var cached = null;
-            try { cached = JSON.parse(localStorage.getItem('economic-indices-v4') || 'null'); } catch(e) {}
+            try { cached = JSON.parse(localStorage.getItem('economic-indices-v5') || 'null'); } catch(e) {}
             if (cached && Date.now() - cached.ts < 21600000) {
                 renderEconomicIndices(cached.data);
                 return;
@@ -9523,7 +9523,7 @@
                 construction: constrRes.status === 'fulfilled' ? constrRes.value : null
             };
 
-            try { localStorage.setItem('economic-indices-v4', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
+            try { localStorage.setItem('economic-indices-v5', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
             renderEconomicIndices(data);
         }
 
@@ -9545,31 +9545,39 @@
             return points;
         }
 
-        // Fetch a CBS price index series by ID
-        // Uses CORS proxies so it works both in browser and PWA
+        // Safe fetch with timeout (compatible with all browsers)
+        function fetchWithTimeout(url, ms) {
+            var ctrl = new AbortController();
+            var timer = setTimeout(function() { ctrl.abort(); }, ms || 10000);
+            return fetch(url, { signal: ctrl.signal }).finally(function() { clearTimeout(timer); });
+        }
+
+        // Fetch a CBS price index series by ID — with CORS proxy fallbacks
         async function fetchCbsSeries(id) {
             var cbsUrl = 'https://api.cbs.gov.il/index/data/price?id=' + id + '&format=json&download=false';
             var proxies = [
-                cbsUrl,  // direct (works in PWA/mobile)
-                'https://corsproxy.io/?' + encodeURIComponent(cbsUrl),
-                'https://api.allorigins.win/get?url=' + encodeURIComponent(cbsUrl)
+                { url: cbsUrl,                                                             wrap: false },
+                { url: 'https://corsproxy.io/?' + encodeURIComponent(cbsUrl),             wrap: false },
+                { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(cbsUrl), wrap: true  }
             ];
             var lastErr = '';
             for (var i = 0; i < proxies.length; i++) {
                 try {
-                    var r = await fetch(proxies[i], { signal: AbortSignal.timeout(10000) });
+                    var r = await fetchWithTimeout(proxies[i].url, 10000);
                     if (!r.ok) { lastErr = 'HTTP ' + r.status; continue; }
                     var raw = await r.text();
-                    // allorigins wraps in { contents: "..." }
                     var d;
-                    try { var wrap = JSON.parse(raw); d = wrap.contents ? JSON.parse(wrap.contents) : wrap; }
-                    catch(e) { lastErr = 'parse error'; continue; }
+                    try {
+                        var parsed = JSON.parse(raw);
+                        d = (proxies[i].wrap && parsed.contents) ? JSON.parse(parsed.contents) : parsed;
+                    } catch(e) { lastErr = 'parse: ' + e.message; continue; }
                     var points = parseCbsApi(d);
-                    if (!points || points.length < 2) { lastErr = 'no data'; continue; }
+                    if (!points || points.length < 2) { lastErr = 'empty'; continue; }
+                    console.log('[CBS id=' + id + '] ✅ source ' + i + ', ' + points.length + ' pts');
                     return points;
-                } catch(e) { lastErr = e.message; }
+                } catch(e) { lastErr = e.message; console.warn('[CBS id=' + id + '] src ' + i + ' failed:', e.message); }
             }
-            throw new Error('CBS id=' + id + ' failed: ' + lastErr);
+            throw new Error('CBS id=' + id + ': ' + lastErr);
         }
 
         async function fetchCPISeries() {
@@ -9582,7 +9590,7 @@
             // Fallback: FRED via codetabs
             try {
                 var fredUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=ISRCPIALLMINMEI';
-                var r = await fetch('https://api.codetabs.com/v1/proxy/?quest=' + fredUrl, { signal: AbortSignal.timeout(10000) });
+                var r = await fetchWithTimeout('https://api.codetabs.com/v1/proxy/?quest=' + fredUrl, 10000);
                 if (r.ok) {
                     var text = await r.text();
                     if (!text.startsWith('<') && !text.includes('"Error"')) {
