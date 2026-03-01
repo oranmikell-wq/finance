@@ -69,7 +69,7 @@
 
         body {
             font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #0a0e27 0%, #141829 50%, #0a0e27 100%);
+            background: #141829;
             color: var(--text-primary);
             min-height: 100dvh;
             display: flex;
@@ -6040,12 +6040,16 @@
                 fetchEconomicIndices();
             }
 
+            // Reset search when entering dashboard
+            if (tabName === 'Dashboard') {
+                var searchEl = document.getElementById('assetSearch');
+                if (searchEl) { searchEl.value = ''; filterAssets(''); }
+            }
+
             // Scroll to top
             window.scrollTo(0, 0);
             document.body.scrollTop = 0;
             document.documentElement.scrollTop = 0;
-
-            // Fill empty space below last element
         }
 
         function updateTrendsTab() {
