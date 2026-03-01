@@ -9505,7 +9505,7 @@
 
             // Cache in localStorage for 6 hours (monthly data)
             var cached = null;
-            try { cached = JSON.parse(localStorage.getItem('economic-indices-v5') || 'null'); } catch(e) {}
+            try { cached = JSON.parse(localStorage.getItem('economic-indices-v6') || 'null'); } catch(e) {}
             if (cached && Date.now() - cached.ts < 21600000) {
                 renderEconomicIndices(cached.data);
                 return;
@@ -9518,12 +9518,20 @@
                 fetchConstructionSeries()
             ]);
 
+            if (cpiRes.status === 'rejected') console.error('[Economic] CPI failed:', cpiRes.reason && cpiRes.reason.message);
+            if (constrRes.status === 'rejected') console.error('[Economic] Construction failed:', constrRes.reason && constrRes.reason.message);
+
             var data = {
                 cpi: cpiRes.status === 'fulfilled' ? cpiRes.value : null,
-                construction: constrRes.status === 'fulfilled' ? constrRes.value : null
+                construction: constrRes.status === 'fulfilled' ? constrRes.value : null,
+                cpiError: cpiRes.status === 'rejected' ? (cpiRes.reason && cpiRes.reason.message) : null,
+                constrError: constrRes.status === 'rejected' ? (constrRes.reason && constrRes.reason.message) : null
             };
 
-            try { localStorage.setItem('economic-indices-v5', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
+            // Only cache when we got real data — never cache failures
+            if (data.cpi || data.construction) {
+                try { localStorage.setItem('economic-indices-v6', JSON.stringify({ data: data, ts: Date.now() })); } catch(e) {}
+            }
             renderEconomicIndices(data);
         }
 
@@ -9545,39 +9553,47 @@
             return points;
         }
 
-        // Safe fetch with timeout (compatible with all browsers)
+        // Safe fetch with timeout — explicit chaining (no .finally needed)
         function fetchWithTimeout(url, ms) {
             var ctrl = new AbortController();
-            var timer = setTimeout(function() { ctrl.abort(); }, ms || 10000);
-            return fetch(url, { signal: ctrl.signal }).finally(function() { clearTimeout(timer); });
+            var id = setTimeout(function() { ctrl.abort(); }, ms || 10000);
+            return fetch(url, { signal: ctrl.signal }).then(
+                function(r) { clearTimeout(id); return r; },
+                function(e) { clearTimeout(id); throw e; }
+            );
         }
 
         // Fetch a CBS price index series by ID — with CORS proxy fallbacks
         async function fetchCbsSeries(id) {
             var cbsUrl = 'https://api.cbs.gov.il/index/data/price?id=' + id + '&format=json&download=false';
             var proxies = [
-                { url: cbsUrl,                                                             wrap: false },
-                { url: 'https://corsproxy.io/?' + encodeURIComponent(cbsUrl),             wrap: false },
-                { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(cbsUrl), wrap: true  }
+                { url: cbsUrl,                                                                              wrap: false },
+                { url: 'https://corsproxy.io/?' + encodeURIComponent(cbsUrl),                              wrap: false },
+                { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(cbsUrl),                 wrap: true  },
+                { url: 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(cbsUrl),           wrap: false }
             ];
-            var lastErr = '';
+            var errors = [];
             for (var i = 0; i < proxies.length; i++) {
                 try {
-                    var r = await fetchWithTimeout(proxies[i].url, 10000);
-                    if (!r.ok) { lastErr = 'HTTP ' + r.status; continue; }
+                    var r = await fetchWithTimeout(proxies[i].url, 12000);
+                    if (!r.ok) { errors.push('src' + i + ':HTTP' + r.status); continue; }
                     var raw = await r.text();
+                    console.log('[CBS ' + id + '] src' + i + ' raw:', raw.substring(0, 400));
                     var d;
                     try {
                         var parsed = JSON.parse(raw);
-                        d = (proxies[i].wrap && parsed.contents) ? JSON.parse(parsed.contents) : parsed;
-                    } catch(e) { lastErr = 'parse: ' + e.message; continue; }
+                        // allorigins wraps response in {contents:"...", status:{...}}
+                        d = (proxies[i].wrap && typeof parsed.contents === 'string') ? JSON.parse(parsed.contents) : parsed;
+                    } catch(pe) { errors.push('src' + i + ':JSON:' + pe.message); continue; }
                     var points = parseCbsApi(d);
-                    if (!points || points.length < 2) { lastErr = 'empty'; continue; }
-                    console.log('[CBS id=' + id + '] ✅ source ' + i + ', ' + points.length + ' pts');
+                    if (!points || points.length < 2) { errors.push('src' + i + ':empty:' + (points ? points.length : 0)); continue; }
+                    console.log('[CBS id=' + id + '] ✅ src' + i + ', ' + points.length + ' pts');
                     return points;
-                } catch(e) { lastErr = e.message; console.warn('[CBS id=' + id + '] src ' + i + ' failed:', e.message); }
+                } catch(e) { errors.push('src' + i + ':' + e.message); console.warn('[CBS id=' + id + '] src' + i + ' failed:', e.message); }
             }
-            throw new Error('CBS id=' + id + ': ' + lastErr);
+            var errMsg = 'CBS id=' + id + ': ' + errors.join('; ');
+            console.error('[CBS]', errMsg);
+            throw new Error(errMsg);
         }
 
         async function fetchCPISeries() {
@@ -9754,7 +9770,11 @@
             if (cpiCh) {
                 html += indexRow('📊', 'מדד מחירים לצרכן (אינפלציה)', cpiCh.monthly, cpiCh.annual, !constrCh);
             } else {
-                html += '<div style="padding:12px 0;color:var(--text-secondary);font-size:0.8rem;">מד"מ: נתונים לא זמינים</div>';
+                html += '<div style="padding:12px 0;display:flex;align-items:center;gap:8px;">'
+                    + '<span style="color:var(--text-secondary);font-size:0.8rem;">מד"מ: נתונים לא זמינים</span>'
+                    + '<button onclick="localStorage.removeItem(\'economic-indices-v6\');fetchEconomicIndices();" style="border:none;background:transparent;color:var(--accent-color,#4e8ef7);cursor:pointer;font-size:0.78rem;padding:2px 6px;text-decoration:underline;font-family:inherit;">נסה שוב</button>'
+                    + (data.cpiError ? '<span title="' + data.cpiError.replace(/"/g,"'") + '" style="cursor:help;font-size:0.7rem;color:var(--text-secondary);">ℹ️</span>' : '')
+                    + '</div>';
             }
 
             if (constrCh) {
@@ -9764,6 +9784,7 @@
                     + '<div style="font-size:1.3rem;">🏗️</div>'
                     + '<div style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text-primary);">מדד תשומות הבניה</div>'
                     + '<div style="font-size:0.75rem;color:var(--text-secondary);">לא זמין</div>'
+                    + (data.constrError ? '<span title="' + data.constrError.replace(/"/g,"'") + '" style="cursor:help;font-size:0.7rem;color:var(--text-secondary);">ℹ️</span>' : '')
                     + '</div>';
             }
 
