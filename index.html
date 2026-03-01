@@ -8093,20 +8093,15 @@
             });
         }
 
-        // iOS keyboard fix — prevent tab bar from floating above keyboard
+        // iOS keyboard fix — hide tab bar when keyboard is open
         if (window.visualViewport) {
             var _tabBar = document.querySelector('.tab-bar');
             function _fixTabBarForKeyboard() {
                 if (!_tabBar) return;
                 var keyboardHeight = window.innerHeight - window.visualViewport.height;
-                if (keyboardHeight > 150) {
-                    _tabBar.style.transform = 'translate3d(0,' + keyboardHeight + 'px,0)';
-                } else {
-                    _tabBar.style.transform = 'translate3d(0,0,0)';
-                }
+                _tabBar.style.visibility = keyboardHeight > 150 ? 'hidden' : 'visible';
             }
             window.visualViewport.addEventListener('resize', _fixTabBarForKeyboard);
-            window.visualViewport.addEventListener('scroll', _fixTabBarForKeyboard);
         }
 
         // iOS install hint (beforeinstallprompt not supported on iOS)
