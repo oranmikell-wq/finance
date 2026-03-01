@@ -4976,30 +4976,35 @@
         function saveAlerts(list) { localStorage.setItem('price-alerts', JSON.stringify(list)); }
         
         function showAlertsManager() {
+            var existing = document.getElementById('alertsModal');
+            if (existing) existing.remove();
+
             var alerts = getAlerts();
-            var html = '<div style="padding:20px;">';
-            html += '<h3 style="text-align:center;margin-bottom:16px;">🔔 התראות מחיר</h3>';
-            
+            var itemsHtml = '';
             if (alerts.length > 0) {
                 alerts.forEach(function(al, i) {
-                    html += '<div class="alert-item"><div>';
-                    html += '<div style="font-weight:500;">' + al.name + '</div>';
-                    html += '<div style="font-size:0.7rem;color:var(--text-secondary);">' + (al.direction === 'above' ? '⬆️ מעל' : '⬇️ מתחת') + ' ₪' + al.target.toLocaleString('he-IL') + '</div>';
-                    html += '</div><button onclick="removeAlert(' + i + ')" style="background:none;border:none;color:var(--accent-red);cursor:pointer;">✕</button></div>';
+                    itemsHtml += '<div class="alert-item"><div>' +
+                        '<div style="font-weight:500;">' + al.name + '</div>' +
+                        '<div style="font-size:0.7rem;color:var(--text-secondary);">' + (al.direction === 'above' ? '⬆️ מעל' : '⬇️ מתחת') + ' ₪' + al.target.toLocaleString('he-IL') + '</div>' +
+                        '</div><button onclick="removeAlert(' + i + ')" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:1.1rem;padding:4px 8px;">✕</button></div>';
                 });
             } else {
-                html += '<div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;padding:15px;">אין התראות פעילות</div>';
+                itemsHtml = '<div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;padding:16px 0;">אין התראות פעילות</div>';
             }
-            
-            html += '<button onclick="addAlert()" style="width:100%;padding:12px;margin-top:12px;background:rgba(244,196,48,0.1);border:1px solid var(--accent-gold);border-radius:10px;color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.85rem;">+ הוסף התראה</button>';
-            html += '<button onclick="this.closest(\'.modal\').classList.remove(\'active\')" style="width:100%;padding:12px;margin-top:8px;background:transparent;border:1px solid var(--border-color);border-radius:10px;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.85rem;">סגור</button>';
-            html += '</div>';
-            
+
             var overlay = document.createElement('div');
-            overlay.className = 'modal active';
             overlay.id = 'alertsModal';
-            overlay.innerHTML = '<div class="modal-content" style="max-width:400px;">' + html + '</div>';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;display:flex;align-items:flex-end;justify-content:center;';
             overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML =
+                '<div style="background:#1e2438;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px calc(80px + env(safe-area-inset-bottom,16px));box-shadow:0 -8px 32px rgba(0,0,0,0.5);">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 8px;">' +
+                        '<div style="font-size:1.1rem;font-weight:700;">🔔 התראות מחיר</div>' +
+                        '<button onclick="document.getElementById(\'alertsModal\').remove()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>' +
+                    '</div>' +
+                    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">' + itemsHtml + '</div>' +
+                    '<button onclick="addAlert()" style="width:100%;padding:12px;background:rgba(244,196,48,0.1);border:1px solid var(--accent-gold);border-radius:10px;color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.85rem;">+ הוסף התראה</button>' +
+                '</div>';
             document.body.appendChild(overlay);
         }
         
