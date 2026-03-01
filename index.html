@@ -8093,6 +8093,22 @@
             });
         }
 
+        // iOS keyboard fix — prevent tab bar from floating above keyboard
+        if (window.visualViewport) {
+            var _tabBar = document.querySelector('.tab-bar');
+            function _fixTabBarForKeyboard() {
+                if (!_tabBar) return;
+                var keyboardHeight = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+                if (keyboardHeight > 100) {
+                    _tabBar.style.transform = 'translate3d(0,' + keyboardHeight + 'px,0)';
+                } else {
+                    _tabBar.style.transform = 'translate3d(0,0,0)';
+                }
+            }
+            window.visualViewport.addEventListener('resize', _fixTabBarForKeyboard);
+            window.visualViewport.addEventListener('scroll', _fixTabBarForKeyboard);
+        }
+
         // iOS install hint (beforeinstallprompt not supported on iOS)
         if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone && !localStorage.getItem('pwa-installed')) {
             setTimeout(() => {
