@@ -270,7 +270,6 @@
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             }
         }
-        .asset-row:active { opacity: 0.75; }
         .asset-row.expanded {
             border-color: rgba(244, 196, 48, 0.4);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(244, 196, 48, 0.08);
@@ -392,7 +391,6 @@
                 box-shadow: 0 4px 12px rgba(244, 196, 48, 0.3);
             }
         }
-        .asset-row-edit-btn:active { opacity: 0.7; transform: scale(0.97); }
 
         .asset-row-chevron {
             transition: transform 0.3s ease;
@@ -460,19 +458,12 @@
         }
 
         /* ============ iPhone & Mobile Optimization ============ */
-        /* ============ IPHONE ACTIVE STATES ============ */
-        .asset-row:active {
-            transform: scale(0.98);
-            opacity: 0.85;
-            transition: all 0.1s ease;
-        }
-        .stat-card:active {
-            transform: scale(0.97);
-        }
-        .action-button:active, .secondary-button:active {
-            transform: scale(0.96);
-            opacity: 0.85;
-        }
+        /* ============ PRESS FEEDBACK (CSS :active + JS .is-pressed) ============ */
+        .asset-row:active, .asset-row.is-pressed { opacity: 0.75; transform: scale(0.98); transition: none; }
+        .asset-row-edit-btn:active, .asset-row-edit-btn.is-pressed { opacity: 0.7; transform: scale(0.97); transition: none; }
+        .action-button:active, .action-button.is-pressed { opacity: 0.75; transform: scale(0.97); transition: none; }
+        .secondary-button:active, .secondary-button.is-pressed { opacity: 0.75; transform: scale(0.97); transition: none; }
+        .stat-card:active, .stat-card.is-pressed { opacity: 0.8; transform: scale(0.98); transition: none; }
 
         /* ============ IPHONE STANDARD (430px) ============ */
         @media (max-width: 430px) {
@@ -912,7 +903,6 @@
                 box-shadow: 0 10px 20px rgba(244, 196, 48, 0.3);
             }
         }
-        .action-button:active { opacity: 0.75; transform: scale(0.97); }
 
         .modal {
             display: none;
@@ -1043,7 +1033,6 @@
                 background: var(--bg-hover);
             }
         }
-        .secondary-button:active { opacity: 0.75; transform: scale(0.97); }
 
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -1320,11 +1309,7 @@
                 background: var(--bg-hover);
             }
         }
-        .settings-row:active { opacity: 0.7; }
-
-        .settings-row:active {
-            transform: scale(0.98);
-        }
+        .settings-row:active, .settings-row.is-pressed { opacity: 0.7; transform: scale(0.98); transition: none; }
 
         .settings-row-icon {
             width: 34px;
@@ -5554,6 +5539,18 @@
             document.getElementById('propertyValue')?.addEventListener('input', calculateEquity);
             document.getElementById('mortgage')?.addEventListener('input', calculateEquity);
         });
+
+        // ---- Touch press feedback (iOS :active fix) ----
+        var _pressSelector = '.settings-row,.action-button,.secondary-button,.asset-row,.asset-row-edit-btn,.stat-card';
+        document.addEventListener('touchstart', function(e) {
+            var el = e.target.closest(_pressSelector);
+            if (el) el.classList.add('is-pressed');
+        }, { passive: true });
+        function _clearPressed() {
+            document.querySelectorAll('.is-pressed').forEach(function(el) { el.classList.remove('is-pressed'); });
+        }
+        document.addEventListener('touchend',    _clearPressed, { passive: true });
+        document.addEventListener('touchcancel', _clearPressed, { passive: true });
 
         // Check if rate needs update (every 2 hours, retry in 1 min on failure)
         async function checkAndUpdateRate() {
