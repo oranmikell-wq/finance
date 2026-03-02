@@ -264,9 +264,11 @@
             overflow: hidden;
         }
 
-        .asset-row:hover {
-            background: linear-gradient(135deg, rgba(26, 31, 58, 1) 0%, rgba(30, 36, 66, 1) 100%);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        @media (hover: hover) {
+            .asset-row:hover {
+                background: linear-gradient(135deg, rgba(26, 31, 58, 1) 0%, rgba(30, 36, 66, 1) 100%);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            }
         }
         .asset-row.expanded {
             border-color: rgba(244, 196, 48, 0.4);
@@ -383,9 +385,11 @@
             margin-top: 12px;
         }
 
-        .asset-row-edit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(244, 196, 48, 0.3);
+        @media (hover: hover) {
+            .asset-row-edit-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(244, 196, 48, 0.3);
+            }
         }
 
         .asset-row-chevron {
@@ -900,9 +904,11 @@
             font-family: 'Rubik', sans-serif;
         }
 
-        .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(244, 196, 48, 0.3);
+        @media (hover: hover) {
+            .action-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(244, 196, 48, 0.3);
+            }
         }
 
         .modal {
@@ -1029,8 +1035,10 @@
             flex: 1;
         }
 
-        .secondary-button:hover {
-            background: var(--bg-hover);
+        @media (hover: hover) {
+            .secondary-button:hover {
+                background: var(--bg-hover);
+            }
         }
 
         @keyframes fadeIn {
@@ -1099,13 +1107,14 @@
             transition: transform 0.3s ease;
         }
 
-        .stat-card:hover {
-            border-color: var(--accent-gold);
-            box-shadow: 0 4px 16px rgba(244, 196, 48, 0.15);
-        }
-
-        .stat-card:hover::before {
-            transform: scaleX(1);
+        @media (hover: hover) {
+            .stat-card:hover {
+                border-color: var(--accent-gold);
+                box-shadow: 0 4px 16px rgba(244, 196, 48, 0.15);
+            }
+            .stat-card:hover::before {
+                transform: scaleX(1);
+            }
         }
 
         .stat-icon {
@@ -1301,9 +1310,11 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .settings-row:hover {
-            border-color: rgba(255,255,255,0.15);
-            background: var(--bg-hover);
+        @media (hover: hover) {
+            .settings-row:hover {
+                border-color: rgba(255,255,255,0.15);
+                background: var(--bg-hover);
+            }
         }
 
         .settings-row:active {
@@ -1529,7 +1540,7 @@
         body.light-mode .gains-table td { border-bottom-color: rgba(0,0,0,0.07) !important; }
 
         /* Settings row hover border — was rgba(255,255,255,0.15) */
-        body.light-mode .settings-row:hover { border-color: rgba(0,0,0,0.15) !important; }
+        @media (hover: hover) { body.light-mode .settings-row:hover { border-color: rgba(0,0,0,0.15) !important; } }
 
         /* Card inner borders / dividers that use semi-transparent white */
         body.light-mode .summary-card { border-color: var(--border-color) !important; }
