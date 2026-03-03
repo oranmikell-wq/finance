@@ -3577,7 +3577,13 @@
                 var ytdMatch = text.match(/% השנה\s*:?\s*([\-−]?[\d.]+)/);
                 if (ytdMatch) ytdPct = parseFloat(ytdMatch[1].replace('−', '-'));
 
-                console.log('Fund parsed:', fundName, 'NAV:', nav, 'Daily:', dailyPct, 'Monthly:', monthlyPct, 'Yearly:', yearlyPct);
+                // Parse fund manager name
+                var manager = '';
+                var managerMatch = text.match(/מנהל\s*(?:ה)?קרן\s+([א-ת][^\d<\n]{1,25}?)(?:\s{2,}|\d|$)/);
+                if (!managerMatch) managerMatch = text.match(/חברת\s+ניהול\s+([א-ת][^\d<\n]{1,25}?)(?:\s{2,}|\d|$)/);
+                if (managerMatch) manager = managerMatch[1].trim().replace(/\s+/g,' ');
+
+                console.log('Fund parsed:', fundName, 'NAV:', nav, 'Daily:', dailyPct, 'Monthly:', monthlyPct, 'Yearly:', yearlyPct, 'Manager:', manager);
 
                 // Try to parse the actual data date from Bizportal (e.g. "נכון ל-31/01/2025")
                 var reportDate = null;
@@ -3604,6 +3610,7 @@
                     yearlyPct: yearlyPct,
                     ytdPct: ytdPct,
                     name: fundName,
+                    manager: manager,
                     date: new Date().toISOString(),
                     reportDate: reportDate
                 };
@@ -3671,9 +3678,11 @@
                 
                 document.getElementById('fundSearchResult').style.display = 'block';
                 
-                // Auto-fill name field if empty
+                // Auto-fill name and provider fields if empty
                 var nameInput = document.getElementById('assetName');
                 if (!nameInput.value) nameInput.value = data.name;
+                var providerInput = document.getElementById('assetProvider');
+                if (providerInput && !providerInput.value && data.manager) providerInput.value = data.manager;
                 document.getElementById('assetReturn').value = formatNum(data.yearlyPct);
                 
                 calculateFundValue();
