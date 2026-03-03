@@ -7984,7 +7984,7 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name}</div>
-                                ${mDayPct !== null ? `<div class="asset-row-provider"><span style="color:${sc(mDayPct)};font-weight:600;">${ss(mDayPct)}${mDayPct.toFixed(2)}%</span> יומי</div>` : ''}
+                                ${(asset.provider || mDayPct !== null) ? `<div class="asset-row-provider">${asset.provider ? asset.provider + (mDayPct !== null ? ' • ' : '') : ''}${mDayPct !== null ? `<span style="color:${sc(mDayPct)};font-weight:600;">${ss(mDayPct)}${mDayPct.toFixed(2)}%</span> יומי` : ''}</div>` : ''}
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${Math.round(mValueILS).toLocaleString('he-IL')}</div>
@@ -8042,7 +8042,7 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name} <span style="font-size:0.7em;color:#ff006e;font-weight:700;">${sTicker}</span></div>
-                                <div class="asset-row-provider"><span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
+                                <div class="asset-row-provider">${asset.provider ? asset.provider + ' • ' : ''}<span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
