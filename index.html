@@ -282,7 +282,6 @@
         }
 
         .asset-row-icon {
-            font-size: 1.3rem;
             width: 38px;
             height: 38px;
             display: flex;
@@ -565,10 +564,9 @@
                 gap: 6px;
             }
             .asset-row-main { gap: 10px; }
-            .asset-row-icon { 
-                width: 40px; 
-                height: 40px; 
-                font-size: 1.2rem;
+            .asset-row-icon {
+                width: 40px;
+                height: 40px;
                 border-radius: 12px;
             }
             .asset-row-name { font-size: 0.88rem; }
@@ -686,7 +684,7 @@
             .total-worth-card { padding: 18px 12px; }
             #totalLiquid, #totalPension, #totalRealEstate { font-size: 0.82rem !important; }
             .asset-row { padding: 12px; }
-            .asset-row-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+            .asset-row-icon { width: 36px; height: 36px; }
             .asset-row-name { font-size: 0.82rem; }
             .asset-row-amount { font-size: 0.95rem; }
             .asset-row-return { font-size: 0.65rem; padding: 3px 8px; }
@@ -1329,7 +1327,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
             flex-shrink: 0;
         }
 
@@ -1762,15 +1759,15 @@
                     </div>
                     <div id="totalBreakdown" style="display:flex;justify-content:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.15);border-radius:10px;padding:6px 10px;">
-                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">💰 נזילים</span>
+                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;display:flex;align-items:center;gap:4px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> נזילים</span>
                             <span id="totalLiquid" style="font-size:0.95rem;font-weight:600;color:#ffffff;white-space:nowrap;">₪0</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(176,38,255,0.08);border:1px solid rgba(176,38,255,0.15);border-radius:10px;padding:6px 10px;">
-                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">🏦 פנסיה</span>
+                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;display:flex;align-items:center;gap:4px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> פנסיה</span>
                             <span id="totalPension" style="font-size:0.95rem;font-weight:600;color:#ffffff;white-space:nowrap;">₪0</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:6px 10px;">
-                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">🏠 נדל"ן</span>
+                            <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;display:flex;align-items:center;gap:4px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> נדל"ן</span>
                             <span id="totalRealEstate" style="font-size:0.95rem;font-weight:600;color:#ffffff;white-space:nowrap;">₪0</span>
                         </div>
                     </div>
@@ -2244,7 +2241,7 @@
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <!-- Personal Details -->
                 <button onclick="showProfileModal()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);">👤</div>
+                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">פרטים אישיים</div>
                         <div class="settings-row-desc" id="profileRowDesc">לא הוגדר</div>
@@ -2254,7 +2251,7 @@
 
                 <!-- Light/Dark toggle -->
                 <button onclick="toggleTheme()" class="settings-row" id="themeToggleRow">
-                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);" id="themeToggleIcon">🌙</div>
+                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);" id="themeToggleIcon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title" id="themeToggleTitle">מצב בהיר</div>
                     </div>
@@ -2263,7 +2260,7 @@
 
                 <!-- Update rates -->
                 <button onclick="updateAllRates()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">🔄</div>
+                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">עדכון שערים</div>
                     </div>
@@ -2272,7 +2269,7 @@
 
                 <!-- Data Management -->
                 <button onclick="showDataMenu()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);">💾</div>
+                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">ייצוא / ייבוא נתונים</div>
                     </div>
@@ -2281,7 +2278,7 @@
 
                 <!-- Price Alerts -->
                 <button onclick="showAlertsManager()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);">🔔</div>
+                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">התראות מחיר</div>
                     </div>
@@ -2290,7 +2287,7 @@
 
                 <!-- Clear data -->
                 <button onclick="if(confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים? פעולה זו בלתי הפיכה!')){assets=[];saveAssets();updateUI();alert('✅ כל הנתונים נמחקו.');}" class="settings-row" style="border-color:rgba(239,68,68,0.15);">
-                    <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);">🗑️</div>
+                    <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title" style="color:var(--accent-red);">מחיקת כל הנתונים</div>
                     </div>
@@ -2302,7 +2299,7 @@
             <!-- About Section -->
             <div class="chart-card">
                 <button onclick="showAboutMenu()" class="settings-row" style="width:100%;">
-                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);">ℹ️</div>
+                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">אודות</div>
                         <div class="settings-row-desc">מידע, תנאי שימוש ופרטיות</div>
@@ -2362,28 +2359,28 @@
             </div>
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button onclick="closeDataMenu();exportData()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);">📤</div>
+                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">ייצוא נתונים</div>
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
                 <button onclick="closeDataMenu();importData()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);">📥</div>
+                    <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">ייבוא נתונים</div>
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
                 <button onclick="closeDataMenu();exportCSV()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">📊</div>
+                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">ייצוא CSV</div>
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
                 <button onclick="closeDataMenu();importCSV()" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);">📂</div>
+                    <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">ייבוא CSV מבנק / ברוקר</div>
                     </div>
@@ -2413,21 +2410,21 @@
             </div>
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button onclick="closeAboutMenu();showAboutModal('developer')" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);">👨‍💻</div>
+                    <div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">אודות</div>
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
                 <button onclick="closeAboutMenu();showAboutModal('terms')" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);">📋</div>
+                    <div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 3H4.5a2.5 2.5 0 0 0 0 5H11"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">תנאי שימוש</div>
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
                 <button onclick="closeAboutMenu();showAboutModal('privacy')" class="settings-row">
-                    <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);">🔒</div>
+                    <div class="settings-row-icon" style="background:rgba(168,85,247,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">מדיניות פרטיות</div>
                     </div>
@@ -2477,7 +2474,7 @@
                 <button class="close-button" onclick="closeModal()">×</button>
                 <div style="display:flex;align-items:center;gap:8px;">
                     <h2 class="modal-title" id="modalTitle" style="font-size:1.3rem;">הוסף נכס חדש</h2>
-                    <div id="modalIcon" style="font-size:2rem;">💰</div>
+                    <div id="modalIcon" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;"></div>
                 </div>
             </div>
             <p id="modalSubtitle" style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:16px;text-align:center;">בחר סוג נכס להתחלה</p>
@@ -4801,7 +4798,7 @@
             var icon = document.getElementById('themeToggleIcon');
             var title = document.getElementById('themeToggleTitle');
             var desc = document.getElementById('themeToggleDesc');
-            if (icon) icon.textContent = isLight ? '☀️' : '🌙';
+            if (icon) icon.innerHTML = isLight ? _si('<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',18) : _si('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',18);
             if (title) title.textContent = isLight ? 'מצב כהה' : 'מצב בהיר';
             if (desc) desc.textContent = isLight ? 'עבור למצב תצוגה כהה' : 'עבור למצב תצוגה בהיר';
         }
@@ -5638,15 +5635,15 @@
         }
 
         const assetTypeIcons = {
-            pension: '🏦',
-            gemel: '💼',
-            fund: '📈',
-            savings: '📊',
-            deposit: '💵',
-            trade: '📊',
-            crypto: '₿',
-            real_estate: '🏠',
-            other: '📋'
+            pension: _si(_sp.landmark),
+            gemel: _si(_sp.briefcase),
+            fund: _si(_sp['trending-up']),
+            savings: _si(_sp['piggy-bank']),
+            deposit: _si(_sp.banknote),
+            trade: _si(_sp['candlestick-chart']),
+            crypto: _si(_sp.bitcoin),
+            real_estate: _si(_sp.house),
+            other: _si(_sp.ellipsis)
         };
 
         const assetTypeNames = {
@@ -5817,7 +5814,31 @@
             document.getElementById('lastUpdate').textContent = now.toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit'}) + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
         }
 
-        var typeIcons = { pension:'🏛️', gemel:'🏦', fund:'📚', savings:'📊', deposit:'💵', trade:'📈', crypto:'₿', real_estate:'🏠', other:'📋' };
+        var _si = function(p,s){return '<svg xmlns="http://www.w3.org/2000/svg" width="'+(s||20)+'" height="'+(s||20)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';};
+        var _sp = {
+            landmark:'<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+            briefcase:'<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+            'trending-up':'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+            'piggy-bank':'<path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/>',
+            banknote:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+            'candlestick-chart':'<path d="M9 5v4"/><rect width="4" height="6" x="7" y="9" rx="1"/><path d="M9 15v2"/><path d="M17 3v2"/><rect width="4" height="8" x="15" y="5" rx="1"/><path d="M17 13v3"/><path d="M3 3v18h18"/>',
+            bitcoin:'<path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/>',
+            house:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+            ellipsis:'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+            wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>'
+        };
+        var typeIcons = {
+            pension: _si(_sp.landmark, 32),
+            gemel: _si(_sp.briefcase, 32),
+            fund: _si(_sp['trending-up'], 32),
+            savings: _si(_sp['piggy-bank'], 32),
+            deposit: _si(_sp.banknote, 32),
+            trade: _si(_sp['candlestick-chart'], 32),
+            crypto: _si(_sp.bitcoin, 32),
+            real_estate: _si(_sp.house, 32),
+            other: _si(_sp.ellipsis, 32),
+            default: _si(_sp.wallet, 32)
+        };
 
         function selectAssetType(type) {
             // Update hidden select
@@ -5830,7 +5851,7 @@
 
             // Update modal header icon
             var iconEl = document.getElementById('modalIcon');
-            if (iconEl) iconEl.textContent = typeIcons[type] || '📋';
+            if (iconEl) iconEl.innerHTML = typeIcons[type] || typeIcons.default;
 
             var subtitle = document.getElementById('modalSubtitle');
             if (subtitle) subtitle.textContent = 'מלא את הפרטים';
@@ -5878,7 +5899,7 @@
 
                     title.textContent = 'ערוך נכס';
                     if (subtitle) subtitle.textContent = '';
-                    if (iconEl) iconEl.textContent = typeIcons[asset.type] || '📋';
+                    if (iconEl) iconEl.innerHTML = typeIcons[asset.type] || typeIcons.default;
                     
                     // Hide type grid, show details
                     if (typeSelector) typeSelector.style.display = 'none';
@@ -6066,7 +6087,7 @@
             } else {
                 title.textContent = 'הוסף נכס חדש';
                 if (subtitle) subtitle.textContent = 'בחר סוג נכס להתחלה';
-                if (iconEl) iconEl.textContent = '💰';
+                if (iconEl) iconEl.innerHTML = typeIcons.default;
                 form.reset();
                 
                 // Show type grid, hide details
@@ -6096,7 +6117,7 @@
             document.querySelectorAll('.type-tile').forEach(function(t) { t.classList.remove('selected'); });
             var ts = document.getElementById('typeSelector'); if (ts) ts.style.display = 'block';
             var ds = document.getElementById('assetDetailsSection'); if (ds) ds.style.display = 'none';
-            var iconEl = document.getElementById('modalIcon'); if (iconEl) iconEl.textContent = '💰';
+            var iconEl = document.getElementById('modalIcon'); if (iconEl) iconEl.innerHTML = typeIcons.default;
             var sub = document.getElementById('modalSubtitle'); if (sub) sub.textContent = 'בחר סוג נכס להתחלה';
             // Reset fund tracking fields
             var fundFields = document.getElementById('fundTrackingFields'); if (fundFields) fundFields.style.display = 'none';
@@ -6545,7 +6566,7 @@
                     var barColor = type === 'pension' || type === 'gemel' || type === 'fund' ? '#b026ff' : type === 'real_estate' ? '#10b981' : type === 'crypto' ? '#a855f7' : '#00d9ff';
 
                     html += '<div style="display:flex;align-items:center;gap:12px;">' +
-                        '<div style="font-size:1.3rem;width:32px;text-align:center;">' + (assetTypeIcons[type] || '📋') + '</div>' +
+                        '<div style="width:32px;display:flex;align-items:center;justify-content:center;">' + (assetTypeIcons[type] || _si(_sp.ellipsis)) + '</div>' +
                         '<div style="flex:1;min-width:0;">' +
                             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
                                 '<span style="font-size:0.8rem;font-weight:500;">' + (assetTypeNames[type] || type) + ' <span style="color:var(--text-secondary);font-size:0.7rem;">(' + data.count + ')</span></span>' +
