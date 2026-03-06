@@ -1542,6 +1542,14 @@
         /* Budget bar track — was rgba(255,255,255,0.06) = invisible on white */
         body.light-mode .budget-bar-track { background: rgba(0,0,0,0.1) !important; }
 
+        /* Asset rows — dark blue gradient end visible on white bg → pure white */
+        body.light-mode .asset-row { background: #ffffff !important; box-shadow: 0 1px 6px rgba(0,0,0,0.07) !important; }
+        @media (hover: hover) { body.light-mode .asset-row:hover { background: #f0f2f5 !important; box-shadow: 0 2px 12px rgba(0,0,0,0.1) !important; } }
+        body.light-mode .asset-row.spy-row { background: linear-gradient(135deg, #ffffff 0%, rgba(244,196,48,0.07) 100%) !important; }
+
+        /* Stat cards (scrollable stats bar) — same dark gradient issue */
+        body.light-mode .stat-card { background: #ffffff !important; }
+
         /* Budget row dividers */
         body.light-mode .budget-row { border-bottom-color: rgba(0,0,0,0.07) !important; }
 
@@ -7858,22 +7866,22 @@
             }
 
             var fmtPct = function(v) {
-                if (v === null || v === undefined || isNaN(v) || Math.abs(v) > 999) return '<span style="color:rgba(255,255,255,0.2);">—</span>';
+                if (v === null || v === undefined || isNaN(v) || Math.abs(v) > 999) return '<span style="color:var(--text-secondary);opacity:0.45;">—</span>';
                 var c = v >= 0 ? '#10b981' : '#ef4444';
                 return '<span style="color:' + c + ';font-weight:600;">' + (v>=0?'+':'') + v.toFixed(1) + '%</span>';
             };
             var fmtFee = function(v) {
-                if (!v || v === 0) return '<span style="color:rgba(255,255,255,0.2);">—</span>';
+                if (!v || v === 0) return '<span style="color:var(--text-secondary);opacity:0.45;">—</span>';
                 var c = v <= 0.5 ? '#10b981' : v <= 1.0 ? '#f4c430' : '#ef4444';
                 return '<span style="color:' + c + ';">' + v.toFixed(2) + '%</span>';
             };
 
             var html = '';
             sorted.forEach(function(r, i) {
-                var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="color:rgba(255,255,255,0.35);font-size:0.82rem;font-weight:600;">'+(i+1)+'.</span>';
+                var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="color:var(--text-secondary);font-size:0.82rem;font-weight:600;">'+(i+1)+'.</span>';
                 var dn = r.name.length > 20 ? r.name.slice(0,20)+'…' : r.name;
                 var df = r.fund && r.fund !== r.name ? (r.fund.length > 22 ? r.fund.slice(0,22)+'…' : r.fund) : '';
-                html += '<div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,0.05);align-items:center;">';
+                html += '<div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:12px 4px;border-bottom:1px solid var(--border-color);align-items:center;">';
                 html += '<div style="min-width:0;"><div style="font-size:0.84rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + medal + ' ' + dn + '</div>';
                 if (df) html += '<div style="font-size:0.7rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px;">' + df + '</div>';
                 html += '</div>';
