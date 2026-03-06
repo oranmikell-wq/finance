@@ -6506,8 +6506,14 @@
 
         // ============ BUDGET SUBPAGE ============
         function openBudgetSubpage() {
+            var firstTab = document.querySelector('.tab-content');
+            var topOffset = 0;
+            if (firstTab && firstTab.previousElementSibling) {
+                topOffset = Math.round(firstTab.previousElementSibling.getBoundingClientRect().bottom);
+            }
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             var sub = document.getElementById('subpageBudget');
+            sub.style.top = topOffset + 'px';
             sub.style.display = 'block';
         }
         function closeBudgetSubpage() {
