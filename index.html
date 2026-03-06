@@ -1829,15 +1829,13 @@
         <div class="tab-content" id="tabTrends">
           <div class="chart-card">
             <div class="chart-card">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-                    <h3 style="margin:0;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div> מגמת שווי לאורך זמן</span></h3>
-                    <div style="display:flex;gap:4px;" id="chartRangeBtns">
-                        <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
-                        <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
-                        <button class="range-btn" onclick="setChartRange('3month',this)">3 חודשים</button>
-                        <button class="range-btn" onclick="setChartRange('year',this)">שנה</button>
-                        <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
-                    </div>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div> גרף שווי</span></h3>
+                <div style="display:flex;gap:4px;margin-bottom:8px;" id="chartRangeBtns">
+                    <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
+                    <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
+                    <button class="range-btn" onclick="setChartRange('3month',this)">3 חודשים</button>
+                    <button class="range-btn" onclick="setChartRange('year',this)">שנה</button>
+                    <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
                 </div>
                 <div id="chartValueHeader" style="display:none;align-items:baseline;gap:10px;margin-bottom:10px;">
                     <span id="chartCurrentValue" style="font-size:1.5rem;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums;"></span>
