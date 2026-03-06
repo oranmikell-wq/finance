@@ -1562,6 +1562,9 @@
         /* Settings row hover border — was rgba(255,255,255,0.15) */
         @media (hover: hover) { body.light-mode .settings-row:hover { border-color: rgba(0,0,0,0.15) !important; } }
 
+        /* Settings/nav icons — rgba(color,0.1) background is invisible on white; saturate+darken makes it vivid */
+        body.light-mode .settings-row-icon { filter: saturate(3) brightness(0.78); }
+
         /* Card inner borders / dividers that use semi-transparent white */
         body.light-mode .summary-card { border-color: var(--border-color) !important; }
 
