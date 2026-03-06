@@ -2245,7 +2245,6 @@
                     <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title">פרטים אישיים</div>
-                        <div class="settings-row-desc" id="profileRowDesc">לא הוגדר</div>
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
@@ -2383,7 +2382,7 @@
                 <button onclick="closeDataMenu();importCSV()" class="settings-row">
                     <div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg></div>
                     <div class="settings-row-info">
-                        <div class="settings-row-title">ייבוא CSV מבנק / ברוקר</div>
+                        <div class="settings-row-title">ייבוא CSV</div>
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
@@ -2395,7 +2394,7 @@
     <div id="csvImportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeCSVModal()">
         <div style="background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:20px 16px 32px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <div style="font-size:1rem;font-weight:700;">📂 ייבוא CSV מבנק / ברוקר</div>
+                <div style="font-size:1rem;font-weight:700;">📂 ייבוא CSV</div>
                 <button onclick="closeCSVModal()" style="background:var(--border-color);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--text-primary);">✕</button>
             </div>
             <div id="csvImportBody"></div>
