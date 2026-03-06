@@ -6507,22 +6507,37 @@
         // ============ BUDGET SUBPAGE ============
         function openBudgetSubpage() {
             var firstTab = document.querySelector('.tab-content');
-            var topOffset = 0;
-            if (firstTab && firstTab.previousElementSibling) {
-                topOffset = Math.round(firstTab.previousElementSibling.getBoundingClientRect().bottom);
-            }
+            var assetsSection = firstTab ? firstTab.previousElementSibling : null;
+            var header = document.querySelector('.header');
+            var topOffset = header ? Math.round(header.getBoundingClientRect().bottom) : 0;
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             var sub = document.getElementById('subpageBudget');
             sub.style.top = topOffset + 'px';
+            // Move total assets section into scroll container so both scroll together
+            if (assetsSection) {
+                var scrollDiv = sub.querySelector('[style*="overflow-y"]');
+                if (scrollDiv) {
+                    sub._assetsSection = assetsSection;
+                    sub._assetsParent = assetsSection.parentNode;
+                    sub._assetsNext = assetsSection.nextSibling;
+                    scrollDiv.insertBefore(assetsSection, scrollDiv.firstChild);
+                }
+            }
             sub.style.display = 'block';
         }
         function closeBudgetSubpage() {
-            document.getElementById('subpageBudget').style.display = 'none';
+            var sub = document.getElementById('subpageBudget');
+            if (sub._assetsSection && sub._assetsParent) {
+                sub._assetsParent.insertBefore(sub._assetsSection, sub._assetsNext);
+                sub._assetsSection = null;
+            }
+            sub.style.display = 'none';
             document.getElementById('tabPersonal').classList.add('active');
         }
 
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
+            closeBudgetSubpage();
             document.getElementById('subpageBudget').style.display = 'none';
             document.body.setAttribute('data-tab', tabName);
             // Hide all tabs
