@@ -769,14 +769,17 @@
             margin-bottom: 10px;
         }
         .chart-card > .chart-card {
-            background: none;
-            border: none;
-            border-radius: 0;
-            margin-bottom: 0;
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin: 5px 10px;
+            padding: 10px 16px;
+        }
+        .chart-card > .chart-card:first-child {
+            margin-top: 10px;
         }
         .chart-card > .chart-card:last-child {
-            border-bottom: none;
+            margin-bottom: 10px;
         }
         /* Budget card keeps its own padding scheme */
         #tabPersonal .chart-card.budget-card { padding: 0; }
