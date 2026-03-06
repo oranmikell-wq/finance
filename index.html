@@ -2172,31 +2172,103 @@
                     <button onclick="closeMashlantaSubpage()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
                 </div>
                 <div style="padding:0 16px 16px;">
+
+                    <!-- Optional: Property value -->
+                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;letter-spacing:0.03em;">נתוני הנכס <span style="font-weight:400;opacity:0.5;">(אופציונלי)</span></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
+                        <div>
+                            <div class="retire-label">שווי נכס (₪)</div>
+                            <input type="text" inputmode="decimal" id="mashlantaPropVal" class="retire-input" placeholder="0" oninput="formatNumberInput(this); mashlantaAutoCalc()">
+                        </div>
+                        <div>
+                            <div class="retire-label">הון עצמי (%)</div>
+                            <input type="text" inputmode="decimal" id="mashlantaEquityPct" class="retire-input" placeholder="25" oninput="mashlantaAutoCalc()">
+                        </div>
+                    </div>
+                    <div id="mashlantaLtvBadge" style="display:none;margin-bottom:10px;padding:6px 10px;border-radius:8px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);font-size:0.75rem;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:var(--text-secondary);">LTV</span>
+                        <span id="mashlantaLtvText" style="font-weight:600;"></span>
+                    </div>
+
+                    <!-- Loan + Years -->
+                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;letter-spacing:0.03em;">פרטי ההלוואה</div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                        <div style="grid-column:1/-1;">
+                        <div>
                             <div class="retire-label">סכום הלוואה (₪)</div>
                             <input type="text" inputmode="decimal" id="mashlantaAmount" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcMortgage()">
                         </div>
+                        <div>
+                            <div class="retire-label">תקופה (שנים)</div>
+                            <input type="text" inputmode="decimal" id="mashlantaYears" class="retire-input" placeholder="20" oninput="calcMortgage()">
+                        </div>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+
+                    <!-- Track 1 -->
+                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;font-weight:600;letter-spacing:0.03em;">מסלולים</div>
+                    <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+                        <div style="font-size:0.7rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">מסלול 1</div>
+                        <div style="display:flex;gap:5px;margin-bottom:8px;" id="mash_t1_type_btns">
+                            <button onclick="setMashlantaType(1,this)" class="mash-type-btn" style="flex:1;padding:5px 2px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.7rem;font-weight:600;">קבועה</button>
+                            <button onclick="setMashlantaType(1,this)" class="mash-type-btn" style="flex:1;padding:5px 2px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.7rem;font-weight:600;">פריים</button>
+                            <button onclick="setMashlantaType(1,this)" class="mash-type-btn" style="flex:1;padding:5px 2px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.7rem;font-weight:600;">צמודה</button>
+                        </div>
                         <div>
                             <div class="retire-label">ריבית שנתית (%)</div>
                             <input type="text" inputmode="decimal" id="mashlantaRate" class="retire-input" placeholder="0" oninput="calcMortgage()">
                         </div>
+                    </div>
+
+                    <!-- Track 2 (hidden) -->
+                    <div id="mashlantaTrack2" style="display:none;background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <div style="font-size:0.7rem;font-weight:600;color:var(--text-secondary);">מסלול 2</div>
+                            <button onclick="removeMashlantaTrack2()" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:0.72rem;padding:0;font-family:inherit;">הסר ✕</button>
+                        </div>
+                        <div style="display:flex;gap:5px;margin-bottom:8px;" id="mash_t2_type_btns">
+                            <button onclick="setMashlantaType(2,this)" class="mash-type-btn" style="flex:1;padding:5px 2px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.7rem;font-weight:600;">קבועה</button>
+                            <button onclick="setMashlantaType(2,this)" class="mash-type-btn" style="flex:1;padding:5px 2px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.7rem;font-weight:600;">פריים</button>
+                            <button onclick="setMashlantaType(2,this)" class="mash-type-btn" style="flex:1;padding:5px 2px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.7rem;font-weight:600;">צמודה</button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <div>
+                                <div class="retire-label">סכום מסלול 2 (₪)</div>
+                                <input type="text" inputmode="decimal" id="mash_t2_amount" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcMortgage()">
+                            </div>
+                            <div>
+                                <div class="retire-label">ריבית שנתית (%)</div>
+                                <input type="text" inputmode="decimal" id="mash_t2_rate" class="retire-input" placeholder="0" oninput="calcMortgage()">
+                            </div>
+                        </div>
+                        <div id="mashlantaTrack1Note" style="display:none;font-size:0.68rem;color:var(--text-secondary);margin-top:6px;padding-top:6px;border-top:1px solid var(--border-color);"></div>
+                    </div>
+
+                    <!-- Add track 2 button -->
+                    <button id="mashlantaAddTrack" onclick="addMashlantaTrack2()" style="width:100%;padding:8px;border-radius:10px;border:1px dashed rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.78rem;margin-bottom:12px;">+ הוסף מסלול שני</button>
+
+                    <!-- Optional: Income + Extra -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
                         <div>
-                            <div class="retire-label">תקופה (שנים)</div>
-                            <input type="text" inputmode="decimal" id="mashlantaYears" class="retire-input" placeholder="0" oninput="calcMortgage()">
+                            <div class="retire-label">הכנסה חודשית (₪) <span style="opacity:0.45;">אופציונלי</span></div>
+                            <input type="text" inputmode="decimal" id="mashlantaIncome" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcMortgage()">
+                        </div>
+                        <div>
+                            <div class="retire-label">החזר נוסף/חודש (₪) <span style="opacity:0.45;">אופציונלי</span></div>
+                            <input type="text" inputmode="decimal" id="mashlantaExtra" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcMortgage()">
                         </div>
                     </div>
+
                     <div style="text-align:left;margin-bottom:14px;">
                         <button onclick="resetMortgage()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
                     </div>
+
+                    <!-- Results -->
                     <div id="mashlantaResult" style="display:none;">
                         <div class="retire-main-card">
                             <div class="retire-main-label">תשלום חודשי</div>
                             <div class="retire-main-amount" id="mashlantaMonthly">₪0</div>
+                            <div id="mashlantaTrackBreakdown" style="font-size:0.72rem;color:var(--text-secondary);margin-top:4px;"></div>
                         </div>
-                        <div class="retire-stats-grid">
+                        <div class="retire-stats-grid" style="margin-bottom:10px;">
                             <div class="retire-stat">
                                 <div class="retire-stat-value" id="mashlantaTotal">—</div>
                                 <div class="retire-stat-label">סה״כ תשלומים</div>
@@ -2210,9 +2282,39 @@
                                 <div class="retire-stat-label">ריבית %</div>
                             </div>
                         </div>
-                        <div style="margin-top:12px;">
+                        <div style="margin-bottom:12px;">
                             <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;"><span>ריבית מסה״כ</span><span id="mashlantaInterestPctLabel">0%</span></div>
                             <div style="height:6px;background:var(--bg-secondary);border-radius:4px;overflow:hidden;"><div id="mashlantaInterestBar" style="height:100%;width:0%;background:var(--accent-red);border-radius:4px;transition:width 0.4s;"></div></div>
+                        </div>
+                        <!-- Affordability (shown when income entered) -->
+                        <div id="mashlantaAffordability" style="display:none;margin-bottom:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--border-color);background:rgba(255,255,255,0.02);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                                <span style="font-size:0.75rem;color:var(--text-secondary);">מתוך הכנסה</span>
+                                <span id="mashlantaAffordText" style="font-size:0.82rem;font-weight:600;"></span>
+                            </div>
+                            <div style="height:5px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;margin-bottom:5px;">
+                                <div id="mashlantaAffordBar" style="height:100%;width:0%;border-radius:3px;transition:width 0.4s;"></div>
+                            </div>
+                            <div id="mashlantaAffordLabel" style="font-size:0.68rem;"></div>
+                        </div>
+                        <!-- Early payoff savings (shown when extra payment entered) -->
+                        <div id="mashlantaEarlyPayoff" style="display:none;margin-bottom:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.04);">
+                            <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:6px;">עם ₪<span id="mashlantaExtraLabel">0</span> נוספים בחודש</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <div>
+                                    <div style="font-size:0.85rem;font-weight:600;color:var(--accent-green);" id="mashlantaYearsSaved">—</div>
+                                    <div style="font-size:0.65rem;color:var(--text-secondary);">חיסכון בשנים</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:0.85rem;font-weight:600;color:var(--accent-green);" id="mashlantaInterestSaved">—</div>
+                                    <div style="font-size:0.65rem;color:var(--text-secondary);">חיסכון בריבית</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Balance milestones -->
+                        <div id="mashlantaMilestones" style="display:none;">
+                            <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;font-weight:600;letter-spacing:0.03em;">יתרת חוב</div>
+                            <div id="mashlantaMilestonesGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"></div>
                         </div>
                     </div>
                 </div>
@@ -6602,31 +6704,141 @@
             sub.style.display = 'none';
             document.getElementById('tabPersonal').classList.add('active');
         }
+        function mashlantaAutoCalc() {
+            var propVal = parseNum(document.getElementById('mashlantaPropVal').value) || 0;
+            var equityPct = parseFloat((document.getElementById('mashlantaEquityPct').value || '').replace(/,/g,'')) || 0;
+            var badge = document.getElementById('mashlantaLtvBadge');
+            if (propVal > 0 && equityPct > 0 && equityPct < 100) {
+                var loan = propVal * (1 - equityPct / 100);
+                var ltv = 100 - equityPct;
+                document.getElementById('mashlantaAmount').value = Math.round(loan).toLocaleString('he-IL');
+                var color = ltv <= 60 ? 'var(--accent-green)' : ltv <= 75 ? 'var(--accent-gold)' : 'var(--accent-red)';
+                var label = ltv <= 60 ? 'נמוך ✓' : ltv <= 75 ? 'סביר' : 'גבוה ⚠';
+                document.getElementById('mashlantaLtvText').innerHTML = ltv.toFixed(0) + '%&nbsp;&nbsp;<span style="color:' + color + ';">' + label + '</span>';
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+            calcMortgage();
+        }
+        function setMashlantaType(track, btn) {
+            btn.parentElement.querySelectorAll('.mash-type-btn').forEach(function(b) {
+                b.style.border = '1px solid var(--border-color)';
+                b.style.background = 'transparent';
+                b.style.color = 'var(--text-secondary)';
+            });
+            btn.style.border = '1px solid var(--accent-gold)';
+            btn.style.background = 'rgba(244,196,48,0.12)';
+            btn.style.color = 'var(--accent-gold)';
+        }
+        function addMashlantaTrack2() {
+            document.getElementById('mashlantaTrack2').style.display = 'block';
+            document.getElementById('mashlantaAddTrack').style.display = 'none';
+            calcMortgage();
+        }
+        function removeMashlantaTrack2() {
+            document.getElementById('mashlantaTrack2').style.display = 'none';
+            document.getElementById('mashlantaAddTrack').style.display = 'block';
+            document.getElementById('mash_t2_amount').value = '';
+            document.getElementById('mash_t2_rate').value = '';
+            document.getElementById('mashlantaTrack1Note').style.display = 'none';
+            calcMortgage();
+        }
         function calcMortgage() {
-            var P = parseNum(document.getElementById('mashlantaAmount').value) || 0;
-            var annualRate = parseFloat((document.getElementById('mashlantaRate').value || '').replace(/,/g,'')) || 0;
+            var totalLoan = parseNum(document.getElementById('mashlantaAmount').value) || 0;
+            var rate1 = parseFloat((document.getElementById('mashlantaRate').value || '').replace(/,/g,'')) || 0;
             var years = parseFloat((document.getElementById('mashlantaYears').value || '').replace(/,/g,'')) || 0;
-            var resultEl = document.getElementById('mashlantaResult');
-            if (P <= 0 || annualRate <= 0 || years <= 0) { resultEl.style.display = 'none'; return; }
-            var r = annualRate / 100 / 12;
             var n = years * 12;
-            var monthly = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
-            var total = monthly * n;
-            var interest = total - P;
-            var interestPct = total > 0 ? (interest / total * 100) : 0;
-            document.getElementById('mashlantaMonthly').textContent = '₪' + Math.round(monthly).toLocaleString('he-IL');
-            document.getElementById('mashlantaTotal').textContent = '₪' + Math.round(total).toLocaleString('he-IL');
-            document.getElementById('mashlantaInterest').textContent = '₪' + Math.round(interest).toLocaleString('he-IL');
+            var resultEl = document.getElementById('mashlantaResult');
+            var hasTrack2 = document.getElementById('mashlantaTrack2').style.display !== 'none';
+            var t2Amount = hasTrack2 ? (parseNum(document.getElementById('mash_t2_amount').value) || 0) : 0;
+            var t2Rate   = hasTrack2 ? (parseFloat((document.getElementById('mash_t2_rate').value || '').replace(/,/g,'')) || 0) : 0;
+            var t1Amount = totalLoan - t2Amount;
+            // Show track 1 remainder note
+            var noteEl = document.getElementById('mashlantaTrack1Note');
+            if (hasTrack2 && totalLoan > 0 && t2Amount > 0 && t2Amount < totalLoan) {
+                noteEl.textContent = 'מסלול 1: ₪' + Math.max(0, Math.round(t1Amount)).toLocaleString('he-IL');
+                noteEl.style.display = 'block';
+            } else { noteEl.style.display = 'none'; }
+            if (totalLoan <= 0 || rate1 <= 0 || years <= 0) { resultEl.style.display = 'none'; return; }
+            if (hasTrack2 && t2Amount > 0 && (t2Rate <= 0 || t2Amount >= totalLoan)) { resultEl.style.display = 'none'; return; }
+            function pmt(P, annualRate) {
+                if (P <= 0 || annualRate <= 0 || n <= 0) return 0;
+                var r = annualRate / 100 / 12;
+                return P * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
+            }
+            var t1Monthly = pmt(t1Amount, rate1);
+            var t2Monthly = (hasTrack2 && t2Amount > 0) ? pmt(t2Amount, t2Rate) : 0;
+            var totalMonthly = t1Monthly + t2Monthly;
+            var totalPayments = totalMonthly * n;
+            var totalInterest = totalPayments - totalLoan;
+            var interestPct = totalPayments > 0 ? (totalInterest / totalPayments * 100) : 0;
+            document.getElementById('mashlantaMonthly').textContent = '₪' + Math.round(totalMonthly).toLocaleString('he-IL');
+            var bd = document.getElementById('mashlantaTrackBreakdown');
+            bd.textContent = (hasTrack2 && t2Monthly > 0) ? 'מסלול 1: ₪' + Math.round(t1Monthly).toLocaleString('he-IL') + ' | מסלול 2: ₪' + Math.round(t2Monthly).toLocaleString('he-IL') : '';
+            document.getElementById('mashlantaTotal').textContent = '₪' + Math.round(totalPayments).toLocaleString('he-IL');
+            document.getElementById('mashlantaInterest').textContent = '₪' + Math.round(totalInterest).toLocaleString('he-IL');
             document.getElementById('mashlantaInterestPct').textContent = interestPct.toFixed(1) + '%';
             document.getElementById('mashlantaInterestPctLabel').textContent = interestPct.toFixed(1) + '%';
             document.getElementById('mashlantaInterestBar').style.width = Math.min(interestPct, 100) + '%';
+            // Affordability
+            var income = parseNum(document.getElementById('mashlantaIncome').value) || 0;
+            var affordEl = document.getElementById('mashlantaAffordability');
+            if (income > 0) {
+                var pct = totalMonthly / income * 100;
+                var aColor = pct <= 25 ? 'var(--accent-green)' : pct <= 33 ? 'var(--accent-gold)' : 'var(--accent-red)';
+                var aLabel = pct <= 25 ? '✓ מעולה — מתחת ל-25%' : pct <= 33 ? '⚠ סביר — בין 25%-33%' : '✗ גבוה — מעל 33%';
+                document.getElementById('mashlantaAffordText').textContent = pct.toFixed(1) + '%';
+                document.getElementById('mashlantaAffordText').style.color = aColor;
+                document.getElementById('mashlantaAffordBar').style.width = Math.min(pct, 100) + '%';
+                document.getElementById('mashlantaAffordBar').style.background = aColor;
+                document.getElementById('mashlantaAffordLabel').textContent = aLabel;
+                document.getElementById('mashlantaAffordLabel').style.color = aColor;
+                affordEl.style.display = 'block';
+            } else { affordEl.style.display = 'none'; }
+            // Early payoff savings
+            var extra = parseNum(document.getElementById('mashlantaExtra').value) || 0;
+            var earlyEl = document.getElementById('mashlantaEarlyPayoff');
+            if (extra > 0 && totalMonthly > 0) {
+                var avgR = ((t1Amount * rate1) + (t2Amount * (t2Rate || 0))) / totalLoan / 100 / 12;
+                if (avgR > 0) {
+                    var newPmt = totalMonthly + extra;
+                    var newN = -Math.log(1 - totalLoan * avgR / newPmt) / Math.log(1 + avgR);
+                    if (isFinite(newN) && newN > 0 && newN < n) {
+                        var yearsSaved = (n - newN) / 12;
+                        var interestSaved = Math.max(0, totalInterest - (newPmt * newN - totalLoan));
+                        document.getElementById('mashlantaExtraLabel').textContent = Math.round(extra).toLocaleString('he-IL');
+                        document.getElementById('mashlantaYearsSaved').textContent = yearsSaved.toFixed(1) + ' שנים';
+                        document.getElementById('mashlantaInterestSaved').textContent = '₪' + Math.round(interestSaved).toLocaleString('he-IL');
+                        earlyEl.style.display = 'block';
+                    } else { earlyEl.style.display = 'none'; }
+                } else { earlyEl.style.display = 'none'; }
+            } else { earlyEl.style.display = 'none'; }
+            // Balance milestones
+            var avgR2 = ((t1Amount * rate1) + (t2Amount * (t2Rate || 0))) / totalLoan / 100 / 12;
+            var cands = [5,10,15,20,Math.round(years/2)].filter(function(y){ return y > 0 && y < years; });
+            cands = cands.filter(function(v,i,a){ return a.indexOf(v)===i; }).sort(function(a,b){return a-b;}).slice(0,3);
+            var milestonesEl = document.getElementById('mashlantaMilestones');
+            if (cands.length > 0 && avgR2 > 0) {
+                document.getElementById('mashlantaMilestonesGrid').innerHTML = cands.map(function(y) {
+                    var m = y * 12;
+                    var rem = Math.max(0, Math.round(totalLoan * Math.pow(1+avgR2,m) - totalMonthly * (Math.pow(1+avgR2,m)-1) / avgR2));
+                    var pctRem = totalLoan > 0 ? (rem / totalLoan * 100).toFixed(0) : 0;
+                    return '<div class="retire-stat"><div class="retire-stat-value" style="font-size:0.78rem;">₪' + rem.toLocaleString('he-IL') + '</div><div class="retire-stat-label">שנה ' + y + '<br>(' + pctRem + '%)</div></div>';
+                }).join('');
+                milestonesEl.style.display = 'block';
+            } else { milestonesEl.style.display = 'none'; }
             resultEl.style.display = 'block';
         }
         function resetMortgage() {
-            ['mashlantaAmount','mashlantaRate','mashlantaYears'].forEach(function(id) {
-                document.getElementById(id).value = '';
+            ['mashlantaPropVal','mashlantaEquityPct','mashlantaAmount','mashlantaYears','mashlantaRate','mashlantaIncome','mashlantaExtra','mash_t2_amount','mash_t2_rate'].forEach(function(id) {
+                var el = document.getElementById(id); if (el) el.value = '';
             });
             document.getElementById('mashlantaResult').style.display = 'none';
+            document.getElementById('mashlantaLtvBadge').style.display = 'none';
+            document.getElementById('mashlantaTrack2').style.display = 'none';
+            document.getElementById('mashlantaAddTrack').style.display = 'block';
+            document.getElementById('mashlantaTrack1Note').style.display = 'none';
         }
 
         // ============ COMPOUND SUBPAGE ============
