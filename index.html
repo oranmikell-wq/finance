@@ -6622,9 +6622,10 @@
         }
 
         // ============ SORTING ============
-        var currentSort = 'value';
+        var currentSort = localStorage.getItem('portfolio-sort') || 'value';
         function sortAssets(by, ev) {
             currentSort = by;
+            localStorage.setItem('portfolio-sort', by);
             // Update button styles
             document.querySelectorAll('.sort-btn').forEach(function(btn) {
                 btn.style.background = 'transparent';
@@ -7862,6 +7863,29 @@
 
         function updateAssetsGrid() {
             const grid = document.getElementById('assetsGrid');
+
+            // Apply saved sort
+            if (currentSort === 'value') {
+                assets.sort(function(a, b) { return toILS(b.value, b.currency||'ILS') - toILS(a.value, a.currency||'ILS'); });
+            } else if (currentSort === 'type') {
+                assets.sort(function(a, b) { return (a.type || '').localeCompare(b.type || ''); });
+            } else if (currentSort === 'return') {
+                assets.sort(function(a, b) { return (b.return || 0) - (a.return || 0); });
+            } else if (currentSort === 'name') {
+                assets.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'he'); });
+            }
+            // Sync sort button styles
+            document.querySelectorAll('.sort-btn').forEach(function(btn) {
+                var txt = btn.textContent.trim();
+                var isActive = (currentSort === 'value' && txt.startsWith('שווי')) ||
+                               (currentSort === 'type'  && txt === 'סוג') ||
+                               (currentSort === 'return'&& txt.startsWith('תשואה')) ||
+                               (currentSort === 'name'  && txt === 'שם');
+                btn.style.background = isActive ? 'rgba(244,196,48,0.15)' : 'transparent';
+                btn.style.color = isActive ? 'var(--accent-gold)' : 'var(--text-secondary)';
+                if (isActive) btn.classList.add('active-sort');
+                else btn.classList.remove('active-sort');
+            });
 
             // Hash: if nothing visual changed, skip re-render entirely
             var gridHash = assets.map(function(a) {
