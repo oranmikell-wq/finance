@@ -2367,7 +2367,7 @@
     <!-- Budget Subpage -->
     <div id="subpageBudget" style="display:none;position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));background:var(--bg-secondary);z-index:500;overflow-y:auto;animation:fadeIn 0.25s ease;">
         <div style="max-width:1400px;width:100%;margin:0 auto;display:flex;flex-direction:column;min-height:100%;">
-        <div style="flex:1;overflow-y:auto;padding:12px 12px 100px;">
+        <div style="flex:1;padding:0 12px 100px;">
             <div class="chart-card budget-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
                 <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
                     <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">תקציב חודשי</span>
@@ -6515,11 +6515,12 @@
             sub.style.top = topOffset + 'px';
             // Move total assets section into scroll container so both scroll together
             if (assetsSection) {
-                var scrollDiv = sub.querySelector('[style*="overflow-y"]');
+                var scrollDiv = sub.querySelector('div[style*="padding"]');
                 if (scrollDiv) {
                     sub._assetsSection = assetsSection;
                     sub._assetsParent = assetsSection.parentNode;
                     sub._assetsNext = assetsSection.nextSibling;
+                    assetsSection.style.marginBottom = '12px';
                     scrollDiv.insertBefore(assetsSection, scrollDiv.firstChild);
                 }
             }
@@ -6528,6 +6529,7 @@
         function closeBudgetSubpage() {
             var sub = document.getElementById('subpageBudget');
             if (sub._assetsSection && sub._assetsParent) {
+                sub._assetsSection.style.marginBottom = '';
                 sub._assetsParent.insertBefore(sub._assetsSection, sub._assetsNext);
                 sub._assetsSection = null;
             }
