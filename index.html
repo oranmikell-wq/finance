@@ -1565,6 +1565,71 @@
         /* Settings/nav icons — rgba(color,0.1) background is invisible on white; saturate+darken makes it vivid */
         body.light-mode .settings-row-icon { filter: saturate(3) brightness(0.78); }
 
+        /* === Light mode: all invisible-on-white rgba(255,255,255,0.xx) patterns === */
+
+        /* Exchange rates bar container */
+        body.light-mode .last-update {
+            background: rgba(0,0,0,0.03) !important;
+            border-color: rgba(0,0,0,0.1) !important;
+            box-shadow: none !important;
+        }
+
+        /* Rate / update chips (inline-styled) */
+        body.light-mode #chipUSD, body.light-mode #chipBTC,
+        body.light-mode #chipETH, body.light-mode #chipSPY,
+        body.light-mode #chipTA,  body.light-mode #chipUpdate {
+            background: rgba(0,0,0,0.04) !important;
+            border-color: rgba(0,0,0,0.12) !important;
+        }
+
+        /* Asset row emoji/icon square */
+        body.light-mode .asset-row-icon { background: rgba(0,0,0,0.06) !important; }
+
+        /* Skeleton loading rows */
+        body.light-mode .skeleton-row {
+            background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.09) 50%, rgba(0,0,0,0.05) 75%) !important;
+        }
+
+        /* Budget stacked bar track */
+        body.light-mode .budget-stacked-bar { background: rgba(0,0,0,0.08) !important; }
+
+        /* Retirement stat boxes and progress bar */
+        body.light-mode .retire-stat { background: rgba(0,0,0,0.03) !important; }
+        body.light-mode .retire-progress-track { background: rgba(0,0,0,0.1) !important; }
+
+        /* Geographic exposure bars */
+        body.light-mode .exposure-bar { background: rgba(0,0,0,0.08) !important; }
+
+        /* Gemel sort buttons */
+        body.light-mode .gemel-sort-btn { border-color: rgba(0,0,0,0.15) !important; }
+
+        /* Pension search result — stat boxes and refresh button */
+        body.light-mode #pensiaSearchResult > div > div[style*="grid"] > div {
+            background: rgba(0,0,0,0.04) !important;
+        }
+        body.light-mode #pensiaSearchResult button { border-color: rgba(0,0,0,0.18) !important; }
+
+        /* Mortgage track blocks and dashed add-track button */
+        body.light-mode #mashlantaAddTrack { border-color: rgba(0,0,0,0.2) !important; }
+
+        /* Gemel dropdown — hardcoded dark bg */
+        body.light-mode #gemelDropdownMenu {
+            background: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+        }
+        /* Gemel track filter chips (inactive) */
+        body.light-mode .gtrack-btn { border-color: rgba(0,0,0,0.15) !important; }
+        /* Gemel dropdown item dividers */
+        body.light-mode .gprod-opt[style*="border-top"] { border-top-color: var(--border-color) !important; }
+
+        /* Stock mode toggle buttons (inactive state set via JS inactiveStyle) */
+        body.light-mode #stockModeManualBtn,
+        body.light-mode #stockModeTickerBtn:not([style*="ff006e"]) {
+            border-color: var(--border-color) !important;
+            background: transparent !important;
+        }
+
         /* Card inner borders / dividers that use semi-transparent white */
         body.light-mode .summary-card { border-color: var(--border-color) !important; }
 
@@ -1908,7 +1973,7 @@
                     <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:8px 0;">אין מספיק נתוני היסטוריה — נדרשים לפחות 2 ימים</div>
                 </div>
 
-                <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
+                <div style="height:1px;background:var(--border-color);margin:14px 0;"></div>
 
                 <!-- Cash forecast -->
                 <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;letter-spacing:0.03em;">💵 תזרים כספי</div>
@@ -2339,12 +2404,12 @@
                             <span id="gemelDropdownLabel">💼 גמל להשקעה</span>
                             <span id="gemelDropdownArrow" style="font-size:0.7rem;transition:transform 0.2s;">▼</span>
                         </button>
-                        <div id="gemelDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;left:0;background:var(--card-bg, #1e1e2e);border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+                        <div id="gemelDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;left:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
                             <div onclick="selectGemelProduct('gemel_invest','💼 גמל להשקעה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--accent-gold);font-weight:600;background:rgba(244,196,48,0.06);">💼 גמל להשקעה</div>
                             <div onclick="selectGemelProduct('pension','🏦 פנסיה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏦 פנסיה</div>
                             <div onclick="selectGemelProduct('hishtalmut','📚 השתלמות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📚 השתלמות</div>
                             <div onclick="selectGemelProduct('gemel_classic','🏛️ גמל קלאסי')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏛️ גמל קלאסי</div>
-                            <div onclick="selectGemelProduct('policies','📋 פוליסות חיסכון')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);border-top:1px solid rgba(255,255,255,0.06);">📋 פוליסות חיסכון</div>
+                            <div onclick="selectGemelProduct('policies','📋 פוליסות חיסכון')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);border-top:1px solid var(--border-color);">📋 פוליסות חיסכון</div>
                             <div onclick="selectGemelProduct('mutual_funds','📊 קרנות נאמנות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📊 קרנות נאמנות</div>
                             <div onclick="selectGemelProduct('bonds','📈 קרנות אג״ח')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📈 קרנות אג״ח</div>
                             <div onclick="selectGemelProduct('money_market','💵 כספיות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">💵 כספיות</div>
@@ -2367,7 +2432,7 @@
                         <button onclick="setGemelSort('fee',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">דמי ניהול</button>
                     </div>
                     <!-- Table header -->
-                    <div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:0.75rem;color:var(--text-secondary);font-weight:600;">
+                    <div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:8px 4px;border-bottom:1px solid var(--border-color);font-size:0.75rem;color:var(--text-secondary);font-weight:600;">
                         <div>קרן / מסלול</div>
                         <div style="text-align:center;">שנה</div>
                         <div style="text-align:center;">3 שנ׳</div>
@@ -2536,7 +2601,7 @@
                     </div>
                 </div>
                 <!-- Divider -->
-                <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+                <div style="height:1px;background:var(--border-color);"></div>
                 <!-- Expense breakdown -->
                 <div style="padding:6px 16px 10px;">
                     <div style="font-size:0.68rem;color:var(--text-secondary);font-weight:600;letter-spacing:0.03em;margin-bottom:2px;">פירוט הוצאות</div>
@@ -3449,7 +3514,7 @@
             var tickerFlds  = document.getElementById('stockTickerModeFields');
             var manualFlds  = document.getElementById('stockManualModeFields');
             var activeStyle   = ';flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,0,110,0.55);background:rgba(255,0,110,0.15);color:#ff006e;cursor:pointer;transition:all 0.2s;font-family:inherit;';
-            var inactiveStyle = ';flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;';
+            var inactiveStyle = ';flex:1;padding:7px 4px;font-size:0.75rem;font-weight:600;border-radius:8px;border:1.5px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;';
             var extraFields = document.getElementById('stockExtraFields');
             if (mode === 'ticker') {
                 if (tickerBtn)  tickerBtn.style.cssText  = activeStyle;
