@@ -1962,89 +1962,8 @@
 
 
             <!-- Pension / Retirement Calculator -->
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg></div> מחשבון משכנתא</span></h3>
-                <!-- Inputs -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                    <div>
-                        <div class="retire-label">גיל נוכחי</div>
-                        <input type="text" inputmode="numeric" id="retireCurrentAge" maxlength="2" class="retire-input" placeholder="מהפרופיל" oninput="calcRetirement()">
-                    </div>
-                    <div>
-                        <div class="retire-label">גיל פרישה</div>
-                        <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" class="retire-input" oninput="calcRetirement()">
-                    </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                    <div>
-                        <div class="retire-label">תשואה שנתית (%)</div>
-                        <input type="text" inputmode="decimal" id="retireReturn" value="6" class="retire-input" oninput="calcRetirement()">
-                    </div>
-                    <div>
-                        <div class="retire-label">הפקדה חודשית כוללת (₪)</div>
-                        <input type="text" inputmode="decimal" id="retireMonthly" class="retire-input" placeholder="מנכסים" oninput="formatNumberInput(this); calcRetirement()">
-                    </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                    <div>
-                        <div class="retire-label">דמי ניהול מצבירה (%)</div>
-                        <input type="text" inputmode="decimal" id="retireFeeBalance" value="0.5" class="retire-input" oninput="formatNumberInput(this); calcRetirement()">
-                    </div>
-                    <div>
-                        <div class="retire-label">דמי ניהול מהפקדה (%)</div>
-                        <input type="text" inputmode="decimal" id="retireFeeDeposit" value="0" class="retire-input" oninput="formatNumberInput(this); calcRetirement()">
-                    </div>
-                </div>
-                <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
-                    💡 <strong>לעצמאי:</strong> הזן הפקדה כוללת (כולל חלק "מעסיק"). <strong>לשכיר:</strong> כולל מעסיק + פיצויים (≈18.5% שכר).
-                </div>
-                <div style="text-align:left;margin-bottom:14px;">
-                    <button onclick="resetRetirementInputs()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
-                </div>
-
-                <!-- No data message -->
-                <div id="retirementNoData" style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;display:none;">הוסף נכסי פנסיה / גמל כדי לראות תחזית</div>
-
-                <!-- Results -->
-                <div id="retirementResult" style="display:none;">
-                    <!-- Main projected amount -->
-                    <div class="retire-main-card">
-                        <div class="retire-main-label">צפי חיסכון בגיל פרישה</div>
-                        <div class="retire-main-amount" id="retireAmount">₪0</div>
-                        <div class="retire-main-sub" id="retireMonthlyIncome"></div>
-                        <div id="retireFeeImpact" style="font-size:0.72rem;color:var(--accent-red);margin-top:6px;display:none;"></div>
-                    </div>
-
-                    <!-- 3-stat breakdown -->
-                    <div class="retire-stats-grid">
-                        <div class="retire-stat">
-                            <div class="retire-stat-value" id="retireYears">—</div>
-                            <div class="retire-stat-label">שנים לפרישה</div>
-                        </div>
-                        <div class="retire-stat">
-                            <div class="retire-stat-value retire-stat-gold" id="retireFromSavings">—</div>
-                            <div class="retire-stat-label">מחיסכון קיים</div>
-                        </div>
-                        <div class="retire-stat">
-                            <div class="retire-stat-value retire-stat-blue" id="retireFromDeposits">—</div>
-                            <div class="retire-stat-label">מהפקדות</div>
-                        </div>
-                    </div>
-
-                    <!-- Progress bar -->
-                    <div style="margin-top:14px;">
-                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">
-                            <span>חיסכון נוכחי מתוך יעד</span>
-                            <span id="retireProgressLabel"></span>
-                        </div>
-                        <div class="retire-progress-track">
-                            <div class="retire-progress-fill" id="retireProgressFill" style="width:0%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Details line -->
-                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:10px;text-align:center;" id="retireDetails"></div>
-                </div>
+            <div class="chart-card" data-no-toggle onclick="openMortgageSubpage()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg></div> מחשבון פנסיה</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
 
@@ -2254,6 +2173,88 @@
 
             <div style="text-align:center;margin-top:12px;color:var(--text-secondary);font-size:0.7rem;opacity:0.5;">
                 Financier v3.0
+            </div>
+        </div>
+
+        <!-- Mortgage Subpage -->
+        <div id="subpageMortgage" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מחשבון פנסיה</span>
+                    <button onclick="closeMortgageSubpage()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <!-- Inputs -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <div class="retire-label">גיל נוכחי</div>
+                            <input type="text" inputmode="numeric" id="retireCurrentAge" maxlength="2" class="retire-input" placeholder="מהפרופיל" oninput="calcRetirement()">
+                        </div>
+                        <div>
+                            <div class="retire-label">גיל פרישה</div>
+                            <input type="text" inputmode="numeric" id="retireAge" value="67" maxlength="3" class="retire-input" oninput="calcRetirement()">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <div class="retire-label">תשואה שנתית (%)</div>
+                            <input type="text" inputmode="decimal" id="retireReturn" value="6" class="retire-input" oninput="calcRetirement()">
+                        </div>
+                        <div>
+                            <div class="retire-label">הפקדה חודשית כוללת (₪)</div>
+                            <input type="text" inputmode="decimal" id="retireMonthly" class="retire-input" placeholder="מנכסים" oninput="formatNumberInput(this); calcRetirement()">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <div class="retire-label">דמי ניהול מצבירה (%)</div>
+                            <input type="text" inputmode="decimal" id="retireFeeBalance" value="0.5" class="retire-input" oninput="formatNumberInput(this); calcRetirement()">
+                        </div>
+                        <div>
+                            <div class="retire-label">דמי ניהול מהפקדה (%)</div>
+                            <input type="text" inputmode="decimal" id="retireFeeDeposit" value="0" class="retire-input" oninput="formatNumberInput(this); calcRetirement()">
+                        </div>
+                    </div>
+                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5;">
+                        💡 <strong>לעצמאי:</strong> הזן הפקדה כוללת (כולל חלק "מעסיק"). <strong>לשכיר:</strong> כולל מעסיק + פיצויים (≈18.5% שכר).
+                    </div>
+                    <div style="text-align:left;margin-bottom:14px;">
+                        <button onclick="resetRetirementInputs()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
+                    </div>
+                    <div id="retirementNoData" style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;display:none;">הוסף נכסי פנסיה / גמל כדי לראות תחזית</div>
+                    <div id="retirementResult" style="display:none;">
+                        <div class="retire-main-card">
+                            <div class="retire-main-label">צפי חיסכון בגיל פרישה</div>
+                            <div class="retire-main-amount" id="retireAmount">₪0</div>
+                            <div class="retire-main-sub" id="retireMonthlyIncome"></div>
+                            <div id="retireFeeImpact" style="font-size:0.72rem;color:var(--accent-red);margin-top:6px;display:none;"></div>
+                        </div>
+                        <div class="retire-stats-grid">
+                            <div class="retire-stat">
+                                <div class="retire-stat-value" id="retireYears">—</div>
+                                <div class="retire-stat-label">שנים לפרישה</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-gold" id="retireFromSavings">—</div>
+                                <div class="retire-stat-label">מחיסכון קיים</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-blue" id="retireFromDeposits">—</div>
+                                <div class="retire-stat-label">מהפקדות</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:14px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">
+                                <span>חיסכון נוכחי מתוך יעד</span>
+                                <span id="retireProgressLabel"></span>
+                            </div>
+                            <div class="retire-progress-track">
+                                <div class="retire-progress-fill" id="retireProgressFill" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:10px;text-align:center;" id="retireDetails"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -6513,6 +6514,20 @@
             }
         }
 
+        // ============ MORTGAGE SUBPAGE ============
+        function openMortgageSubpage() {
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            document.getElementById('subpageMortgage').style.display = 'block';
+            window.scrollTo(0, 0);
+            calcRetirement();
+        }
+        function closeMortgageSubpage() {
+            var sub = document.getElementById('subpageMortgage');
+            if (sub.style.display === 'none') return;
+            sub.style.display = 'none';
+            document.getElementById('tabPersonal').classList.add('active');
+        }
+
         // ============ BUDGET SUBPAGE ============
         function openBudgetSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
@@ -6529,7 +6544,9 @@
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
             closeBudgetSubpage();
+            closeMortgageSubpage();
             document.getElementById('subpageBudget').style.display = 'none';
+            document.getElementById('subpageMortgage').style.display = 'none';
             document.body.setAttribute('data-tab', tabName);
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(function(t) {
