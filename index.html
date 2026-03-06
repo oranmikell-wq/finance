@@ -1943,78 +1943,8 @@
         <div class="tab-content" id="tabPersonal">
             <!-- Summary Cards removed per user request -->
 
-            <div class="chart-card budget-card" style="overflow:hidden;">
-                <h3 style="padding:10px 16px 0;"><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> תקציב חודשי</span></h3>
-                <!-- Salary + Summary -->
-                <div style="padding:0 16px 8px;margin-top:6px;">
-                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">💵 שכר חודשי נטו</div>
-                    <input type="text" inputmode="decimal" id="profileSalary" placeholder="₪ 0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;font-weight:700;text-align:right;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
-                    <input type="hidden" id="profileExpenses">
-                    <!-- Stacked allocation bar -->
-                    <div id="budgetStackedBar" class="budget-stacked-bar" style="display:none;"></div>
-                    <!-- Summary pills -->
-                    <div id="budgetSummaryRow" style="display:none;gap:8px;margin-top:10px;">
-                        <div class="budget-pill" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.12);">
-                            <div class="budget-pill-label">הוצאות</div>
-                            <div class="budget-pill-value" id="budgetExpensesDisplay" style="color:var(--accent-red);">₪0</div>
-                        </div>
-                        <div id="disposableDisplay" class="budget-pill">
-                            <div class="budget-pill-label">פנוי</div>
-                            <div class="budget-pill-value" id="disposableAmount">₪0</div>
-                            <div id="disposablePct" style="font-size:0.6rem;color:var(--text-secondary);margin-top:2px;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Divider -->
-                <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
-
-                <!-- Expense breakdown -->
-                <div style="padding:6px 16px 10px;">
-                    <div style="font-size:0.68rem;color:var(--text-secondary);font-weight:600;letter-spacing:0.03em;margin-bottom:2px;">פירוט הוצאות</div>
-                    <div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(239,68,68,0.12);">🏠</span><span>דיור / שכ״ד</span></span>
-                            <input type="text" inputmode="decimal" id="expHousing" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(245,158,11,0.12);">🚗</span><span>רכב ותחבורה</span></span>
-                            <input type="text" inputmode="decimal" id="expTransport" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(16,185,129,0.12);">🛒</span><span>מזון וסופר</span></span>
-                            <input type="text" inputmode="decimal" id="expFood" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(59,130,246,0.12);">🛡️</span><span>ביטוחים</span></span>
-                            <input type="text" inputmode="decimal" id="expInsurance" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(139,92,246,0.12);">📱</span><span>חשבונות שוטפים</span></span>
-                            <input type="text" inputmode="decimal" id="expBills" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(236,72,153,0.12);">🎓</span><span>חינוך</span></span>
-                            <input type="text" inputmode="decimal" id="expEducation" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(249,115,22,0.12);">💳</span><span>הלוואות / אשראי</span></span>
-                            <input type="text" inputmode="decimal" id="expDebt" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(100,116,139,0.12);">📦</span><span>אחר</span></span>
-                            <input type="text" inputmode="decimal" id="expOther" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <!-- Expense breakdown bars -->
-                        <div id="expenseBreakdownBars" style="display:none;margin-top:12px;"></div>
-                    </div>
-                </div>
-
-                <!-- Actual savings (salary - expenses - deposits) -->
-                <div id="actualSavingsDisplay" style="display:none;margin:0 16px 16px;padding:10px 14px;border-radius:12px;text-align:center;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);">
-                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">אחרי הפקדות לנכסים:</div>
-                    <div style="font-size:1.1rem;font-weight:700;" id="actualSavingsAmount">₪0</div>
-                </div>
+            <div class="chart-card" data-no-toggle onclick="openBudgetSubpage()" style="cursor:pointer;margin-bottom:10px;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> תקציב חודשי</span><span style="color:var(--text-secondary);font-size:0.85rem;">‹</span></h3>
             </div>
 
 
@@ -2430,6 +2360,85 @@
                     </div>
                     <div class="settings-row-arrow">‹</div>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Subpage -->
+    <div id="subpageBudget" style="display:none;flex-direction:column;flex:1;overflow-x:hidden;animation:fadeIn 0.25s ease;">
+        <div style="display:flex;align-items:center;direction:rtl;padding:10px 16px 8px;gap:8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+            <button onclick="closeBudgetSubpage()" style="background:none;border:none;color:var(--accent-gold);font-size:1.3rem;cursor:pointer;padding:0 2px;font-family:inherit;line-height:1;flex-shrink:0;">›</button>
+            <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">תקציב חודשי</span>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-bottom:100px;">
+            <div class="chart-card budget-card" style="overflow:hidden;margin-bottom:0;border-radius:0;border-left:none;border-right:none;">
+                <!-- Salary + Summary -->
+                <div style="padding:0 16px 8px;margin-top:6px;">
+                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">💵 שכר חודשי נטו</div>
+                    <input type="text" inputmode="decimal" id="profileSalary" placeholder="₪ 0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;font-weight:700;text-align:right;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
+                    <input type="hidden" id="profileExpenses">
+                    <!-- Stacked allocation bar -->
+                    <div id="budgetStackedBar" class="budget-stacked-bar" style="display:none;"></div>
+                    <!-- Summary pills -->
+                    <div id="budgetSummaryRow" style="display:none;gap:8px;margin-top:10px;">
+                        <div class="budget-pill" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.12);">
+                            <div class="budget-pill-label">הוצאות</div>
+                            <div class="budget-pill-value" id="budgetExpensesDisplay" style="color:var(--accent-red);">₪0</div>
+                        </div>
+                        <div id="disposableDisplay" class="budget-pill">
+                            <div class="budget-pill-label">פנוי</div>
+                            <div class="budget-pill-value" id="disposableAmount">₪0</div>
+                            <div id="disposablePct" style="font-size:0.6rem;color:var(--text-secondary);margin-top:2px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Divider -->
+                <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+                <!-- Expense breakdown -->
+                <div style="padding:6px 16px 10px;">
+                    <div style="font-size:0.68rem;color:var(--text-secondary);font-weight:600;letter-spacing:0.03em;margin-bottom:2px;">פירוט הוצאות</div>
+                    <div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(239,68,68,0.12);">🏠</span><span>דיור / שכ״ד</span></span>
+                            <input type="text" inputmode="decimal" id="expHousing" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(245,158,11,0.12);">🚗</span><span>רכב ותחבורה</span></span>
+                            <input type="text" inputmode="decimal" id="expTransport" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(16,185,129,0.12);">🛒</span><span>מזון וסופר</span></span>
+                            <input type="text" inputmode="decimal" id="expFood" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(59,130,246,0.12);">🛡️</span><span>ביטוחים</span></span>
+                            <input type="text" inputmode="decimal" id="expInsurance" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(139,92,246,0.12);">📱</span><span>חשבונות שוטפים</span></span>
+                            <input type="text" inputmode="decimal" id="expBills" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(236,72,153,0.12);">🎓</span><span>חינוך</span></span>
+                            <input type="text" inputmode="decimal" id="expEducation" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(249,115,22,0.12);">💳</span><span>הלוואות / אשראי</span></span>
+                            <input type="text" inputmode="decimal" id="expDebt" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(100,116,139,0.12);">📦</span><span>אחר</span></span>
+                            <input type="text" inputmode="decimal" id="expOther" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                        <!-- Expense breakdown bars -->
+                        <div id="expenseBreakdownBars" style="display:none;margin-top:12px;"></div>
+                    </div>
+                </div>
+                <!-- Actual savings -->
+                <div id="actualSavingsDisplay" style="display:none;margin:0 16px 16px;padding:10px 14px;border-radius:12px;text-align:center;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);">
+                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">אחרי הפקדות לנכסים:</div>
+                    <div style="font-size:1.1rem;font-weight:700;" id="actualSavingsAmount">₪0</div>
+                </div>
             </div>
         </div>
     </div>
@@ -6493,8 +6502,20 @@
             }
         }
 
+        // ============ BUDGET SUBPAGE ============
+        function openBudgetSubpage() {
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            var sub = document.getElementById('subpageBudget');
+            sub.style.display = 'flex';
+        }
+        function closeBudgetSubpage() {
+            document.getElementById('subpageBudget').style.display = 'none';
+            document.getElementById('tabPersonal').classList.add('active');
+        }
+
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
+            document.getElementById('subpageBudget').style.display = 'none';
             document.body.setAttribute('data-tab', tabName);
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(function(t) {
@@ -8558,6 +8579,7 @@
             var st = {};
             try { st = JSON.parse(localStorage.getItem('cc-toggle-state') || '{}'); } catch(e) {}
             document.querySelectorAll('.chart-card').forEach(function(card, idx) {
+                if (card.hasAttribute('data-no-toggle')) return;
                 var firstEl = card.firstElementChild;
                 if (!firstEl || firstEl.tagName !== 'H3') return;
                 var h3 = firstEl;
