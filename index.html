@@ -769,17 +769,17 @@
             margin-bottom: 10px;
         }
         .chart-card > .chart-card {
-            background: rgba(255,255,255,0.02);
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            margin: 5px 10px;
-            padding: 10px 16px;
+            margin: 0 0 10px;
+            padding: 6px 12px;
         }
         .chart-card > .chart-card:first-child {
-            margin-top: 10px;
+            margin-top: 0;
         }
         .chart-card > .chart-card:last-child {
-            margin-bottom: 10px;
+            margin-bottom: 0;
         }
         /* Budget card keeps its own padding scheme */
         #tabPersonal .chart-card.budget-card { padding: 0; }
@@ -793,27 +793,27 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 500;
         }
         .h3-label {
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 10px;
         }
         .h3-label svg { flex-shrink: 0; }
         .chart-card.cc-collapsed > h3 { margin-bottom: 0; }
         .chart-card.budget-card.cc-collapsed > h3 { padding-bottom: 10px !important; }
         .card-toggle-chevron {
             display: inline-block;
-            font-size: 0.6rem;
+            font-size: 1.2rem;
             color: var(--text-secondary);
             transition: transform 0.3s ease;
             flex-shrink: 0;
-            opacity: 0.6;
+            opacity: 0.4;
         }
-        .chart-card:hover .card-toggle-chevron { opacity: 1; }
-        .chart-card.cc-collapsed .card-toggle-chevron { transform: rotate(-90deg); }
+        .chart-card:hover .card-toggle-chevron { opacity: 0.6; }
+        .chart-card.cc-collapsed .card-toggle-chevron { transform: rotate(90deg); }
         .card-body {
             overflow: hidden;
             /* height & opacity animated by JS for reliable iOS layout */
@@ -1828,10 +1828,10 @@
 
         <!-- TAB 2: Trends -->
         <div class="tab-content" id="tabTrends">
-          <div class="chart-card" style="padding:0;">
+          <div class="chart-card">
             <div class="chart-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-                    <h3 style="margin:0;"><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> מגמת שווי לאורך זמן</span></h3>
+                    <h3 style="margin:0;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div> מגמת שווי לאורך זמן</span></h3>
                     <div style="display:flex;gap:4px;" id="chartRangeBtns">
                         <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
                         <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
@@ -1859,7 +1859,7 @@
 
             <!-- Economic Price Indices -->
             <div class="chart-card" id="economicIndicesCard">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg> מדדי מחירים</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></div> מדדי מחירים</span></h3>
                 <div id="economicIndicesContent">
                     <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען...</div>
                 </div>
@@ -1867,24 +1867,24 @@
 
             <!-- Fee Analysis -->
             <div class="chart-card">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> ניתוח דמי ניהול</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></div> ניתוח דמי ניהול</span></h3>
                 <div id="feeAnalysisContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף דמי ניהול לנכסים כדי לראות ניתוח</div>
             </div>
 
             <!-- Geographic Exposure -->
             <div class="chart-card">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg> חשיפה גיאוגרפית</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div> חשיפה גיאוגרפית</span></h3>
                 <div id="exposureContent"></div>
             </div>
 
             <div class="chart-card">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> תובנות</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div> תובנות</span></h3>
                 <div id="trendsInsights" style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:12px 0;">טוען...</div>
             </div>
 
             <!-- Gemel Rankings -->
             <div class="chart-card" style="padding:10px 12px;">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg> דירוג קרנות</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg></div> דירוג קרנות</span></h3>
 
                 <!-- Product type dropdown -->
                 <div style="position:relative;margin-bottom:14px;" id="gemelDropdownWrap">
@@ -1956,17 +1956,17 @@
 
         <!-- TAB 3: Personal -->
         <div class="tab-content" id="tabPersonal">
-          <div class="chart-card" style="padding:0;">
+          <div class="chart-card">
             <!-- Summary Cards removed per user request -->
 
             <div class="chart-card" data-no-toggle onclick="openBudgetSubpage()" style="cursor:pointer;">
-                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> תקציב חודשי</span><span style="color:var(--text-secondary);font-size:0.85rem;">›</span></h3>
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></div> תקציב חודשי</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">‹</span></h3>
             </div>
 
 
             <!-- Pension / Retirement Calculator -->
             <div class="chart-card">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg> מחשבון משכנתא</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg></div> מחשבון משכנתא</span></h3>
                 <!-- Inputs -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                     <div>
@@ -2053,7 +2053,7 @@
 
             <!-- Compound Interest Calculator -->
             <div class="chart-card">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg> מחשבון תשואה</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> מחשבון תשואה</span></h3>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                     <div>
                         <div class="retire-label">קרן התחלתית (₪)</div>
@@ -2112,7 +2112,7 @@
 
             <!-- Month-End Forecast -->
             <div class="chart-card" id="monthForecastCard">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> חיזוי סוף חודש</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></div> חיזוי סוף חודש</span></h3>
 
                 <!-- Portfolio forecast -->
                 <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;letter-spacing:0.03em;">📊 שווי תיק</div>
@@ -2131,7 +2131,7 @@
 
             <!-- Capital Gains Tax Calculator -->
             <div class="chart-card">
-                <h3><span class="h3-label"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg> מחשבון מס רווח הון</span></h3>
+                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg></div> מחשבון מס רווח הון</span></h3>
                 <div style="margin-bottom:14px;">
                     <div class="retire-label" style="margin-bottom:8px;">סוג נכס</div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="taxTypeButtons">
@@ -8607,7 +8607,7 @@
                 // Add chevron to h3
                 var chev = document.createElement('span');
                 chev.className = 'card-toggle-chevron';
-                chev.textContent = '▼';
+                chev.textContent = '‹';
                 h3.appendChild(chev);
                 // Wrap all siblings after h3 in .card-body
                 var body = document.createElement('div');
