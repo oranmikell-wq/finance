@@ -1562,8 +1562,15 @@
         /* Settings row hover border — was rgba(255,255,255,0.15) */
         @media (hover: hover) { body.light-mode .settings-row:hover { border-color: rgba(0,0,0,0.15) !important; } }
 
-        /* Settings/nav icons — rgba(color,0.1) background is invisible on white; saturate+darken makes it vivid */
-        body.light-mode .settings-row-icon { filter: saturate(3) brightness(0.78); }
+        /* Settings/nav icons — rgba(color,0.1) background is invisible on white.
+           Override each colour at 0.15 opacity (uniform across hues, no filter skew). */
+        body.light-mode .settings-row-icon[style*="rgba(99,102,241"]  { background: rgba(99,102,241,0.15)  !important; }
+        body.light-mode .settings-row-icon[style*="rgba(244,196,48"]  { background: rgba(244,196,48,0.15)  !important; }
+        body.light-mode .settings-row-icon[style*="rgba(16,185,129"]  { background: rgba(16,185,129,0.15)  !important; }
+        body.light-mode .settings-row-icon[style*="rgba(59,130,246"]  { background: rgba(59,130,246,0.15)  !important; }
+        body.light-mode .settings-row-icon[style*="rgba(239,68,68"]   { background: rgba(239,68,68,0.15)   !important; }
+        body.light-mode .settings-row-icon[style*="rgba(168,85,247"]  { background: rgba(168,85,247,0.15)  !important; }
+        body.light-mode .settings-row-icon[style*="rgba(176,38,255"]  { background: rgba(176,38,255,0.15)  !important; }
 
         /* === Light mode: all invisible-on-white rgba(255,255,255,0.xx) patterns === */
 
