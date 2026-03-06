@@ -1968,62 +1968,13 @@
 
 
             <!-- Compound Interest Calculator -->
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> מחשבון תשואה</span></h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                    <div>
-                        <div class="retire-label">קרן התחלתית (₪)</div>
-                        <input type="text" inputmode="decimal" id="compPrincipal" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcCompound()">
-                    </div>
-                    <div>
-                        <div class="retire-label">הפקדה חודשית (₪)</div>
-                        <input type="text" inputmode="decimal" id="compMonthly" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcCompound()">
-                    </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-                    <div>
-                        <div class="retire-label">תשואה שנתית (%)</div>
-                        <input type="text" inputmode="decimal" id="compRate" class="retire-input" placeholder="7" oninput="calcCompound()">
-                    </div>
-                    <div>
-                        <div class="retire-label">תקופה (שנים)</div>
-                        <input type="text" inputmode="decimal" id="compYears" class="retire-input" placeholder="10" oninput="calcCompound()">
-                    </div>
-                </div>
-                <div style="text-align:left;margin-bottom:14px;">
-                    <button onclick="resetCompound()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
-                </div>
+            <div class="chart-card" data-no-toggle onclick="openCompoundSubpage()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> מחשבון תשואה</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
+            </div>
 
-                <!-- Result -->
-                <div id="compoundResult" style="display:none;">
-                    <div class="retire-main-card">
-                        <div class="retire-main-label">סכום סופי</div>
-                        <div class="retire-main-amount" id="compResultTotal">₪0</div>
-                    </div>
-                    <div class="retire-stats-grid">
-                        <div class="retire-stat">
-                            <div class="retire-stat-value" id="compResultDeposited">—</div>
-                            <div class="retire-stat-label">סה״כ הפקדות</div>
-                        </div>
-                        <div class="retire-stat">
-                            <div class="retire-stat-value retire-stat-gold" id="compResultProfit">—</div>
-                            <div class="retire-stat-label">רווח</div>
-                        </div>
-                        <div class="retire-stat">
-                            <div class="retire-stat-value retire-stat-blue" id="compResultProfitPct">—</div>
-                            <div class="retire-stat-label">תשואה כוללת</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:14px;">
-                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">
-                            <span>רווח מתוך סכום סופי</span>
-                            <span id="compProfitPctLabel"></span>
-                        </div>
-                        <div class="retire-progress-track">
-                            <div class="retire-progress-fill" id="compProfitBar" style="width:0%;background:var(--accent-green);"></div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Capital Gains Tax Calculator -->
+            <div class="chart-card" data-no-toggle onclick="openTaxSubpage()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg></div> מחשבון מס רווח הון</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
             <!-- Month-End Forecast -->
@@ -2042,56 +1993,6 @@
                 <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600;letter-spacing:0.03em;">💵 תזרים כספי</div>
                 <div id="cashForecastContent">
                     <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:8px 0;">הזן שכר בתקציב החודשי כדי לראות תחזית</div>
-                </div>
-            </div>
-
-            <!-- Capital Gains Tax Calculator -->
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg></div> מחשבון מס רווח הון</span></h3>
-                <div style="margin-bottom:14px;">
-                    <div class="retire-label" style="margin-bottom:8px;">סוג נכס</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="taxTypeButtons">
-                        <button onclick="setTaxType('capital',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">מניות / קריפטו<br>קרן נאמנות<br><span style="font-size:0.65rem;opacity:0.8;">25% על רווח</span></button>
-                        <button onclick="setTaxType('deposit',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פיקדון<br>חיסכון<br><span style="font-size:0.65rem;opacity:0.8;">15% על ריבית</span></button>
-                        <button onclick="setTaxType('hashtalm',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">ק׳ השתלמות<br>משיכה מוקדמת<br><span style="font-size:0.65rem;opacity:0.8;">25% על רווח</span></button>
-                        <button onclick="setTaxType('pension',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פנסיה / גמל<br>משיכה מוקדמת<br><span style="font-size:0.65rem;opacity:0.8;">35% על הכל</span></button>
-                    </div>
-                    <input type="hidden" id="taxAssetType" value="capital">
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-                    <div>
-                        <div class="retire-label" id="taxLabel1">שווי מכירה (₪)</div>
-                        <input type="text" inputmode="decimal" id="taxSaleValue" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
-                    </div>
-                    <div id="taxField2Wrap">
-                        <div class="retire-label" id="taxLabel2">עלות בסיס / קרן (₪)</div>
-                        <input type="text" inputmode="decimal" id="taxCostBasis" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
-                    </div>
-                </div>
-                <div style="text-align:left;margin-bottom:14px;">
-                    <button onclick="resetTax()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
-                </div>
-
-                <div id="taxResult" style="display:none;">
-                    <div class="retire-main-card">
-                        <div class="retire-main-label" id="taxNote">25% מס רווח הון</div>
-                        <div class="retire-main-amount" id="taxResultTax">₪0</div>
-                        <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">מס לתשלום</div>
-                    </div>
-                    <div class="retire-stats-grid">
-                        <div class="retire-stat">
-                            <div class="retire-stat-value" id="taxResultGain">—</div>
-                            <div class="retire-stat-label">רווח</div>
-                        </div>
-                        <div class="retire-stat">
-                            <div class="retire-stat-value retire-stat-gold" id="taxGainPct">—</div>
-                            <div class="retire-stat-label">תשואה %</div>
-                        </div>
-                        <div class="retire-stat">
-                            <div class="retire-stat-value retire-stat-blue" id="taxResultNet">—</div>
-                            <div class="retire-stat-label">נטו לאחר מס</div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -2253,6 +2154,121 @@
                             </div>
                         </div>
                         <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:10px;text-align:center;" id="retireDetails"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compound Interest Subpage -->
+        <div id="subpageCompound" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מחשבון תשואה</span>
+                    <button onclick="closeCompoundSubpage()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <div class="retire-label">הון התחלתי (₪)</div>
+                            <input type="text" inputmode="decimal" id="compPrincipal" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcCompound()">
+                        </div>
+                        <div>
+                            <div class="retire-label">הפקדה חודשית (₪)</div>
+                            <input type="text" inputmode="decimal" id="compMonthly" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcCompound()">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <div class="retire-label">תשואה שנתית (%)</div>
+                            <input type="text" inputmode="decimal" id="compRate" class="retire-input" placeholder="0" oninput="calcCompound()">
+                        </div>
+                        <div>
+                            <div class="retire-label">מספר שנים</div>
+                            <input type="text" inputmode="decimal" id="compYears" class="retire-input" placeholder="0" oninput="calcCompound()">
+                        </div>
+                    </div>
+                    <div style="text-align:left;margin-bottom:14px;">
+                        <button onclick="resetCompound()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
+                    </div>
+                    <div id="compoundResult" style="display:none;">
+                        <div class="retire-main-card">
+                            <div class="retire-main-label">שווי עתידי</div>
+                            <div class="retire-main-amount" id="compResultTotal">₪0</div>
+                        </div>
+                        <div class="retire-stats-grid">
+                            <div class="retire-stat">
+                                <div class="retire-stat-value" id="compResultDeposited">—</div>
+                                <div class="retire-stat-label">סה״כ הופקד</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value" style="color:var(--accent-green);" id="compResultProfit">—</div>
+                                <div class="retire-stat-label">רווח</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-gold" id="compResultProfitPct">—</div>
+                                <div class="retire-stat-label">תשואה %</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;"><span>רווח מתוך סה״כ</span><span id="compProfitPctLabel">0%</span></div>
+                            <div style="height:6px;background:var(--bg-secondary);border-radius:4px;overflow:hidden;"><div id="compProfitBar" style="height:100%;width:0%;background:var(--accent-green);border-radius:4px;transition:width 0.4s;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capital Gains Tax Subpage -->
+        <div id="subpageTax" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מחשבון מס רווח הון</span>
+                    <button onclick="closeTaxSubpage()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div style="margin-bottom:14px;">
+                        <div class="retire-label" style="margin-bottom:8px;">סוג נכס</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="taxTypeButtons">
+                            <button onclick="setTaxType('capital',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.12);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">מניות / קריפטו<br>קרן נאמנות<br><span style="font-size:0.65rem;opacity:0.8;">25% על רווח</span></button>
+                            <button onclick="setTaxType('deposit',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פיקדון<br>חיסכון<br><span style="font-size:0.65rem;opacity:0.8;">15% על ריבית</span></button>
+                            <button onclick="setTaxType('hashtalm',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">ק׳ השתלמות<br>משיכה מוקדמת<br><span style="font-size:0.65rem;opacity:0.8;">25% על רווח</span></button>
+                            <button onclick="setTaxType('pension',this)" class="tax-type-btn" style="padding:8px 4px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;line-height:1.3;text-align:center;">פנסיה / גמל<br>משיכה מוקדמת<br><span style="font-size:0.65rem;opacity:0.8;">35% על הכל</span></button>
+                        </div>
+                        <input type="hidden" id="taxAssetType" value="capital">
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                        <div>
+                            <div class="retire-label" id="taxLabel1">שווי מכירה (₪)</div>
+                            <input type="text" inputmode="decimal" id="taxSaleValue" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
+                        </div>
+                        <div id="taxField2Wrap">
+                            <div class="retire-label" id="taxLabel2">עלות בסיס / קרן (₪)</div>
+                            <input type="text" inputmode="decimal" id="taxCostBasis" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcTax()">
+                        </div>
+                    </div>
+                    <div style="text-align:left;margin-bottom:14px;">
+                        <button onclick="resetTax()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
+                    </div>
+                    <div id="taxResult" style="display:none;">
+                        <div class="retire-main-card">
+                            <div class="retire-main-label" id="taxNote">25% מס רווח הון</div>
+                            <div class="retire-main-amount" id="taxResultTax">₪0</div>
+                            <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">מס לתשלום</div>
+                        </div>
+                        <div class="retire-stats-grid">
+                            <div class="retire-stat">
+                                <div class="retire-stat-value" id="taxResultGain">—</div>
+                                <div class="retire-stat-label">רווח</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-gold" id="taxGainPct">—</div>
+                                <div class="retire-stat-label">תשואה %</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-blue" id="taxResultNet">—</div>
+                                <div class="retire-stat-label">נטו לאחר מס</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -6514,6 +6530,32 @@
             }
         }
 
+        // ============ COMPOUND SUBPAGE ============
+        function openCompoundSubpage() {
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            document.getElementById('subpageCompound').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        function closeCompoundSubpage() {
+            var sub = document.getElementById('subpageCompound');
+            if (sub.style.display === 'none') return;
+            sub.style.display = 'none';
+            document.getElementById('tabPersonal').classList.add('active');
+        }
+
+        // ============ TAX SUBPAGE ============
+        function openTaxSubpage() {
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            document.getElementById('subpageTax').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        function closeTaxSubpage() {
+            var sub = document.getElementById('subpageTax');
+            if (sub.style.display === 'none') return;
+            sub.style.display = 'none';
+            document.getElementById('tabPersonal').classList.add('active');
+        }
+
         // ============ MORTGAGE SUBPAGE ============
         function openMortgageSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
@@ -6545,8 +6587,12 @@
         function switchTab(tabName, btn) {
             closeBudgetSubpage();
             closeMortgageSubpage();
+            closeCompoundSubpage();
+            closeTaxSubpage();
             document.getElementById('subpageBudget').style.display = 'none';
             document.getElementById('subpageMortgage').style.display = 'none';
+            document.getElementById('subpageCompound').style.display = 'none';
+            document.getElementById('subpageTax').style.display = 'none';
             document.body.setAttribute('data-tab', tabName);
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(function(t) {
