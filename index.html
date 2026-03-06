@@ -1828,127 +1828,32 @@
         <!-- TAB 2: Trends -->
         <div class="tab-content" id="tabTrends">
           <div class="chart-card">
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div> גרף שווי</span></h3>
-                <div style="display:flex;gap:4px;margin-bottom:8px;" id="chartRangeBtns">
-                    <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
-                    <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
-                    <button class="range-btn" onclick="setChartRange('3month',this)">3 חודשים</button>
-                    <button class="range-btn" onclick="setChartRange('year',this)">שנה</button>
-                    <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
-                </div>
-                <div id="chartValueHeader" style="display:none;align-items:baseline;gap:10px;margin-bottom:10px;">
-                    <span id="chartCurrentValue" style="font-size:1.5rem;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums;"></span>
-                    <span id="chartPeriodChange" style="font-size:0.82rem;font-weight:600;padding:2px 8px;border-radius:6px;"></span>
-                </div>
-                <div style="position:relative;width:100%;">
-                    <canvas id="historyChart" style="width:100%;height:240px;cursor:crosshair;"></canvas>
-                    <div id="chartTooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(15,20,40,0.92);border:1px solid rgba(244,196,48,0.3);border-radius:10px;padding:8px 12px;font-size:0.78rem;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:10;direction:rtl;">
-                        <div id="chartTooltipDate" style="color:rgba(255,255,255,0.5);font-size:0.7rem;margin-bottom:3px;"></div>
-                        <div id="chartTooltipValue" style="color:#f4c430;font-weight:700;font-size:0.9rem;"></div>
-                        <div id="chartTooltipChange" style="font-size:0.72rem;margin-top:2px;"></div>
-                    </div>
-                </div>
-                <div id="historyEmpty" style="text-align:center;color:var(--text-secondary);padding:30px;display:none;">
-                    📊 נתונים היסטוריים יתחילו להצטבר מהיום. חזור מחר!
-                </div>
+
+            <div class="chart-card" data-no-toggle onclick="openTrendsChart()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div> גרף שווי</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
-            <!-- Economic Price Indices -->
-            <div class="chart-card" id="economicIndicesCard">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></div> מדדי מחירים</span></h3>
-                <div id="economicIndicesContent">
-                    <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען...</div>
-                </div>
+            <div class="chart-card" data-no-toggle onclick="openTrendsIndices()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></div> מדדי מחירים</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
-            <!-- Fee Analysis -->
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></div> ניתוח דמי ניהול</span></h3>
-                <div id="feeAnalysisContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף דמי ניהול לנכסים כדי לראות ניתוח</div>
+            <div class="chart-card" data-no-toggle onclick="openTrendsFees()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></div> ניתוח דמי ניהול</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
-            <!-- Geographic Exposure -->
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div> חשיפה גיאוגרפית</span></h3>
-                <div id="exposureContent"></div>
+            <div class="chart-card" data-no-toggle onclick="openTrendsExposure()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(59,130,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div> חשיפה גיאוגרפית</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div> תובנות</span></h3>
-                <div id="trendsInsights" style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:12px 0;">טוען...</div>
+            <div class="chart-card" data-no-toggle onclick="openTrendsInsights()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div> תובנות</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
-            <!-- Gemel Rankings -->
-            <div class="chart-card">
-                <h3><span class="h3-label"><div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg></div> דירוג קרנות</span></h3>
-
-                <!-- Product type dropdown -->
-                <div style="position:relative;margin-bottom:14px;" id="gemelDropdownWrap">
-                    <button onclick="toggleGemelDropdown()" id="gemelDropdownBtn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.08);color:var(--accent-gold);font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600;">
-                        <span id="gemelDropdownLabel">💼 גמל להשקעה</span>
-                        <span id="gemelDropdownArrow" style="font-size:0.7rem;transition:transform 0.2s;">▼</span>
-                    </button>
-                    <div id="gemelDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;left:0;background:var(--card-bg, #1e1e2e);border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-                        <div onclick="selectGemelProduct('gemel_invest','💼 גמל להשקעה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--accent-gold);font-weight:600;background:rgba(244,196,48,0.06);">💼 גמל להשקעה</div>
-                        <div onclick="selectGemelProduct('pension','🏦 פנסיה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏦 פנסיה</div>
-                        <div onclick="selectGemelProduct('hishtalmut','📚 השתלמות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📚 השתלמות</div>
-                        <div onclick="selectGemelProduct('gemel_classic','🏛️ גמל קלאסי')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏛️ גמל קלאסי</div>
-                        <div onclick="selectGemelProduct('policies','📋 פוליסות חיסכון')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);border-top:1px solid rgba(255,255,255,0.06);">📋 פוליסות חיסכון</div>
-                        <div onclick="selectGemelProduct('mutual_funds','📊 קרנות נאמנות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📊 קרנות נאמנות</div>
-                        <div onclick="selectGemelProduct('bonds','📈 קרנות אג״ח')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📈 קרנות אג״ח</div>
-                        <div onclick="selectGemelProduct('money_market','💵 כספיות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">💵 כספיות</div>
-                    </div>
-                </div>
-
-                <!-- Track filter chips -->
-                <div id="gemelTrackFilters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
-                    <button id="gemelFilterAll" onclick="setGemelFilter('all',this)" class="gtrack-btn gtrack-active" style="padding:3px 10px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.68rem;cursor:pointer;font-family:inherit;font-weight:600;">הכל</button>
-                    <button onclick="setGemelFilter('כללי',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">כללי</button>
-                    <button onclick="setGemelFilter('מניות',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מנייתי</button>
-                    <button onclick="setGemelFilter('מדד',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מחקה מדד</button>
-                    <button onclick="setGemelFilter('אגח',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">אג״ח</button>
-                </div>
-
-                <!-- Sort row -->
-                <div style="display:flex;gap:5px;margin-bottom:10px;align-items:center;">
-                    <span style="font-size:0.65rem;color:var(--text-secondary);flex-shrink:0;">מיון:</span>
-                    <button onclick="setGemelSort('y1',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">שנה</button>
-                    <button onclick="setGemelSort('y3',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">3 שנים</button>
-                    <button onclick="setGemelSort('y5',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.1);color:var(--accent-gold);font-size:0.65rem;cursor:pointer;font-family:inherit;font-weight:600;">5 שנים</button>
-                    <button onclick="setGemelSort('fee',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">דמי ניהול</button>
-                </div>
-
-                <!-- Table header -->
-                <div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:0.75rem;color:var(--text-secondary);font-weight:600;">
-                    <div>קרן / מסלול</div>
-                    <div style="text-align:center;">שנה</div>
-                    <div style="text-align:center;">3 שנ׳</div>
-                    <div style="text-align:center;">5 שנ׳</div>
-                    <div style="text-align:center;">דמי ניהול</div>
-                </div>
-
-                <!-- Data rows -->
-                <div id="gemelRankingRows" style="min-height:80px;">
-                    <div style="text-align:center;padding:30px;color:var(--text-secondary);font-size:0.8rem;">
-                        <div style="font-size:1.4rem;margin-bottom:6px;">⏳</div>
-                        טוען נתונים מ-Gemelnet...
-                    </div>
-                </div>
-
-                <div id="gemelError" style="display:none;text-align:center;padding:20px;font-size:0.78rem;">
-                    <div style="font-size:1.3rem;margin-bottom:6px;">⚠️</div>
-                    <div style="color:var(--text-secondary);margin-bottom:10px;" id="gemelErrorMsg">לא ניתן לטעון נתונים</div>
-                    <button onclick="loadGemelData(true)" style="padding:6px 16px;border-radius:10px;border:1px solid var(--accent-gold);background:transparent;color:var(--accent-gold);font-size:0.78rem;cursor:pointer;font-family:inherit;">נסה שוב</button>
-                </div>
-
-                <div id="gemelSourceNote" style="font-size:0.6rem;color:var(--text-secondary);opacity:0.5;text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);">
-                    מקור: Gemelnet / רשות שוק ההון • תשואות לפני דמי ניהול • אינו מהווה ייעוץ השקעות
-                </div>
+            <div class="chart-card" data-no-toggle onclick="openTrendsGemel()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(244,196,48,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg></div> דירוג קרנות</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
           </div>
-
         </div>
 
         <!-- TAB 3: Personal -->
@@ -2316,6 +2221,162 @@
                             <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;font-weight:600;letter-spacing:0.03em;">יתרת חוב</div>
                             <div id="mashlantaMilestonesGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends: Chart Subpage -->
+        <div id="subpageTrendsChart" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">גרף שווי</span>
+                    <button onclick="closeTrendsChart()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div style="display:flex;gap:4px;margin-bottom:8px;" id="chartRangeBtns">
+                        <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
+                        <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
+                        <button class="range-btn" onclick="setChartRange('3month',this)">3 חודשים</button>
+                        <button class="range-btn" onclick="setChartRange('year',this)">שנה</button>
+                        <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
+                    </div>
+                    <div id="chartValueHeader" style="display:none;align-items:baseline;gap:10px;margin-bottom:10px;">
+                        <span id="chartCurrentValue" style="font-size:1.5rem;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums;"></span>
+                        <span id="chartPeriodChange" style="font-size:0.82rem;font-weight:600;padding:2px 8px;border-radius:6px;"></span>
+                    </div>
+                    <div style="position:relative;width:100%;">
+                        <canvas id="historyChart" style="width:100%;height:240px;cursor:crosshair;"></canvas>
+                        <div id="chartTooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(15,20,40,0.92);border:1px solid rgba(244,196,48,0.3);border-radius:10px;padding:8px 12px;font-size:0.78rem;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:10;direction:rtl;">
+                            <div id="chartTooltipDate" style="color:rgba(255,255,255,0.5);font-size:0.7rem;margin-bottom:3px;"></div>
+                            <div id="chartTooltipValue" style="color:#f4c430;font-weight:700;font-size:0.9rem;"></div>
+                            <div id="chartTooltipChange" style="font-size:0.72rem;margin-top:2px;"></div>
+                        </div>
+                    </div>
+                    <div id="historyEmpty" style="text-align:center;color:var(--text-secondary);padding:30px;display:none;">
+                        📊 נתונים היסטוריים יתחילו להצטבר מהיום. חזור מחר!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends: Indices Subpage -->
+        <div id="subpageTrendsIndices" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מדדי מחירים</span>
+                    <button onclick="closeTrendsIndices()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div id="economicIndicesContent">
+                        <div style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:10px 0;">⏳ טוען...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends: Fees Subpage -->
+        <div id="subpageTrendsFees" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">ניתוח דמי ניהול</span>
+                    <button onclick="closeTrendsFees()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div id="feeAnalysisContent" style="text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:10px;">הוסף דמי ניהול לנכסים כדי לראות ניתוח</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends: Exposure Subpage -->
+        <div id="subpageTrendsExposure" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">חשיפה גיאוגרפית</span>
+                    <button onclick="closeTrendsExposure()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div id="exposureContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends: Insights Subpage -->
+        <div id="subpageTrendsInsights" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">תובנות</span>
+                    <button onclick="closeTrendsInsights()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div id="trendsInsights" style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:12px 0;">טוען...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends: Gemel Rankings Subpage -->
+        <div id="subpageTrendsGemel" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">דירוג קרנות</span>
+                    <button onclick="closeTrendsGemel()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <!-- Product type dropdown -->
+                    <div style="position:relative;margin-bottom:14px;" id="gemelDropdownWrap">
+                        <button onclick="toggleGemelDropdown()" id="gemelDropdownBtn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.08);color:var(--accent-gold);font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600;">
+                            <span id="gemelDropdownLabel">💼 גמל להשקעה</span>
+                            <span id="gemelDropdownArrow" style="font-size:0.7rem;transition:transform 0.2s;">▼</span>
+                        </button>
+                        <div id="gemelDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;left:0;background:var(--card-bg, #1e1e2e);border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+                            <div onclick="selectGemelProduct('gemel_invest','💼 גמל להשקעה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--accent-gold);font-weight:600;background:rgba(244,196,48,0.06);">💼 גמל להשקעה</div>
+                            <div onclick="selectGemelProduct('pension','🏦 פנסיה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏦 פנסיה</div>
+                            <div onclick="selectGemelProduct('hishtalmut','📚 השתלמות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📚 השתלמות</div>
+                            <div onclick="selectGemelProduct('gemel_classic','🏛️ גמל קלאסי')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏛️ גמל קלאסי</div>
+                            <div onclick="selectGemelProduct('policies','📋 פוליסות חיסכון')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);border-top:1px solid rgba(255,255,255,0.06);">📋 פוליסות חיסכון</div>
+                            <div onclick="selectGemelProduct('mutual_funds','📊 קרנות נאמנות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📊 קרנות נאמנות</div>
+                            <div onclick="selectGemelProduct('bonds','📈 קרנות אג״ח')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📈 קרנות אג״ח</div>
+                            <div onclick="selectGemelProduct('money_market','💵 כספיות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">💵 כספיות</div>
+                        </div>
+                    </div>
+                    <!-- Track filter chips -->
+                    <div id="gemelTrackFilters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+                        <button id="gemelFilterAll" onclick="setGemelFilter('all',this)" class="gtrack-btn gtrack-active" style="padding:3px 10px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.68rem;cursor:pointer;font-family:inherit;font-weight:600;">הכל</button>
+                        <button onclick="setGemelFilter('כללי',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">כללי</button>
+                        <button onclick="setGemelFilter('מניות',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מנייתי</button>
+                        <button onclick="setGemelFilter('מדד',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מחקה מדד</button>
+                        <button onclick="setGemelFilter('אגח',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">אג״ח</button>
+                    </div>
+                    <!-- Sort row -->
+                    <div style="display:flex;gap:5px;margin-bottom:10px;align-items:center;">
+                        <span style="font-size:0.65rem;color:var(--text-secondary);flex-shrink:0;">מיון:</span>
+                        <button onclick="setGemelSort('y1',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">שנה</button>
+                        <button onclick="setGemelSort('y3',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">3 שנים</button>
+                        <button onclick="setGemelSort('y5',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.1);color:var(--accent-gold);font-size:0.65rem;cursor:pointer;font-family:inherit;font-weight:600;">5 שנים</button>
+                        <button onclick="setGemelSort('fee',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">דמי ניהול</button>
+                    </div>
+                    <!-- Table header -->
+                    <div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:0.75rem;color:var(--text-secondary);font-weight:600;">
+                        <div>קרן / מסלול</div>
+                        <div style="text-align:center;">שנה</div>
+                        <div style="text-align:center;">3 שנ׳</div>
+                        <div style="text-align:center;">5 שנ׳</div>
+                        <div style="text-align:center;">דמי ניהול</div>
+                    </div>
+                    <!-- Data rows -->
+                    <div id="gemelRankingRows" style="min-height:80px;">
+                        <div style="text-align:center;padding:30px;color:var(--text-secondary);font-size:0.8rem;">
+                            <div style="font-size:1.4rem;margin-bottom:6px;">⏳</div>
+                            טוען נתונים מ-Gemelnet...
+                        </div>
+                    </div>
+                    <div id="gemelError" style="display:none;text-align:center;padding:20px;font-size:0.78rem;">
+                        <div style="font-size:1.3rem;margin-bottom:6px;">⚠️</div>
+                        <div style="color:var(--text-secondary);margin-bottom:10px;" id="gemelErrorMsg">לא ניתן לטעון נתונים</div>
+                        <button onclick="loadGemelData(true)" style="padding:6px 16px;border-radius:10px;border:1px solid var(--accent-gold);background:transparent;color:var(--accent-gold);font-size:0.78rem;cursor:pointer;font-family:inherit;">נסה שוב</button>
+                    </div>
+                    <div id="gemelSourceNote" style="font-size:0.6rem;color:var(--text-secondary);opacity:0.5;text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);">
+                        מקור: Gemelnet / רשות שוק ההון • תשואות לפני דמי ניהול • אינו מהווה ייעוץ השקעות
                     </div>
                 </div>
             </div>
@@ -6841,6 +6902,35 @@
             document.getElementById('mashlantaTrack1Note').style.display = 'none';
         }
 
+        // ============ TRENDS SUBPAGES ============
+        var _trendsSubpageIds = ['subpageTrendsChart','subpageTrendsIndices','subpageTrendsFees','subpageTrendsExposure','subpageTrendsInsights','subpageTrendsGemel'];
+        function _openTrendsSubpage(id, cb) {
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            _trendsSubpageIds.forEach(function(s) { var el = document.getElementById(s); if (el) el.style.display = 'none'; });
+            var sub = document.getElementById(id);
+            if (sub) sub.style.display = 'block';
+            window.scrollTo(0, 0);
+            if (cb) { setTimeout(cb, 50); }
+        }
+        function _closeTrendsSubpage(id) {
+            var sub = document.getElementById(id);
+            if (!sub || sub.style.display === 'none') return;
+            sub.style.display = 'none';
+            document.getElementById('tabTrends').classList.add('active');
+        }
+        function openTrendsChart()    { _openTrendsSubpage('subpageTrendsChart',    function() { renderHistoryChart(); }); }
+        function closeTrendsChart()   { _closeTrendsSubpage('subpageTrendsChart'); }
+        function openTrendsIndices()  { _openTrendsSubpage('subpageTrendsIndices',  function() { updateTrendsTab(); }); }
+        function closeTrendsIndices() { _closeTrendsSubpage('subpageTrendsIndices'); }
+        function openTrendsFees()     { _openTrendsSubpage('subpageTrendsFees',     function() { updateTrendsTab(); }); }
+        function closeTrendsFees()    { _closeTrendsSubpage('subpageTrendsFees'); }
+        function openTrendsExposure() { _openTrendsSubpage('subpageTrendsExposure', function() { updateTrendsTab(); }); }
+        function closeTrendsExposure(){ _closeTrendsSubpage('subpageTrendsExposure'); }
+        function openTrendsInsights() { _openTrendsSubpage('subpageTrendsInsights', function() { updateTrendsTab(); }); }
+        function closeTrendsInsights(){ _closeTrendsSubpage('subpageTrendsInsights'); }
+        function openTrendsGemel()    { _openTrendsSubpage('subpageTrendsGemel',    function() { if (!gemelLoaded) loadGemelData(false); }); }
+        function closeTrendsGemel()   { _closeTrendsSubpage('subpageTrendsGemel'); }
+
         // ============ COMPOUND SUBPAGE ============
         function openCompoundSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
@@ -6897,6 +6987,7 @@
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
             closeBudgetSubpage();
+            _trendsSubpageIds && _trendsSubpageIds.forEach(function(s) { var el = document.getElementById(s); if (el) el.style.display = 'none'; });
             closeMortgageSubpage();
             closeCompoundSubpage();
             closeTaxSubpage();
@@ -6906,6 +6997,7 @@
             document.getElementById('subpageCompound').style.display = 'none';
             document.getElementById('subpageTax').style.display = 'none';
             document.getElementById('subpageMashlanta').style.display = 'none';
+            _trendsSubpageIds && _trendsSubpageIds.forEach(function(s) { var el = document.getElementById(s); if (el) el.style.display = 'none'; });
             document.body.setAttribute('data-tab', tabName);
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(function(t) {
