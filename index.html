@@ -7178,9 +7178,12 @@
             var canvas = document.getElementById('historyChart');
             var emptyMsg = document.getElementById('historyEmpty');
             if (!canvas) return;
-            // Skip if trends tab is not visible — avoids 0-width canvas bugs
+            // Skip if trends tab or its chart subpage is not visible — avoids 0-width canvas bugs
             var trendsTab = document.getElementById('tabTrends');
-            if (!trendsTab || !trendsTab.classList.contains('active')) return;
+            var chartSubpage = document.getElementById('subpageTrendsChart');
+            var chartVisible = (trendsTab && trendsTab.classList.contains('active')) ||
+                               (chartSubpage && chartSubpage.style.display !== 'none');
+            if (!chartVisible) return;
 
             var history = [];
             try { history = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
