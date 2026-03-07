@@ -2833,9 +2833,13 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
                             <span>פנסיה</span>
                         </button>
+                        <button type="button" class="type-tile" data-type="gemel_invest" onclick="selectAssetType('gemel_invest')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f4c430" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            <span>גמל להשקעה</span>
+                        </button>
                         <button type="button" class="type-tile" data-type="gemel" onclick="selectAssetType('gemel')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b026ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
-                            <span>גמל</span>
+                            <span>גמל קלאסי</span>
                         </button>
                         <button type="button" class="type-tile" data-type="fund" onclick="selectAssetType('fund')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f4c430" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
@@ -2861,7 +2865,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                             <span>נדל"ן</span>
                         </button>
-                        <button type="button" class="type-tile" data-type="other" onclick="selectAssetType('other')">
+                        <button type="button" class="type-tile" data-type="other" onclick="selectAssetType('other')" style="display:none;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
                             <span>אחר</span>
                         </button>
@@ -3236,11 +3240,11 @@
                     <!-- ===== גמל להשקעה / קרן השתלמות / קופת גמל — גמל-נט ===== -->
                     <div id="gemelTrackingFields" style="display:none;">
                         <div style="padding:14px;background:linear-gradient(135deg,rgba(244,196,48,0.08),rgba(0,217,255,0.06));border:1px solid rgba(244,196,48,0.18);border-radius:12px;margin-bottom:14px;">
-                            <div style="font-size:0.85rem;font-weight:600;color:var(--accent-gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-                                🏦 מעקב גמל / השתלמות — גמל-נט
+                            <div id="gemelTrackingTitle" style="font-size:0.85rem;font-weight:600;color:var(--accent-gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                                💰 מעקב גמל להשקעה — גמל-נט
                             </div>
                             <!-- סוג קופה -->
-                            <div style="display:flex;gap:7px;margin-bottom:12px;">
+                            <div id="gemelTypeSelectorDiv" style="display:flex;gap:7px;margin-bottom:12px;">
                                 <button type="button" id="gemelTypeBtnGemel" onclick="selectGemelFundType('gemel')"
                                     style="flex:1;padding:7px 4px;font-size:0.71rem;font-weight:600;border-radius:8px;border:1.5px solid rgba(244,196,48,0.55);background:rgba(244,196,48,0.15);color:var(--accent-gold);cursor:pointer;transition:all 0.2s;font-family:inherit;">
                                     💰 גמל להשקעה
@@ -3687,14 +3691,20 @@
 
                 // ── Inline edit row ──
                 if (idx === editingHoldingIdx) {
-                    html += '<div style="display:flex;align-items:center;gap:6px;padding:8px 4px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.03);border-radius:6px;">'
-                        + '<span style="font-size:0.75rem;font-weight:700;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 6px;border-radius:5px;white-space:nowrap;flex-shrink:0;">' + tickerLabel + '</span>'
-                        + '<div style="flex:1;display:flex;gap:5px;">'
-                        +   '<input type="text" inputmode="decimal" id="editHoldingUnits_' + idx + '" value="' + (h.units || '') + '" placeholder="' + (isCash ? 'סכום $' : 'כמות') + '" style="flex:1;font-size:0.78rem;padding:5px 7px;border-radius:6px;min-width:0;" oninput="formatNumberInput(this)">'
-                        +   (isCash ? '' : '<input type="text" inputmode="decimal" id="editHoldingAvgBuy_' + idx + '" value="' + (h.avgBuyPrice > 0 ? h.avgBuyPrice : '') + '" placeholder="מחיר קנייה" style="flex:1;font-size:0.78rem;padding:5px 7px;border-radius:6px;min-width:0;" oninput="formatNumberInput(this)">')
+                    html += '<div style="padding:8px 4px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.03);border-radius:6px;">'
+                        // Row 1: badge + save/cancel buttons
+                        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+                        +   '<span style="font-size:0.75rem;font-weight:700;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 8px;border-radius:5px;white-space:nowrap;">' + tickerLabel + '</span>'
+                        +   '<div style="display:flex;gap:6px;">'
+                        +     '<button type="button" onclick="saveEditHolding(' + idx + ')" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:var(--accent-green);cursor:pointer;padding:5px 12px;display:flex;align-items:center;gap:4px;font-size:0.75rem;font-family:inherit;font-weight:600;" title="שמור"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> שמור</button>'
+                        +     '<button type="button" onclick="cancelEditHolding()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--text-secondary);cursor:pointer;padding:5px 10px;display:flex;align-items:center;gap:4px;font-size:0.75rem;font-family:inherit;" title="ביטול"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ביטול</button>'
+                        +   '</div>'
                         + '</div>'
-                        + '<button type="button" onclick="saveEditHolding(' + idx + ')" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:var(--accent-green);font-size:1rem;cursor:pointer;padding:3px 8px;flex-shrink:0;" title="שמור">✓</button>'
-                        + '<button type="button" onclick="cancelEditHolding()" style="background:none;border:none;color:var(--text-secondary);font-size:1rem;cursor:pointer;padding:3px 5px;flex-shrink:0;" title="ביטול">✗</button>'
+                        // Row 2: inputs full-width
+                        + '<div style="display:flex;gap:8px;">'
+                        +   '<input type="text" inputmode="decimal" id="editHoldingUnits_' + idx + '" value="' + (h.units || '') + '" placeholder="' + (isCash ? 'סכום $' : 'כמות יחידות') + '" style="flex:1;font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input,rgba(255,255,255,0.06));color:var(--text-primary);min-width:0;" oninput="formatNumberInput(this)">'
+                        +   (isCash ? '' : '<input type="text" inputmode="decimal" id="editHoldingAvgBuy_' + idx + '" value="' + (h.avgBuyPrice > 0 ? h.avgBuyPrice : '') + '" placeholder="מחיר קנייה $" style="flex:1;font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input,rgba(255,255,255,0.06));color:var(--text-primary);min-width:0;" oninput="formatNumberInput(this)">')
+                        + '</div>'
                         + '</div>';
                     return;
                 }
@@ -3712,8 +3722,8 @@
                         +     '&nbsp;<span style="color:' + fxColor + ';">' + (fxPct>=0?'+':'') + fxPct.toFixed(2) + '%</span></div>'
                         + '</div>'
                         + '<div style="text-align:left;flex-shrink:0;"><div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">₪' + Math.round(valILS).toLocaleString('he-IL') + '</div></div>'
-                        + '<button type="button" onclick="startEditHolding(' + idx + ')" style="background:none;border:none;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="ערוך">✏️</button>'
-                        + '<button type="button" onclick="removeHoldingFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--accent-red);font-size:1rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="הסר">🗑</button>'
+                        + '<button type="button" onclick="startEditHolding(' + idx + ')" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:3px 4px;flex-shrink:0;display:flex;align-items:center;" title="ערוך"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+                        + '<button type="button" onclick="removeHoldingFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--accent-red);cursor:pointer;padding:3px 4px;flex-shrink:0;display:flex;align-items:center;" title="הסר"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
                         + '</div>';
                     return;
                 }
@@ -3740,8 +3750,8 @@
                     + '<div style="text-align:left;flex-shrink:0;">'
                     +   '<div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">₪' + Math.round(valILS).toLocaleString('he-IL') + '</div>'
                     + '</div>'
-                    + '<button type="button" onclick="startEditHolding(' + idx + ')" style="background:none;border:none;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="ערוך">✏️</button>'
-                    + '<button type="button" onclick="removeHoldingFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--accent-red);font-size:1rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="הסר">🗑</button>'
+                    + '<button type="button" onclick="startEditHolding(' + idx + ')" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:3px 4px;flex-shrink:0;display:flex;align-items:center;" title="ערוך"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+                    + '<button type="button" onclick="removeHoldingFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--accent-red);cursor:pointer;padding:3px 4px;flex-shrink:0;display:flex;align-items:center;" title="הסר"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
                     + '</div>';
             });
             el.innerHTML = html;
@@ -3830,33 +3840,65 @@
         async function fetchStockPrice(ticker) {
             if (!ticker) return null;
             ticker = ticker.trim().toUpperCase();
-            // Check cache (max 15 min)
+            // Cache: 12 sec during market hours, 15 min otherwise
+            var cacheAgeSec = isMarketOpen() ? 12 : 15 * 60;
             if (stockDataCache[ticker]) {
-                var age = (new Date() - new Date(stockDataCache[ticker].date)) / 60000;
-                if (age < 15) return stockDataCache[ticker];
+                var age = (new Date() - new Date(stockDataCache[ticker].date)) / 1000;
+                if (age < cacheAgeSec) return stockDataCache[ticker];
             }
-            // Try localStorage cache
-            try {
-                var lc = localStorage.getItem('stock-cache-' + ticker);
-                if (lc) {
-                    var lcp = JSON.parse(lc);
-                    var lcAge = (new Date() - new Date(lcp.date)) / 60000;
-                    if (lcAge < 30) { stockDataCache[ticker] = lcp; return lcp; }
-                }
-            } catch(e) {}
+            // localStorage cache (only when market closed)
+            if (!isMarketOpen()) {
+                try {
+                    var lc = localStorage.getItem('stock-cache-' + ticker);
+                    if (lc) {
+                        var lcp = JSON.parse(lc);
+                        var lcAge = (new Date() - new Date(lcp.date)) / 1000;
+                        if (lcAge < 30 * 60) { stockDataCache[ticker] = lcp; return lcp; }
+                    }
+                } catch(e) {}
+            }
 
+            var isIsraeliStock = ticker.endsWith('.TA');
+
+            // ── Finnhub (primary for US stocks) ──
+            if (!isIsraeliStock) {
+                try {
+                    var fbKey = getFinnhubKey();
+                    var fbResp = await _fetchTimeout('https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=' + fbKey, 5000);
+                    if (fbResp.ok) {
+                        var fbData = await fbResp.json();
+                        if (fbData && fbData.c > 0) {
+                            var result = {
+                                price: fbData.c,
+                                prevClose: fbData.pc || 0,
+                                dailyPct: fbData.pc > 0 ? ((fbData.c - fbData.pc) / fbData.pc * 100) : (fbData.dp || 0),
+                                // Preserve existing name (Finnhub /quote has no name field)
+                                name: (stockDataCache[ticker] && stockDataCache[ticker].name && stockDataCache[ticker].name !== ticker)
+                                    ? stockDataCache[ticker].name : ticker,
+                                currency: 'USD',
+                                ticker: ticker,
+                                date: new Date().toISOString()
+                            };
+                            stockDataCache[ticker] = result;
+                            try { localStorage.setItem('stock-cache-' + ticker, JSON.stringify(result)); } catch(e) {}
+                            console.log('[Stock] ✅ Finnhub', ticker, fbData.c);
+                            return result;
+                        }
+                    }
+                } catch(e) { console.warn('[Stock] Finnhub failed for', ticker, e.message); }
+            }
+
+            // ── Yahoo Finance (fallback for US / primary for .TA) ──
             var proxies = [
                 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1d'),
                 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1d'),
                 'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1d'),
             ];
-
             for (var i = 0; i < proxies.length; i++) {
                 try {
                     var resp = await _fetchTimeout(proxies[i], 8000);
                     if (!resp.ok) continue;
                     var raw = await resp.json();
-                    // allorigins wraps in .contents
                     var parsed = (raw && raw.contents) ? JSON.parse(raw.contents) : raw;
                     var meta = parsed && parsed.chart && parsed.chart.result && parsed.chart.result[0] && parsed.chart.result[0].meta;
                     if (!meta) continue;
@@ -3873,7 +3915,7 @@
                     };
                     stockDataCache[ticker] = result;
                     try { localStorage.setItem('stock-cache-' + ticker, JSON.stringify(result)); } catch(e) {}
-                    console.log('[Stock] ✅', ticker, price, result.currency);
+                    console.log('[Stock] ✅ Yahoo', ticker, price, result.currency);
                     return result;
                 } catch(e) { console.warn('[Stock] proxy', i, 'failed:', e.message); }
             }
@@ -4587,6 +4629,25 @@
             }
         }, 15 * 60000);
 
+        // Auto-update portfolio stocks every 15 sec during market hours (Finnhub)
+        var _portfolioUpdating = false;
+        setInterval(async () => {
+            if (_portfolioUpdating) return;
+            if (!isMarketOpen()) return;
+            var hasPortfolioAssets = assets.some(function(a) {
+                return a.type === 'trade' && a.stockMode === 'portfolio' && a.holdings && a.holdings.length > 0;
+            });
+            if (!hasPortfolioAssets) return;
+            _portfolioUpdating = true;
+            try {
+                var before = JSON.stringify(assets);
+                await updateTradeAssets();
+                if (JSON.stringify(assets) !== before) updateUI();
+            } finally {
+                _portfolioUpdating = false;
+            }
+        }, 15000);
+
         // ── TA-125 Index fetch ──
         async function fetchTA125() {
             // Try Yahoo Finance for ^TA125.TA
@@ -5010,12 +5071,18 @@
                 valueField.style.display = 'none';
                 document.getElementById('assetCurrency').value = 'ILS';
                 selectGemelFundType('gemel');
+                // Type selector shown by default; selectAssetType() may hide it
+                var tsd = document.getElementById('gemelTypeSelectorDiv');
+                if (tsd) tsd.style.display = 'flex';
             } else if (assetType === 'fund') {
                 if (gemelFields) gemelFields.style.display = 'block';
                 currencyField.style.display = 'none';
                 valueField.style.display = 'none';
                 document.getElementById('assetCurrency').value = 'ILS';
                 selectGemelFundType('hashtalamut');
+                // Type selector shown by default; selectAssetType() may hide it
+                var tsd2 = document.getElementById('gemelTypeSelectorDiv');
+                if (tsd2) tsd2.style.display = 'flex';
             } else if (assetType === 'trade') {
                 var sf2 = document.getElementById('stockTrackingFields'); if (sf2) sf2.style.display = 'block';
                 var ef2 = document.getElementById('stockExtraFields'); if (ef2) ef2.style.display = 'none';
@@ -6301,6 +6368,7 @@
         var typeIcons = {
             pension: _si(_sp.landmark, 32),
             gemel: _si(_sp.briefcase, 32),
+            gemel_invest: _si(_sp.briefcase, 32),
             fund: _si(_sp['trending-up'], 32),
             savings: _si(_sp['piggy-bank'], 32),
             deposit: _si(_sp.banknote, 32),
@@ -6325,7 +6393,8 @@
 
         const assetTypeNames = {
             pension: 'פנסיה',
-            gemel: 'גמל',
+            gemel: 'גמל קלאסי',
+            gemel_invest: 'גמל להשקעה',
             fund: 'קרן השתלמות',
             savings: 'קרן נאמנות',
             deposit: 'חיסכון/פיקדון',
@@ -6493,9 +6562,11 @@
         }
 
         function selectAssetType(type) {
+            // Map virtual types to stored types
+            var storedType = type === 'gemel_invest' ? 'gemel' : type;
             // Update hidden select
-            document.getElementById('assetType').value = type;
-            
+            document.getElementById('assetType').value = storedType;
+
             // Highlight selected tile
             document.querySelectorAll('.type-tile').forEach(function(t) {
                 t.classList.toggle('selected', t.dataset.type === type);
@@ -6513,6 +6584,19 @@
 
             // Toggle type-specific fields
             toggleRealEstateFields();
+
+            // After toggleRealEstateFields, apply per-tile gemel fund type & hide type selector
+            var gemelTSD = document.getElementById('gemelTypeSelectorDiv');
+            if (type === 'gemel_invest') {
+                selectGemelFundType('gemel');   // גמל להשקעה (sug=4)
+                if (gemelTSD) gemelTSD.style.display = 'none';
+            } else if (type === 'gemel') {
+                selectGemelFundType('kupat');   // גמל קלאסי (sug=1)
+                if (gemelTSD) gemelTSD.style.display = 'none';
+            } else if (type === 'fund') {
+                // hashtalamut already set by toggleRealEstateFields; just hide selector
+                if (gemelTSD) gemelTSD.style.display = 'none';
+            }
 
             // Scroll to details
             setTimeout(function() {
@@ -6558,7 +6642,10 @@
                     if (detailsSection) detailsSection.style.display = 'block';
 
                     // Highlight correct tile
-                    var tile = document.querySelector('.type-tile[data-type="' + asset.type + '"]');
+                    // For gemel type, highlight based on gemelFundType (gemel_invest vs classic gemel)
+                    var tileType = asset.type;
+                    if (asset.type === 'gemel' && asset.gemelFundType !== 'kupat') tileType = 'gemel_invest';
+                    var tile = document.querySelector('.type-tile[data-type="' + tileType + '"]');
                     if (tile) tile.classList.add('selected');
 
                     document.getElementById('assetType').value = asset.type;
@@ -6705,6 +6792,9 @@
                     if ((asset.type === 'gemel' || asset.type === 'fund') && asset.gemelKupahNum) {
                         var gemelTF = document.getElementById('gemelTrackingFields');
                         if (gemelTF) gemelTF.style.display = 'block';
+                        // Show type selector in edit mode
+                        var gemelTSD2 = document.getElementById('gemelTypeSelectorDiv');
+                        if (gemelTSD2) gemelTSD2.style.display = 'flex';
                         document.getElementById('gemelKupahNumber').value = asset.gemelKupahNum;
                         var ft = asset.gemelFundType || (asset.type === 'fund' ? 'hashtalamut' : 'gemel');
                         document.getElementById('gemelFundType').value = ft;
@@ -8929,50 +9019,66 @@
                         `<span style="font-size:0.65em;color:#ff006e;font-weight:700;background:rgba(255,0,110,0.1);padding:1px 5px;border-radius:4px;white-space:nowrap;">${h.ticker}</span>`
                     ).join(' ') + (extraCount > 0 ? ` <span style="font-size:0.65em;color:var(--text-secondary);">+${extraCount}</span>` : '');
                     // Weighted daily change (stock returns weighted by value)
-                    let totalVal = 0, weightedDaily = 0, usdValTotal = 0;
+                    let totalVal = 0, weightedDaily = 0, usdStocksVal = 0;
                     holdings.forEach(function(h) {
                         const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
                         const hVal = (h.units || 0) * pILS;
                         totalVal += hVal;
                         weightedDaily += hVal * (h.dailyPct || 0);
-                        if (h.currency === 'USD') usdValTotal += hVal;
+                        // Cash ($) already has FX in its dailyPct — exclude from fxDailyPct to avoid double-counting
+                        if (h.currency === 'USD' && h.ticker !== '$') usdStocksVal += hVal;
                     });
                     const fxDailyPct = (exchangeRatePrevClose > 0 && totalVal > 0)
-                        ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 * (usdValTotal / totalVal) : 0;
+                        ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 * (usdStocksVal / totalVal) : 0;
                     const combinedDailyPct = (totalVal > 0 ? weightedDaily / totalVal : 0) + fxDailyPct;
-                    const combinedDailyILS = (asset.value || 0) * (combinedDailyPct / 100);
+                    // Use live totalVal (not stale asset.value) for ILS daily amount
+                    const combinedDailyILS = totalVal * (combinedDailyPct / 100);
                     // Holdings table rows
                     const holdingRows = holdings.map(function(h) {
                         const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
                         const hVal = Math.round((h.units || 0) * pILS);
                         const priceStr = h.currency === 'ILS' ? '₪' + (h.price || 0).toFixed(2) : '$' + (h.price || 0).toFixed(2);
                         const retPct = h.avgBuyPrice > 0 && h.price > 0 ? (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100 : null;
-                        const retILS = retPct !== null ? Math.round((h.units || 0) * (h.price - h.avgBuyPrice) * (h.currency === 'ILS' ? 1 : exchangeRate)) : 0;
+                        // Cash ($) gain is in ILS (FX change), not dollars
+                        const isCash = h.ticker === '$';
+                        const currSym = (h.currency === 'ILS' || isCash) ? '₪' : '$';
+                        // Native-currency amounts: cash→ILS gain, US stocks→USD, Israeli stocks→ILS
+                        const dailyNativeAmt = isCash
+                            ? Math.round((h.units || 0) * exchangeRate * (h.dailyPct || 0) / 100)
+                            : Math.round((h.units || 0) * (h.price || 0) * (h.dailyPct || 0) / 100);
+                        const retNativeAmt = retPct !== null ? Math.round((h.units || 0) * ((h.price || 0) - (h.avgBuyPrice || 0))) : 0;
                         return `<tr style="border-bottom:1px solid var(--border-color);">
                             <td style="padding:5px 4px;font-weight:700;color:#ff006e;white-space:nowrap;">${h.ticker}</td>
-                            <td style="padding:5px 4px;font-size:0.72rem;color:var(--text-secondary);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.name || ''}</td>
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${(h.units || 0).toLocaleString('he-IL', {maximumFractionDigits:3})}</td>
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${priceStr}</td>
                             <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">₪${hVal.toLocaleString('he-IL')}</td>
-                            <td style="padding:5px 4px;font-size:0.75rem;color:${sc(h.dailyPct || 0)};text-align:center;">${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%</td>
-                            ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.75rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(1)}%<br><span style="font-size:0.7rem;font-weight:400;">${ss(retILS)}₪${Math.abs(retILS).toLocaleString('he-IL')}</span></td>` : '<td style="padding:5px 4px;font-size:0.75rem;color:var(--text-secondary);text-align:center;">—</td>'}
+                            <td style="padding:5px 4px;font-size:0.75rem;color:${sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.7rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toLocaleString('he-IL')}</span>` : ''}</td>
+                            ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.75rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(1)}%<br><span style="font-size:0.7rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toLocaleString('he-IL')}</span></td>` : '<td style="padding:5px 4px;font-size:0.75rem;color:var(--text-secondary);text-align:center;">—</td>'}
                         </tr>`;
                     }).join('');
+                    // Compute value only for holdings with a known buy price (for accurate return %)
+                    let valueWithBasis = 0;
+                    holdings.forEach(function(h) {
+                        if (h.avgBuyPrice > 0) {
+                            const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
+                            valueWithBasis += (h.units || 0) * pILS;
+                        }
+                    });
                     const totalCostBasis = asset.costBasis || 0;
-                    const totalRetPct = totalCostBasis > 0 ? ((asset.value || 0) - totalCostBasis) / totalCostBasis * 100 : null;
-                    const totalRetILS = totalRetPct !== null ? Math.round((asset.value || 0) - totalCostBasis) : 0;
+                    const totalRetPct = totalCostBasis > 0 ? (valueWithBasis - totalCostBasis) / totalCostBasis * 100 : null;
+                    const totalRetILS = totalRetPct !== null ? Math.round(valueWithBasis - totalCostBasis) : 0;
 
                     return `
                     <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
                         <div class="asset-row-main">
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
-                                <div class="asset-row-name">${asset.name}&nbsp;${tickerBadges}</div>
+                                <div class="asset-row-name">${asset.name}</div>
                                 <div class="asset-row-provider">${asset.provider ? asset.provider + ' • ' : ''}<span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי${holdings.length > 0 ? ' · ' + holdings.length + ' מניות' : ''}</div>
                             </div>
                             <div class="asset-row-values">
-                                <div class="asset-row-amount">₪${(asset.value || 0).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                <div class="asset-row-sub" style="color:${sc(combinedDailyPct)};">${ss(combinedDailyILS)}₪${Math.abs(Math.round(combinedDailyILS)).toLocaleString('he-IL')} היום</div>
+                                <div class="asset-row-amount">₪${Math.round(totalVal).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
+                                ${totalRetPct !== null ? `<div class="asset-row-sub" style="color:${sc(totalRetPct)};">${totalRetILS >= 0 ? '+' : '-'}₪${Math.abs(totalRetILS).toLocaleString('he-IL')}</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -8983,7 +9089,6 @@
                                     <thead>
                                         <tr style="border-bottom:2px solid var(--border-color);">
                                             <th style="padding:4px;text-align:right;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">טיקר</th>
-                                            <th style="padding:4px;text-align:right;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">שם</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">יח'</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">מחיר</th>
                                             <th style="padding:4px;text-align:left;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">שווי ₪</th>
@@ -8994,8 +9099,8 @@
                                     <tbody>${holdingRows}</tbody>
                                     <tfoot>
                                         <tr style="border-top:2px solid var(--border-color);">
-                                            <td colspan="4" style="padding:6px 4px;font-weight:700;color:var(--text-secondary);font-size:0.75rem;">סה"כ</td>
-                                            <td style="padding:6px 4px;font-weight:700;font-size:0.88rem;color:var(--text-primary);">₪${(asset.value || 0).toLocaleString('he-IL')}</td>
+                                            <td colspan="3" style="padding:6px 4px;font-weight:700;color:var(--text-secondary);font-size:0.75rem;">סה"כ</td>
+                                            <td style="padding:6px 4px;font-weight:700;font-size:0.88rem;color:var(--text-primary);">₪${Math.round(totalVal).toLocaleString('he-IL')}</td>
                                             <td style="padding:6px 4px;text-align:center;font-size:0.75rem;color:${sc(combinedDailyPct)};font-weight:700;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
                                             <td style="padding:6px 4px;text-align:center;font-size:0.75rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(1) + '%' : '—'}</td>
                                         </tr>
@@ -9166,6 +9271,7 @@
                             ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
                                 <div class="asset-row-amount">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
+                                ${fDaily !== 0 ? `<div class="asset-row-sub" style="color:${fc(fDaily)};">${fs(dailyILS)}₪${Math.abs(Math.round(dailyILS)).toLocaleString('he-IL')} היום</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -9698,6 +9804,16 @@
                 btn.style.background   = isActive ? 'rgba(244,196,48,0.18)' : 'rgba(255,255,255,0.04)';
                 btn.style.color        = isActive ? 'var(--accent-gold)' : 'var(--text-secondary)';
             });
+            // Update section title to match selected type
+            var titleEl = document.getElementById('gemelTrackingTitle');
+            if (titleEl) {
+                var titles = {
+                    'gemel':       '💰 מעקב גמל להשקעה — גמל-נט',
+                    'hashtalamut': '📚 מעקב קרן השתלמות — גמל-נט',
+                    'kupat':       '🏛️ מעקב גמל קלאסי — גמל-נט',
+                };
+                titleEl.textContent = titles[type] || '🏦 מעקב גמל-נט';
+            }
             // Clear stale results when type changes
             var sr = document.getElementById('gemelSearchResult'); if (sr) sr.style.display = 'none';
             var em = document.getElementById('gemelErrorMsg');     if (em) em.style.display = 'none';
