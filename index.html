@@ -3156,10 +3156,10 @@
                                 <!-- Add stock sub-form -->
                                 <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,0,110,0.15);border-radius:10px;padding:12px;margin-bottom:10px;">
                                     <div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:9px;">הוסף מניה לתיק</div>
-                                    <div style="display:flex;gap:8px;margin-bottom:8px;">
-                                        <input type="text" id="portfolioAddTicker" placeholder="AAPL / TEVA.TA" style="flex:1;text-transform:uppercase;font-size:0.82rem;" oninput="this.value=this.value.toUpperCase()">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <input type="text" id="portfolioAddTicker" placeholder="AAPL / TEVA.TA" style="flex:1;min-width:0;text-transform:uppercase;font-size:0.82rem;" oninput="this.value=this.value.toUpperCase()">
                                         <button type="button" id="portfolioAddSearchBtn" onclick="portfolioSearchTicker()"
-                                            style="padding:8px 13px;background:linear-gradient(135deg,#ff006e,#ff8c00);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">🔍 חפש</button>
+                                            style="flex-shrink:0;padding:8px 13px;background:linear-gradient(135deg,#ff006e,#ff8c00);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">🔍 חפש</button>
                                     </div>
                                     <div id="portfolioAddResult" style="display:none;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:8px;">
                                         <div style="font-size:0.82rem;font-weight:700;color:#ff006e;" id="portfolioAddName">—</div>
@@ -5056,8 +5056,10 @@
                 document.getElementById('assetCurrency').value = 'ILS';
                 calculateEquity();
             } else if (assetType === 'pension') {
-                // SPY moved to trade — pension shows only pensia-net
-                document.getElementById('pensiaNetcheckbox').style.display = 'block';
+                // Auto-enable pensia-net tracking (no manual checkbox needed)
+                document.getElementById('pensiaNetcheckbox').style.display = 'none';
+                document.getElementById('isPensiaTracked').checked = true;
+                togglePensiaFields();
                 currencyField.style.display = 'block';
                 valueField.style.display = 'block';
             } else if (assetType === 'savings') {
