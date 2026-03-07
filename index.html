@@ -320,8 +320,8 @@
         }
 
         .asset-row-amount {
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: var(--accent-gold);
             white-space: nowrap;
         }
@@ -371,17 +371,17 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 18px;
-            background: linear-gradient(135deg, var(--accent-gold) 0%, #ffd700 100%);
-            color: #0a0e27;
-            border: none;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
             cursor: pointer;
             font-family: inherit;
             transition: all 0.2s ease;
-            margin-top: 12px;
+            margin-top: 10px;
         }
 
         @media (hover: hover) {
@@ -9057,11 +9057,10 @@
                                 : '₪' + hVal.toLocaleString('he-IL');
                         return `<tr style="border-bottom:1px solid var(--border-color);">
                             <td style="padding:5px 4px;font-weight:700;color:var(--text-primary);white-space:nowrap;">${h.ticker}</td>
-                            <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${isCash ? '—' : (h.units || 0).toLocaleString('he-IL', {maximumFractionDigits:3})}</td>
-                            <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${priceStr}</td>
-                            <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">${valStr}</td>
-                            <td style="padding:5px 4px;font-size:0.75rem;color:${isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${isCash ? '—' : `${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.7rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toFixed(2)}</span>` : ''}`}</td>
-                            ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.75rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(2)}%<br><span style="font-size:0.7rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toFixed(2)}</span></td>` : '<td style="padding:5px 4px;font-size:0.75rem;color:var(--text-secondary);text-align:center;">—</td>'}
+                            <td style="padding:5px 4px;font-size:0.85rem;text-align:center;">${priceStr}</td>
+                            <td style="padding:5px 4px;font-size:0.85rem;font-weight:600;text-align:left;">${valStr}</td>
+                            <td style="padding:5px 4px;font-size:0.85rem;color:${isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${isCash ? '—' : `${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.72rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toFixed(2)}</span>` : ''}`}</td>
+                            ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.85rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(2)}%<br><span style="font-size:0.72rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toFixed(2)}</span></td>` : '<td style="padding:5px 4px;font-size:0.85rem;color:var(--text-secondary);text-align:center;">—</td>'}
                         </tr>`;
                     }).join('');
                     // Compute value only for holdings with a known buy price (for accurate return %)
@@ -9097,7 +9096,6 @@
                                     <thead>
                                         <tr style="border-bottom:2px solid var(--border-color);">
                                             <th style="padding:4px;text-align:right;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">טיקר</th>
-                                            <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">יח'</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">מחיר</th>
                                             <th style="padding:4px;text-align:left;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">שווי</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">יומי</th>
