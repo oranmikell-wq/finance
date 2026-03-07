@@ -9056,7 +9056,7 @@
                                 ? '$' + Math.round(hVal / exchangeRate).toLocaleString('en-US')
                                 : '₪' + hVal.toLocaleString('he-IL');
                         return `<tr style="border-bottom:1px solid var(--border-color);">
-                            <td style="padding:5px 4px;font-weight:700;color:#ff006e;white-space:nowrap;">${h.ticker}</td>
+                            <td style="padding:5px 4px;font-weight:700;color:var(--text-primary);white-space:nowrap;">${h.ticker}</td>
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${isCash ? '—' : (h.units || 0).toLocaleString('he-IL', {maximumFractionDigits:3})}</td>
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${priceStr}</td>
                             <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">${valStr}</td>
