@@ -3736,7 +3736,7 @@
                 if (h.avgBuyPrice > 0 && h.price > 0) {
                     var retPct = (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100;
                     var retColor = retPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                    retStr = '<span style="color:' + retColor + ';font-size:0.7rem;font-weight:700;">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(1) + '%</span>';
+                    retStr = '<span style="color:' + retColor + ';font-size:0.7rem;font-weight:700;">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
                 }
                 var dailyColor = (h.dailyPct || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border-color);">'
@@ -3944,7 +3944,7 @@
                     var retPct  = (data.price - avgBuy) / avgBuy * 100;
                     var retSign = retPct >= 0 ? '+' : '';
                     var retColor= retPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                    returnStr = '  <span style="color:' + retColor + ';font-weight:700;">' + retSign + retPct.toFixed(1) + '%</span>';
+                    returnStr = '  <span style="color:' + retColor + ';font-weight:700;">' + retSign + retPct.toFixed(2) + '%</span>';
                 }
                 priceEl.innerHTML = priceStr + '  <span style="color:' + (data.dailyPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + dSign + data.dailyPct.toFixed(2) + '% יומי</span>' + returnStr;
             }
@@ -9061,7 +9061,7 @@
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${priceStr}</td>
                             <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">${valStr}</td>
                             <td style="padding:5px 4px;font-size:0.75rem;color:${isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${isCash ? '—' : `${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.7rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toLocaleString('he-IL')}</span>` : ''}`}</td>
-                            ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.75rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(1)}%<br><span style="font-size:0.7rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toLocaleString('he-IL')}</span></td>` : '<td style="padding:5px 4px;font-size:0.75rem;color:var(--text-secondary);text-align:center;">—</td>'}
+                            ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.75rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(2)}%<br><span style="font-size:0.7rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toLocaleString('he-IL')}</span></td>` : '<td style="padding:5px 4px;font-size:0.75rem;color:var(--text-secondary);text-align:center;">—</td>'}
                         </tr>`;
                     }).join('');
                     // Compute value only for holdings with a known buy price (for accurate return %)
