@@ -3673,6 +3673,11 @@
                 valEl.style.display = '';
             }
             if (res) res.style.display = 'block';
+            // Auto-fill provider/company name if the field is empty
+            var providerInputStock = document.getElementById('assetProvider');
+            if (providerInputStock && !providerInputStock.value && data.name && data.name !== ticker) {
+                providerInputStock.value = data.name;
+            }
         }
 
         async function fetchAndShowStockPrice() {
@@ -3922,9 +3927,24 @@
 
                 // Parse fund manager name
                 var manager = '';
-                var managerMatch = text.match(/מנהל\s*(?:ה)?קרן\s+([א-ת][^\d<\n]{1,25}?)(?:\s{2,}|\d|$)/);
-                if (!managerMatch) managerMatch = text.match(/חברת\s+ניהול\s+([א-ת][^\d<\n]{1,25}?)(?:\s{2,}|\d|$)/);
-                if (managerMatch) manager = managerMatch[1].trim().replace(/\s+/g,' ');
+                // Strategy 1: parse from raw HTML before whitespace collapse — more reliable
+                var htmlMgrMatch = html.match(/מנהל\s*ה?קרן[\s\S]{0,120}?>([^<]{2,40})</i);
+                if (!htmlMgrMatch) htmlMgrMatch = html.match(/חברת\s+ניהול[\s\S]{0,120}?>([^<]{2,40})</i);
+                if (htmlMgrMatch) {
+                    var rawMgr = htmlMgrMatch[1].trim().replace(/&nbsp;/g,' ').replace(/\s+/g,' ');
+                    if (/[א-ת]/.test(rawMgr)) manager = rawMgr;
+                }
+                // Strategy 2: text-based with non-Hebrew terminator (works after whitespace collapse)
+                if (!manager) {
+                    var m2 = text.match(/מנהל\s*ה?קרן\s*:?\s*([א-ת][א-ת\s"'׳\-]{1,30}?)(?=[^א-ת\s"'׳\-]|$)/);
+                    if (!m2) m2 = text.match(/חברת\s+ניהול\s*:?\s*([א-ת][א-ת\s"'׳\-]{1,30}?)(?=[^א-ת\s"'׳\-]|$)/);
+                    if (m2) manager = m2[1].trim().replace(/\s+/g,' ');
+                }
+                // Strategy 3: fallback — first 1-2 Hebrew words from fund name before a known category keyword
+                if (!manager && fundName) {
+                    var fnm = fundName.match(/^([א-ת]+(?:\s+[א-ת]+)?)\s+(?:קרן|מניות|אג"ח|כספית|גמישה|שקלית|מדד)/);
+                    if (fnm) manager = fnm[1].trim();
+                }
 
                 console.log('Fund parsed:', fundName, 'NAV:', nav, 'Daily:', dailyPct, 'Monthly:', monthlyPct, 'Yearly:', yearlyPct, 'Manager:', manager);
 
