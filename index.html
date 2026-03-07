@@ -7183,15 +7183,24 @@
             var breakdownEl = document.getElementById('totalBreakdown');
             if (breakdownEl) breakdownEl.style.display = assets.length > 0 ? 'flex' : 'none';
             
-            // Calculate monthly change
-            const monthlyChange = assets.reduce((sum, asset) => {
-                const valueInILS = toILS(asset.value, asset.currency || 'ILS');
-                const monthlyGain = (valueInILS * (asset.return / 100) / 12);
-                const monthlyDeposit = toILS(asset.monthly || 0, asset.monthlyCurrency || 'ILS');
-                return sum + monthlyGain + monthlyDeposit;
-            }, 0);
-            
-            const changePercent = totalILS > 0 ? (monthlyChange / totalILS * 100) : 0;
+            // Calculate monthly change from history snapshot (last entry before start of current month)
+            var historyForChange = [];
+            try { historyForChange = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
+            const monthStart = new Date().toISOString().slice(0, 7) + '-01'; // 'YYYY-MM-01'
+            const prevEntries = historyForChange.filter(e => e.date < monthStart);
+            const baselineEntry = prevEntries.length > 0 ? prevEntries[prevEntries.length - 1] : null;
+            let monthlyChange, changePercent;
+            if (baselineEntry) {
+                monthlyChange = totalILS - baselineEntry.value;
+                changePercent = baselineEntry.value > 0 ? (monthlyChange / baselineEntry.value * 100) : 0;
+            } else {
+                // No history yet — fall back to estimated formula
+                monthlyChange = assets.reduce((sum, asset) => {
+                    const valueInILS = toILS(asset.value, asset.currency || 'ILS');
+                    return sum + (valueInILS * (asset.return || 0) / 100 / 12) + toILS(asset.monthly || 0, asset.monthlyCurrency || 'ILS');
+                }, 0);
+                changePercent = totalILS > 0 ? (monthlyChange / totalILS * 100) : 0;
+            }
             const changeElement = document.getElementById('totalChange');
             
             if (monthlyChange >= 0) {
