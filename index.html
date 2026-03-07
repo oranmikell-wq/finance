@@ -9092,23 +9092,30 @@
                         <div class="asset-row-expand">
                             ${holdings.length > 0 ? `
                             <div style="overflow-x:auto;margin-bottom:10px;">
-                                <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+                                <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                                    <colgroup>
+                                        <col style="width:14%">
+                                        <col style="width:22%">
+                                        <col style="width:20%">
+                                        <col style="width:22%">
+                                        <col style="width:22%">
+                                    </colgroup>
                                     <thead>
                                         <tr style="border-bottom:2px solid var(--border-color);">
-                                            <th style="padding:4px;text-align:right;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">טיקר</th>
-                                            <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">מחיר</th>
-                                            <th style="padding:4px;text-align:left;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">שווי</th>
-                                            <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">יומי</th>
-                                            <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">תשואה</th>
+                                            <th style="padding:6px 4px;text-align:right;color:var(--text-secondary);font-weight:600;font-size:0.75rem;">טיקר</th>
+                                            <th style="padding:6px 4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.75rem;">מחיר</th>
+                                            <th style="padding:6px 4px;text-align:left;color:var(--text-secondary);font-weight:600;font-size:0.75rem;">שווי</th>
+                                            <th style="padding:6px 4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.75rem;">יומי</th>
+                                            <th style="padding:6px 4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.75rem;">תשואה</th>
                                         </tr>
                                     </thead>
                                     <tbody>${holdingRows}</tbody>
                                     <tfoot>
                                         <tr style="border-top:2px solid var(--border-color);">
-                                            <td colspan="3" style="padding:6px 4px;font-weight:700;color:var(--text-secondary);font-size:0.75rem;">סה"כ</td>
-                                            <td style="padding:6px 4px;font-weight:700;font-size:0.88rem;color:var(--text-primary);text-align:left;">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
-                                            <td style="padding:6px 4px;text-align:center;font-size:0.75rem;color:${sc(combinedDailyPct)};font-weight:700;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
-                                            <td style="padding:6px 4px;text-align:center;font-size:0.75rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(2) + '%' : '—'}</td>
+                                            <td colspan="2" style="padding:7px 4px;font-weight:700;color:var(--text-secondary);font-size:0.8rem;">סה"כ</td>
+                                            <td style="padding:7px 4px;font-weight:700;font-size:0.9rem;color:var(--text-primary);text-align:left;">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
+                                            <td style="padding:7px 4px;text-align:center;font-size:0.82rem;color:${sc(combinedDailyPct)};font-weight:700;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
+                                            <td style="padding:7px 4px;text-align:center;font-size:0.82rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(2) + '%' : '—'}</td>
                                         </tr>
                                     </tfoot>
                                 </table>
