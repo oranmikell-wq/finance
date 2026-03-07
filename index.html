@@ -9110,7 +9110,7 @@
                                     <tfoot>
                                         <tr style="border-top:2px solid var(--border-color);">
                                             <td colspan="3" style="padding:6px 4px;font-weight:700;color:var(--text-secondary);font-size:0.75rem;">סה"כ</td>
-                                            <td style="padding:6px 4px;font-weight:700;font-size:0.88rem;color:var(--text-primary);">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
+                                            <td style="padding:6px 4px;font-weight:700;font-size:0.88rem;color:var(--text-primary);text-align:left;">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
                                             <td style="padding:6px 4px;text-align:center;font-size:0.75rem;color:${sc(combinedDailyPct)};font-weight:700;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
                                             <td style="padding:6px 4px;text-align:center;font-size:0.75rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(1) + '%' : '—'}</td>
                                         </tr>
