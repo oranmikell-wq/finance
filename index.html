@@ -3643,6 +3643,29 @@
         // ─── Portfolio: remove holding by index ───
         function removeHoldingFromPortfolio(idx) {
             portfolioHoldings.splice(idx, 1);
+            editingHoldingIdx = -1;
+            renderPortfolioHoldingsList();
+            updatePortfolioTotal();
+        }
+
+        // ─── Portfolio: inline edit ───
+        function startEditHolding(idx) {
+            editingHoldingIdx = idx;
+            renderPortfolioHoldingsList();
+        }
+        function cancelEditHolding() {
+            editingHoldingIdx = -1;
+            renderPortfolioHoldingsList();
+        }
+        function saveEditHolding(idx) {
+            var unitsEl = document.getElementById('editHoldingUnits_' + idx);
+            var avgBuyEl = document.getElementById('editHoldingAvgBuy_' + idx);
+            if (!unitsEl) { editingHoldingIdx = -1; renderPortfolioHoldingsList(); return; }
+            var units = parseNum(unitsEl);
+            var avgBuy = avgBuyEl ? parseNum(avgBuyEl) : 0;
+            if (units > 0) portfolioHoldings[idx].units = units;
+            portfolioHoldings[idx].avgBuyPrice = avgBuy > 0 ? avgBuy : 0;
+            editingHoldingIdx = -1;
             renderPortfolioHoldingsList();
             updatePortfolioTotal();
         }
@@ -3657,8 +3680,27 @@
             }
             var html = '';
             portfolioHoldings.forEach(function(h, idx) {
-                // ── USD Cash position ──
-                if (h.ticker === '$') {
+                var isCash = h.ticker === '$';
+                var badgeColor = isCash ? '#f4c430' : '#ff006e';
+                var badgeBg    = isCash ? 'rgba(244,196,48,0.12)' : 'rgba(255,0,110,0.1)';
+                var tickerLabel = isCash ? '$' : h.ticker;
+
+                // ── Inline edit row ──
+                if (idx === editingHoldingIdx) {
+                    html += '<div style="display:flex;align-items:center;gap:6px;padding:8px 4px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.03);border-radius:6px;">'
+                        + '<span style="font-size:0.75rem;font-weight:700;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 6px;border-radius:5px;white-space:nowrap;flex-shrink:0;">' + tickerLabel + '</span>'
+                        + '<div style="flex:1;display:flex;gap:5px;">'
+                        +   '<input type="text" inputmode="decimal" id="editHoldingUnits_' + idx + '" value="' + (h.units || '') + '" placeholder="' + (isCash ? 'סכום $' : 'כמות') + '" style="flex:1;font-size:0.78rem;padding:5px 7px;border-radius:6px;min-width:0;" oninput="formatNumberInput(this)">'
+                        +   (isCash ? '' : '<input type="text" inputmode="decimal" id="editHoldingAvgBuy_' + idx + '" value="' + (h.avgBuyPrice > 0 ? h.avgBuyPrice : '') + '" placeholder="מחיר קנייה" style="flex:1;font-size:0.78rem;padding:5px 7px;border-radius:6px;min-width:0;" oninput="formatNumberInput(this)">')
+                        + '</div>'
+                        + '<button type="button" onclick="saveEditHolding(' + idx + ')" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:var(--accent-green);font-size:1rem;cursor:pointer;padding:3px 8px;flex-shrink:0;" title="שמור">✓</button>'
+                        + '<button type="button" onclick="cancelEditHolding()" style="background:none;border:none;color:var(--text-secondary);font-size:1rem;cursor:pointer;padding:3px 5px;flex-shrink:0;" title="ביטול">✗</button>'
+                        + '</div>';
+                    return;
+                }
+
+                // ── USD Cash view row ──
+                if (isCash) {
                     var valILS = (h.units || 0) * (exchangeRate || 0);
                     var fxPct = h.dailyPct || 0;
                     var fxColor = fxPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
@@ -3670,10 +3712,13 @@
                         +     '&nbsp;<span style="color:' + fxColor + ';">' + (fxPct>=0?'+':'') + fxPct.toFixed(2) + '%</span></div>'
                         + '</div>'
                         + '<div style="text-align:left;flex-shrink:0;"><div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">₪' + Math.round(valILS).toLocaleString('he-IL') + '</div></div>'
+                        + '<button type="button" onclick="startEditHolding(' + idx + ')" style="background:none;border:none;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="ערוך">✏️</button>'
                         + '<button type="button" onclick="removeHoldingFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--accent-red);font-size:1rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="הסר">🗑</button>'
                         + '</div>';
                     return;
                 }
+
+                // ── Stock view row ──
                 var pILS = h.currency === 'ILS' ? h.price : h.price * exchangeRate;
                 var valILS = (h.units || 0) * pILS;
                 var priceStr = h.currency === 'ILS' ? '₪' + h.price.toFixed(2) : '$' + h.price.toFixed(2);
@@ -3695,6 +3740,7 @@
                     + '<div style="text-align:left;flex-shrink:0;">'
                     +   '<div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">₪' + Math.round(valILS).toLocaleString('he-IL') + '</div>'
                     + '</div>'
+                    + '<button type="button" onclick="startEditHolding(' + idx + ')" style="background:none;border:none;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="ערוך">✏️</button>'
                     + '<button type="button" onclick="removeHoldingFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--accent-red);font-size:1rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="הסר">🗑</button>'
                     + '</div>';
             });
@@ -3779,6 +3825,7 @@
                 // ─── Stock ticker price fetch ───
         var stockDataCache = {}; // { ticker: { price, prevClose, dailyPct, name, currency, date } }
         var portfolioHoldings = []; // staging area while editing a portfolio in the modal
+        var editingHoldingIdx = -1;  // index of holding currently being inline-edited (-1 = none)
 
         async function fetchStockPrice(ticker) {
             if (!ticker) return null;
