@@ -9381,9 +9381,16 @@
                                 <span class="asset-row-detail-label">תשואה שנתית</span>
                                 <span class="asset-row-detail-value ${retClass}">${retSign}${retPct}%</span>
                             </div>
-                            ${(asset.type === 'pension' || asset.type === 'gemel') && asset.pensiaMonthlyReturn != null ? `<div class="asset-row-detail">
+                            ${(asset.type === 'gemel' || asset.type === 'fund') && asset.gemelMonthlyReturn != null ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">תשואה חודשית</span>
+                                <span class="asset-row-detail-value" style="color:${asset.gemelMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${asset.gemelMonthlyReturn >= 0 ? '+' : ''}${asset.gemelMonthlyReturn.toFixed(2)}%</span>
+                            </div>` : asset.type === 'pension' && asset.pensiaMonthlyReturn != null ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">תשואה חודשית</span>
                                 <span class="asset-row-detail-value" style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span>
+                            </div>` : ''}
+                            ${asset.fee != null && (asset.type === 'gemel' || asset.type === 'fund' || asset.type === 'pension') ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">דמי ניהול</span>
+                                <span class="asset-row-detail-value">${asset.fee.toFixed(3)}%</span>
                             </div>` : ''}
                             ${asset.pensiaBaseValue > 0 ? `<div class="asset-row-detail" style="grid-column:1/-1;background:rgba(16,185,129,0.06);border-radius:8px;padding:6px 10px;">
                                 <span class="asset-row-detail-label">📊 מחושב מבסיס</span>
