@@ -3920,6 +3920,7 @@
                 pa.holdings.forEach(function(h) { var pILS = h.currency === 'ILS' ? h.price : h.price * exchangeRate; tot += (h.units || 0) * pILS; if (h.avgBuyPrice > 0) { var avgILS = h.currency === 'ILS' ? h.avgBuyPrice : h.avgBuyPrice * exchangeRate; totBasis += (h.units || 0) * avgILS; } });
                 pa.value = Math.round(tot);
                 if (totBasis > 0) { pa.costBasis = Math.round(totBasis); pa.costBasisCurrency = 'ILS'; }
+                else { delete pa.costBasis; delete pa.costBasisCurrency; }
                 console.log('[Stock] ✅ Portfolio updated:', pa.name, '→ ₪' + pa.value.toLocaleString());
             }
             if (portfolioAssets.length > 0) await saveAssets();
