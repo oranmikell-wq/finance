@@ -9056,7 +9056,7 @@
                             <div class="asset-row-icon" style="background:rgba(0,217,255,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name}</div>
-                                <div class="asset-row-provider">${asset.provider} • קרן נאמנות${fMonthly !== 0 ? ` • <span style="color:${fc(fMonthly)};font-weight:600;">${fs(fMonthly)}${fMonthly.toFixed(2)}%</span> חודשי` : ''}</div>
+                                <div class="asset-row-provider">${[asset.provider, 'קרן נאמנות'].filter(Boolean).join(' • ')}${fDaily !== 0 ? ` • <span style="color:${fc(fDaily)};font-weight:600;">${fs(fDaily)}${fDaily.toFixed(2)}%</span> יומי` : ''}</div>
                             </div>
                             ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
