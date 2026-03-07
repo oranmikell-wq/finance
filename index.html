@@ -9041,25 +9041,28 @@
                     // Use live totalVal (not stale asset.value) for ILS daily amount
                     const combinedDailyILS = totalVal * (combinedDailyPct / 100);
                     // Holdings table rows
-                    const holdingRows = holdings.filter(h => h.ticker !== '$').map(function(h) {
+                    const holdingRows = holdings.map(function(h) {
+                        const isCash = h.ticker === '$';
                         const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
                         const hVal = Math.round((h.units || 0) * pILS);
-                        const priceStr = h.currency === 'ILS' ? '₪' + (h.price || 0).toFixed(2) : '$' + (h.price || 0).toFixed(2);
-                        const retPct = h.avgBuyPrice > 0 && h.price > 0 ? (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100 : null;
+                        const priceStr = isCash ? '$1.00' : (h.currency === 'ILS' ? '₪' + (h.price || 0).toFixed(2) : '$' + (h.price || 0).toFixed(2));
+                        const retPct = !isCash && h.avgBuyPrice > 0 && h.price > 0 ? (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100 : null;
                         const currSym = h.currency === 'ILS' ? '₪' : '$';
                         // Native-currency amounts
                         const dailyNativeAmt = Math.round((h.units || 0) * (h.price || 0) * (h.dailyPct || 0) / 100);
                         const retNativeAmt = retPct !== null ? Math.round((h.units || 0) * ((h.price || 0) - (h.avgBuyPrice || 0))) : 0;
-                        // Value in native currency ($ for USD stocks, ₪ for ILS)
-                        const valStr = h.currency === 'USD'
-                            ? '$' + Math.round(hVal / exchangeRate).toLocaleString('en-US')
-                            : '₪' + hVal.toLocaleString('he-IL');
+                        // Value in native currency ($ for USD/cash, ₪ for ILS)
+                        const valStr = isCash
+                            ? '$' + Math.round(h.units || 0).toLocaleString('en-US')
+                            : h.currency === 'USD'
+                                ? '$' + Math.round(hVal / exchangeRate).toLocaleString('en-US')
+                                : '₪' + hVal.toLocaleString('he-IL');
                         return `<tr style="border-bottom:1px solid var(--border-color);">
                             <td style="padding:5px 4px;font-weight:700;color:#ff006e;white-space:nowrap;">${h.ticker}</td>
-                            <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${(h.units || 0).toLocaleString('he-IL', {maximumFractionDigits:3})}</td>
+                            <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${isCash ? '—' : (h.units || 0).toLocaleString('he-IL', {maximumFractionDigits:3})}</td>
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${priceStr}</td>
                             <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">${valStr}</td>
-                            <td style="padding:5px 4px;font-size:0.75rem;color:${sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.7rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toLocaleString('he-IL')}</span>` : ''}</td>
+                            <td style="padding:5px 4px;font-size:0.75rem;color:${isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${isCash ? '—' : `${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.7rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toLocaleString('he-IL')}</span>` : ''}`}</td>
                             ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.75rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(1)}%<br><span style="font-size:0.7rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toLocaleString('he-IL')}</span></td>` : '<td style="padding:5px 4px;font-size:0.75rem;color:var(--text-secondary);text-align:center;">—</td>'}
                         </tr>`;
                     }).join('');
