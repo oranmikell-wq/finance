@@ -3177,6 +3177,15 @@
                                     </button>
                                 </div>
 
+                                <!-- USD Cash position -->
+                                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(244,196,48,0.2);border-radius:10px;padding:10px;margin-bottom:10px;">
+                                    <div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">💵 מזומן דולרי</div>
+                                    <div style="display:flex;gap:8px;">
+                                        <input type="text" inputmode="decimal" id="portfolioCashAmount" placeholder="סכום ב-$" style="flex:1;font-size:0.82rem;" oninput="formatNumberInput(this)">
+                                        <button type="button" onclick="addCashToPortfolio()" style="padding:8px 12px;background:linear-gradient(135deg,rgba(244,196,48,0.15),rgba(255,140,0,0.1));border:1px solid rgba(244,196,48,0.35);border-radius:8px;color:#f4c430;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">+ הוסף</button>
+                                    </div>
+                                </div>
+
                                 <!-- Holdings list -->
                                 <div id="portfolioHoldingsList" style="margin-bottom:8px;">
                                     <div style="font-size:0.75rem;color:var(--text-secondary);text-align:center;padding:10px;">טרם נוספו מניות לתיק</div>
@@ -3608,6 +3617,29 @@
             updatePortfolioTotal();
         }
 
+        // ─── Portfolio: add USD cash position ───
+        function addCashToPortfolio() {
+            var amount = parseNum(document.getElementById('portfolioCashAmount'));
+            if (!amount || amount <= 0) { alert('הכנס סכום בדולרים'); return; }
+            var fxDailyPct = (exchangeRatePrevClose > 0 && exchangeRate > 0)
+                ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 : 0;
+            var existing = portfolioHoldings.find(function(h) { return h.ticker === '$'; });
+            if (existing) {
+                existing.units = amount;
+                existing.price = 1;
+                existing.dailyPct = fxDailyPct;
+                existing.lastUpdate = new Date().toISOString();
+            } else {
+                portfolioHoldings.push({ ticker:'$', units:amount, avgBuyPrice:0,
+                    price:1, currency:'USD', name:'מזומן דולרי',
+                    dailyPct:fxDailyPct, lastUpdate:new Date().toISOString() });
+            }
+            var cashEl = document.getElementById('portfolioCashAmount');
+            if (cashEl) cashEl.value = '';
+            renderPortfolioHoldingsList();
+            updatePortfolioTotal();
+        }
+
         // ─── Portfolio: remove holding by index ───
         function removeHoldingFromPortfolio(idx) {
             portfolioHoldings.splice(idx, 1);
@@ -3625,6 +3657,23 @@
             }
             var html = '';
             portfolioHoldings.forEach(function(h, idx) {
+                // ── USD Cash position ──
+                if (h.ticker === '$') {
+                    var valILS = (h.units || 0) * (exchangeRate || 0);
+                    var fxPct = h.dailyPct || 0;
+                    var fxColor = fxPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border-color);">'
+                        + '<span style="font-size:0.75rem;font-weight:700;color:#f4c430;background:rgba(244,196,48,0.12);padding:2px 6px;border-radius:5px;white-space:nowrap;">$</span>'
+                        + '<div style="flex:1;min-width:0;">'
+                        +   '<div style="font-size:0.75rem;font-weight:600;color:var(--text-primary);">מזומן דולרי</div>'
+                        +   '<div style="font-size:0.7rem;color:var(--text-secondary);">$' + (h.units||0).toLocaleString('he-IL',{maximumFractionDigits:0}) + '&nbsp;·&nbsp;שע"ח ₪' + (exchangeRate||0).toFixed(3)
+                        +     '&nbsp;<span style="color:' + fxColor + ';">' + (fxPct>=0?'+':'') + fxPct.toFixed(2) + '%</span></div>'
+                        + '</div>'
+                        + '<div style="text-align:left;flex-shrink:0;"><div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">₪' + Math.round(valILS).toLocaleString('he-IL') + '</div></div>'
+                        + '<button type="button" onclick="removeHoldingFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--accent-red);font-size:1rem;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;" title="הסר">🗑</button>'
+                        + '</div>';
+                    return;
+                }
                 var pILS = h.currency === 'ILS' ? h.price : h.price * exchangeRate;
                 var valILS = (h.units || 0) * pILS;
                 var priceStr = h.currency === 'ILS' ? '₪' + h.price.toFixed(2) : '$' + h.price.toFixed(2);
@@ -3847,6 +3896,14 @@
                 for (var hi = 0; hi < pa.holdings.length; hi++) {
                     var h = pa.holdings[hi];
                     if (!h.ticker) continue;
+                    // USD cash — update FX daily % without API call
+                    if (h.ticker === '$') {
+                        h.price = 1; h.currency = 'USD'; h.name = 'מזומן דולרי';
+                        h.dailyPct = (exchangeRatePrevClose > 0 && exchangeRate > 0)
+                            ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 : 0;
+                        h.lastUpdate = new Date().toISOString();
+                        continue;
+                    }
                     try {
                         if (seen[h.ticker]) {
                             var cd = stockDataCache[h.ticker];
