@@ -6400,7 +6400,7 @@
             fund: 'קרן השתלמות',
             savings: 'קרן נאמנות',
             deposit: 'חיסכון/פיקדון',
-            trade: 'טרייד',
+            trade: 'שוק ההון',
             crypto: 'קריפטו',
             real_estate: 'נדל"ן',
             other: 'אחר'
@@ -6409,6 +6409,7 @@
         const assetColors = {
             pension: '#00d9ff',
             gemel: '#b026ff',
+            gemel_invest: '#d855ff',
             fund: 'var(--accent-gold)',
             savings: '#0ea5e9',
             deposit: '#7c3aed',
@@ -7521,7 +7522,7 @@
 
             var groups = {};
             assets.forEach(function(a) {
-                var t = a.type;
+                var t = (a.type === 'gemel' && a.gemelFundType === 'gemel') ? 'gemel_invest' : a.type;
                 if (!groups[t]) groups[t] = { total: 0, count: 0, returns: [] };
                 groups[t].total += toILS(a.value, a.currency || 'ILS');
                 groups[t].count++;
@@ -9529,8 +9530,9 @@
 
             const grouped = {};
             assets.forEach(asset => {
-                if (!grouped[asset.type]) grouped[asset.type] = 0;
-                grouped[asset.type] += toILS(asset.value, asset.currency || 'ILS');
+                const key = (asset.type === 'gemel' && asset.gemelFundType === 'gemel') ? 'gemel_invest' : asset.type;
+                if (!grouped[key]) grouped[key] = 0;
+                grouped[key] += toILS(asset.value, asset.currency || 'ILS');
             });
             const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
 
