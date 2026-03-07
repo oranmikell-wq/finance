@@ -6794,9 +6794,9 @@
                     if ((asset.type === 'gemel' || asset.type === 'fund') && asset.gemelKupahNum) {
                         var gemelTF = document.getElementById('gemelTrackingFields');
                         if (gemelTF) gemelTF.style.display = 'block';
-                        // Show type selector in edit mode
+                        // Hide type selector in edit mode — type is fixed after creation
                         var gemelTSD2 = document.getElementById('gemelTypeSelectorDiv');
-                        if (gemelTSD2) gemelTSD2.style.display = 'flex';
+                        if (gemelTSD2) gemelTSD2.style.display = 'none';
                         document.getElementById('gemelKupahNumber').value = asset.gemelKupahNum;
                         var ft = asset.gemelFundType || (asset.type === 'fund' ? 'hashtalamut' : 'gemel');
                         document.getElementById('gemelFundType').value = ft;
@@ -8890,7 +8890,9 @@
                 const retClass = retPct >= 0 ? 'positive' : 'negative';
                 const retSign = retPct > 0 ? '+' : '';
                 const icon = assetTypeIcons[asset.type] || '📋';
-                const typeName = assetTypeNames[asset.type] || asset.type;
+                const typeName = (asset.type === 'gemel' && asset.gemelFundType === 'gemel') ? 'גמל להשקעה' :
+                                 (asset.type === 'gemel' && asset.gemelFundType === 'kupat') ? 'גמל קלאסי' :
+                                 assetTypeNames[asset.type] || asset.type;
                 const delay = Math.min(idx * 0.05, 0.4);
                 const assetIdForEdit = asset.id;
                 const editBtn = `<button class="asset-row-edit-btn" type="button" onclick="openModal('edit', ${assetIdForEdit});">✏️ עריכה</button>`;
@@ -9021,39 +9023,42 @@
                         `<span style="font-size:0.65em;color:#ff006e;font-weight:700;background:rgba(255,0,110,0.1);padding:1px 5px;border-radius:4px;white-space:nowrap;">${h.ticker}</span>`
                     ).join(' ') + (extraCount > 0 ? ` <span style="font-size:0.65em;color:var(--text-secondary);">+${extraCount}</span>` : '');
                     // Weighted daily change (stock returns weighted by value)
-                    let totalVal = 0, weightedDaily = 0, usdStocksVal = 0;
+                    let totalVal = 0, weightedDaily = 0, usdStocksVal = 0, stocksVal = 0;
                     holdings.forEach(function(h) {
                         const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
                         const hVal = (h.units || 0) * pILS;
                         totalVal += hVal;
-                        weightedDaily += hVal * (h.dailyPct || 0);
-                        // Cash ($) already has FX in its dailyPct — exclude from fxDailyPct to avoid double-counting
-                        if (h.currency === 'USD' && h.ticker !== '$') usdStocksVal += hVal;
+                        // Exclude cash ($) from daily % denominator — matches broker calculation
+                        if (h.ticker !== '$') {
+                            stocksVal += hVal;
+                            weightedDaily += hVal * (h.dailyPct || 0);
+                            if (h.currency === 'USD') usdStocksVal += hVal;
+                        }
                     });
-                    const fxDailyPct = (exchangeRatePrevClose > 0 && totalVal > 0)
-                        ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 * (usdStocksVal / totalVal) : 0;
-                    const combinedDailyPct = (totalVal > 0 ? weightedDaily / totalVal : 0) + fxDailyPct;
+                    const fxDailyPct = (exchangeRatePrevClose > 0 && stocksVal > 0)
+                        ? (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100 * (usdStocksVal / stocksVal) : 0;
+                    const combinedDailyPct = (stocksVal > 0 ? weightedDaily / stocksVal : 0) + fxDailyPct;
                     // Use live totalVal (not stale asset.value) for ILS daily amount
                     const combinedDailyILS = totalVal * (combinedDailyPct / 100);
                     // Holdings table rows
-                    const holdingRows = holdings.map(function(h) {
+                    const holdingRows = holdings.filter(h => h.ticker !== '$').map(function(h) {
                         const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
                         const hVal = Math.round((h.units || 0) * pILS);
                         const priceStr = h.currency === 'ILS' ? '₪' + (h.price || 0).toFixed(2) : '$' + (h.price || 0).toFixed(2);
                         const retPct = h.avgBuyPrice > 0 && h.price > 0 ? (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100 : null;
-                        // Cash ($) gain is in ILS (FX change), not dollars
-                        const isCash = h.ticker === '$';
-                        const currSym = (h.currency === 'ILS' || isCash) ? '₪' : '$';
-                        // Native-currency amounts: cash→ILS gain, US stocks→USD, Israeli stocks→ILS
-                        const dailyNativeAmt = isCash
-                            ? Math.round((h.units || 0) * exchangeRate * (h.dailyPct || 0) / 100)
-                            : Math.round((h.units || 0) * (h.price || 0) * (h.dailyPct || 0) / 100);
+                        const currSym = h.currency === 'ILS' ? '₪' : '$';
+                        // Native-currency amounts
+                        const dailyNativeAmt = Math.round((h.units || 0) * (h.price || 0) * (h.dailyPct || 0) / 100);
                         const retNativeAmt = retPct !== null ? Math.round((h.units || 0) * ((h.price || 0) - (h.avgBuyPrice || 0))) : 0;
+                        // Value in native currency ($ for USD stocks, ₪ for ILS)
+                        const valStr = h.currency === 'USD'
+                            ? '$' + Math.round(hVal / exchangeRate).toLocaleString('en-US')
+                            : '₪' + hVal.toLocaleString('he-IL');
                         return `<tr style="border-bottom:1px solid var(--border-color);">
                             <td style="padding:5px 4px;font-weight:700;color:#ff006e;white-space:nowrap;">${h.ticker}</td>
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${(h.units || 0).toLocaleString('he-IL', {maximumFractionDigits:3})}</td>
                             <td style="padding:5px 4px;font-size:0.78rem;text-align:center;">${priceStr}</td>
-                            <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">₪${hVal.toLocaleString('he-IL')}</td>
+                            <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">${valStr}</td>
                             <td style="padding:5px 4px;font-size:0.75rem;color:${sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.7rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toLocaleString('he-IL')}</span>` : ''}</td>
                             ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.75rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(1)}%<br><span style="font-size:0.7rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toLocaleString('he-IL')}</span></td>` : '<td style="padding:5px 4px;font-size:0.75rem;color:var(--text-secondary);text-align:center;">—</td>'}
                         </tr>`;
@@ -9093,7 +9098,7 @@
                                             <th style="padding:4px;text-align:right;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">טיקר</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">יח'</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">מחיר</th>
-                                            <th style="padding:4px;text-align:left;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">שווי ₪</th>
+                                            <th style="padding:4px;text-align:left;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">שווי</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">יומי</th>
                                             <th style="padding:4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.7rem;">תשואה</th>
                                         </tr>
