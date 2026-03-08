@@ -3909,6 +3909,7 @@
                     delete a.stockTicker; delete a.stockUnits; delete a.stockAvgBuyPrice;
                     delete a.stockPrice;  delete a.stockCurrency; delete a.stockDailyPct;
                     delete a.stockName;   delete a.stockLastUpdate;
+                    delete a.return; // stale — will be recomputed from holdings
                     changed = true;
                 }
             });
@@ -4126,11 +4127,11 @@
                     } catch(e) { console.warn('[Stock] portfolio update failed', h.ticker, e); }
                 }
                 // Recalculate portfolio total
-                var tot = 0, totBasis = 0;
-                pa.holdings.forEach(function(h) { var pILS = h.currency === 'ILS' ? h.price : h.price * exchangeRate; tot += (h.units || 0) * pILS; if (h.avgBuyPrice > 0) { var avgILS = h.currency === 'ILS' ? h.avgBuyPrice : h.avgBuyPrice * exchangeRate; totBasis += (h.units || 0) * avgILS; } });
+                var tot = 0, totBasis = 0, totValueWithBasis = 0;
+                pa.holdings.forEach(function(h) { var pILS = h.currency === 'ILS' ? h.price : h.price * exchangeRate; tot += (h.units || 0) * pILS; if (h.avgBuyPrice > 0) { var avgILS = h.currency === 'ILS' ? h.avgBuyPrice : h.avgBuyPrice * exchangeRate; totBasis += (h.units || 0) * avgILS; totValueWithBasis += (h.units || 0) * pILS; } });
                 pa.value = Math.round(tot);
-                if (totBasis > 0) { pa.costBasis = Math.round(totBasis); pa.costBasisCurrency = 'ILS'; }
-                else { delete pa.costBasis; delete pa.costBasisCurrency; }
+                if (totBasis > 0) { pa.costBasis = Math.round(totBasis); pa.costBasisCurrency = 'ILS'; pa.return = Math.round((totValueWithBasis - totBasis) / totBasis * 100 * 10) / 10; }
+                else { delete pa.costBasis; delete pa.costBasisCurrency; delete pa.return; }
                 console.log('[Stock] ✅ Portfolio updated:', pa.name, '→ ₪' + pa.value.toLocaleString());
             }
             if (portfolioAssets.length > 0) await saveAssets();
@@ -7100,18 +7101,26 @@
                 delete asset.stockName;   delete asset.stockLastUpdate;
                 if (stockModeVal === 'portfolio') {
                     asset.holdings = portfolioHoldings.slice();
-                    var totalValue = 0, totalCostBasis = 0;
+                    var totalValue = 0, totalCostBasis = 0, totalValueWithBasis = 0;
                     portfolioHoldings.forEach(function(h) {
                         var priceILS = h.currency === 'ILS' ? h.price : h.price * exchangeRate;
                         totalValue += (h.units || 0) * priceILS;
                         if (h.avgBuyPrice > 0) {
                             var avgILS = h.currency === 'ILS' ? h.avgBuyPrice : h.avgBuyPrice * exchangeRate;
                             totalCostBasis += (h.units || 0) * avgILS;
+                            totalValueWithBasis += (h.units || 0) * priceILS;
                         }
                     });
                     asset.value = Math.round(totalValue);
-                    if (totalCostBasis > 0) { asset.costBasis = Math.round(totalCostBasis); asset.costBasisCurrency = 'ILS'; }
-                    else { delete asset.costBasis; delete asset.costBasisCurrency; }
+                    if (totalCostBasis > 0) {
+                        asset.costBasis = Math.round(totalCostBasis);
+                        asset.costBasisCurrency = 'ILS';
+                        asset.return = Math.round((totalValueWithBasis - totalCostBasis) / totalCostBasis * 100 * 10) / 10;
+                    } else {
+                        delete asset.costBasis;
+                        delete asset.costBasisCurrency;
+                        delete asset.return;
+                    }
                     asset.currency = 'ILS';
                 } else {
                     // Manual mode
@@ -8561,34 +8570,62 @@
             var total = assets.reduce(function(s,a){ return s + toILS(a.value||0, a.currency||'ILS'); }, 0);
             if (total <= 0) return '<div style="text-align:center;color:var(--text-secondary);padding:20px;">הוסף נכסים כדי לראות תובנות</div>';
 
+            // ── investable assets: excludes non-rental real estate (primary residence) ──
+            var invAssets = assets.filter(function(a){ return !(a.type === 'real_estate' && !a.isRentalProperty); });
+            var totalInv = invAssets.reduce(function(s,a){ return s + toILS(a.value||0, a.currency||'ILS'); }, 0);
+            if (totalInv <= 0) totalInv = total; // fallback
+
             var ins = [];
             var fmt  = function(n){ return '₪' + Math.round(n).toLocaleString('he-IL'); };
             var fp   = function(n){ return n.toFixed(1) + '%'; };
-            var pct  = function(v){ return total > 0 ? v / total * 100 : 0; };
+            var pct     = function(v){ return totalInv > 0 ? v / totalInv * 100 : 0; };   // % of investable
+            var pctTot  = function(v){ return total   > 0 ? v / total   * 100 : 0; };    // % of total wealth
 
-            // ── breakdown by type ──
+            // ── breakdown: investable assets (excl. primary residence) ──
             var byType = {};
-            assets.forEach(function(a){ var v = toILS(a.value||0, a.currency||'ILS'); byType[a.type] = (byType[a.type]||0) + v; });
+            invAssets.forEach(function(a){ var v = toILS(a.value||0, a.currency||'ILS'); byType[a.type] = (byType[a.type]||0) + v; });
+            // real estate counted from full assets list
+            var byTypeAll = {};
+            assets.forEach(function(a){ var v = toILS(a.value||0, a.currency||'ILS'); byTypeAll[a.type] = (byTypeAll[a.type]||0) + v; });
             var typeCount    = Object.keys(byType).length;
             var cryptoVal    = byType['crypto']||0;
-            var realEstVal   = byType['real_estate']||0;
-            var pensionVal   = (byType['pension']||0)+(byType['gemel']||0)+(byType['fund']||0)+(byType['gemel_invest']||0);
-            var liquidVal    = (byType['savings']||0)+(byType['deposit']||0)+(byType['trade']||0);
+            var realEstVal   = byTypeAll['real_estate']||0;
+            // gemel type: split into liquid (gemelFundType='gemel' = גמל להשקעה) vs illiquid (kupat/other)
+            var gemelInvVal = invAssets.reduce(function(s,a){ return s+(a.type==='gemel'&&a.gemelFundType==='gemel'?toILS(a.value||0,a.currency||'ILS'):0); },0);
+            var gemelKupatVal = invAssets.reduce(function(s,a){ return s+(a.type==='gemel'&&a.gemelFundType!=='gemel'?toILS(a.value||0,a.currency||'ILS'):0); },0);
+            var pensionVal   = (byType['pension']||0)+gemelKupatVal+(byType['fund']||0);
+            var liquidVal    = (byType['savings']||0)+(byType['deposit']||0)+(byType['trade']||0)+(byType['gemel_invest']||0)+gemelInvVal;
             var cryptoPct    = pct(cryptoVal);
-            var realEstPct   = pct(realEstVal);
+            var realEstPct   = pctTot(realEstVal);   // real estate as % of total wealth
             var liquidPct    = pct(liquidVal);
 
-            // ── USD exposure ──
-            var usdVal = assets.reduce(function(s,a){ return s + (a.currency==='USD' ? toILS(a.value||0,'USD') : 0); }, 0);
+            // ── USD exposure: includes portfolio holdings + SPY-linked pension assets ──
+            var usdVal = invAssets.reduce(function(s,a) {
+                if (a.currency === 'USD') return s + toILS(a.value||0,'USD');
+                // SPY-linked pension: fully USD-exposed (tracks S&P 500)
+                if (a.spyLinked) return s + toILS(a.value||0, a.currency||'ILS');
+                // Portfolio trade: sum USD-denominated holdings
+                if (a.type === 'trade' && a.stockMode === 'portfolio' && a.holdings) {
+                    return s + a.holdings.reduce(function(hs,h) {
+                        return hs + (h.currency === 'USD' ? (h.units||0) * (h.price||0) * exchangeRate : 0);
+                    }, 0);
+                }
+                return s;
+            }, 0);
             var usdPct = pct(usdVal);
 
-            // ── largest single asset ──
-            var sorted = assets.slice().sort(function(a,b){ return toILS(b.value||0,b.currency||'ILS')-toILS(a.value||0,a.currency||'ILS'); });
+            // ── largest single investable asset ──
+            var sorted = invAssets.slice().sort(function(a,b){ return toILS(b.value||0,b.currency||'ILS')-toILS(a.value||0,a.currency||'ILS'); });
             var bigA = sorted[0], bigPct = bigA ? pct(toILS(bigA.value||0, bigA.currency||'ILS')) : 0;
 
-            // ── returns ──
-            var withRet = assets.filter(function(a){ return a.return!=null && !isNaN(a.return); });
-            var avgRet  = withRet.length ? withRet.reduce(function(s,a){ return s+(a.return||0); },0)/withRet.length : null;
+            // ── returns: liquid investable assets only ──
+            var LIQUID_TYPES = { savings:1, deposit:1, crypto:1, gemel_invest:1, trade:1 };
+            var isLiquid = function(a){ return !!LIQUID_TYPES[a.type] || (a.type==='gemel' && a.gemelFundType==='gemel'); };
+            var liquidAssets = invAssets.filter(isLiquid);
+            var withRet = liquidAssets.filter(function(a){ return a.return != null && !isNaN(a.return); });
+            var _retWeightSum = 0, _retValSum = 0;
+            withRet.forEach(function(a){ var v=toILS(a.value||0,a.currency||'ILS'); _retValSum+=v*(a.return||0); _retWeightSum+=v; });
+            var avgRet = _retWeightSum > 0 ? _retValSum / _retWeightSum : null;
             var bestA   = withRet.slice().sort(function(a,b){ return (b.return||0)-(a.return||0); })[0];
             var worstA  = withRet.slice().sort(function(a,b){ return (a.return||0)-(b.return||0); })[0];
 
@@ -8596,8 +8633,8 @@
             var totalMonthly = assets.reduce(function(s,a){ return s + toILS(a.monthly||0, a.monthlyCurrency||'ILS'); }, 0);
 
             // ── fees ──
-            var highFeeAssets = assets.filter(function(a){ return (a.managementFee||0) > 1.0; });
-            var feeCost = highFeeAssets.reduce(function(s,a){ return s + toILS(a.value||0,a.currency||'ILS')*(a.managementFee||0)/100; }, 0);
+            var highFeeAssets = assets.filter(function(a){ return (a.fee||0) > 1.0; });
+            var feeCost = highFeeAssets.reduce(function(s,a){ return s + toILS(a.value||0,a.currency||'ILS')*(a.fee||0)/100; }, 0);
 
             // ── history ──
             var history = [];
@@ -8656,10 +8693,21 @@
                 ins.push({ type:'tip', icon:'💸', title:'דמי ניהול גבוהים',
                     text: highFeeAssets.length + ' נכסים עם דמי ניהול מעל 1%. עלות שנתית מוערכת: ' + fmt(feeCost) + '.' });
             }
-            // No USD exposure
-            if (usdPct < 5 && total > 150000) {
-                ins.push({ type:'tip', icon:'🌍', title:'כל התיק בשקלים',
-                    text: 'כמעט אפס חשיפה למטבע חוץ. חשיפה דולרית יכולה לגדר סיכון מקרו-כלכלי.' });
+            // USD exposure insight — always show when portfolio is large enough
+            if (totalInv > 150000) {
+                if (usdVal < 1000) {
+                    ins.push({ type:'tip', icon:'🌍', title:'כל התיק בשקלים',
+                        text: 'אפס חשיפה למטבע חוץ. חשיפה דולרית יכולה לגדר סיכון מקרו-כלכלי.' });
+                } else if (usdPct < 10) {
+                    ins.push({ type:'tip', icon:'🌍', title:'חשיפה דולרית נמוכה',
+                        text: fp(usdPct) + ' מהתיק (ללא מגורים) חשוף לדולר (' + fmt(usdVal) + ').' });
+                } else if (usdPct < 50) {
+                    ins.push({ type:'info', icon:'🌍', title:'חשיפה דולרית',
+                        text: fp(usdPct) + ' מהתיק (ללא מגורים) חשוף לדולר (' + fmt(usdVal) + ').' });
+                } else {
+                    ins.push({ type:'warning', icon:'🌍', title:'חשיפה דולרית גבוהה',
+                        text: fp(usdPct) + ' מהתיק (ללא מגורים) חשוף לדולר (' + fmt(usdVal) + '). תנודות בשער ה-$ משפיעות משמעותית.' });
+                }
             }
             // Best performer
             if (bestA && (bestA.return||0) > 8) {
@@ -8678,19 +8726,19 @@
             }
             // Monthly savings
             if (totalMonthly > 0) {
-                ins.push({ type:'info', icon:'💰', title:'קצב חיסכון',
-                    text: fmt(totalMonthly) + ' לחודש — ' + fmt(totalMonthly*12) + ' בשנה. שיעור שנתי מהתיק: ' + fp(totalMonthly*12/total*100) });
+                ins.push({ type:'info', icon:'💰', title:'הפקדות חודשיות',
+                    text: fmt(totalMonthly) + ' לחודש — ' + fmt(totalMonthly*12) + ' בשנה' });
             }
             // Million milestone
             if (total >= 1000000) {
                 ins.push({ type:'achievement', icon:'🎉', title:'מעל מיליון',
                     text: 'סך התיק: ' + fmt(total) + '. מזל טוב!' });
             }
-            // Average return summary
+            // Average return summary (value-weighted)
             if (avgRet !== null) {
                 var retGood = avgRet > 6;
                 ins.push({ type: retGood?'achievement':'info', icon:'📊', title:'תשואה ממוצעת',
-                    text: (avgRet>=0?'+':'') + fp(avgRet) + ' ממוצע על ' + withRet.length + ' נכסים' + (retGood?' — מעל ממוצע השוק':'') });
+                    text: (avgRet>=0?'+':'') + fp(avgRet) + ' תשואה ממוצעת משוקללת (' + withRet.length + (withRet.length < liquidAssets.length ? ' מתוך ' + liquidAssets.length : '') + ' נכסים נזילים)' + (retGood?' — מעל ממוצע השוק':'') });
             }
 
             if (!ins.length) {
