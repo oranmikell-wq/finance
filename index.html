@@ -1973,6 +1973,11 @@
                 <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div> מחשבון משכנתא</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
+            <!-- Salary Calculator -->
+            <div class="chart-card" data-no-toggle onclick="openSalarySubpage()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(139,92,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></div> מחשבון שכר</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
+            </div>
+
 
           </div>
         </div>
@@ -2754,6 +2759,70 @@
             </div>
         </div>
     </div>
+
+        <!-- Salary Calculator Subpage -->
+        <div id="subpageSalary" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מחשבון שכר</span>
+                    <button onclick="closeSalarySubpage()" style="background:none;border:1px solid rgba(244,196,48,0.3);color:var(--accent-gold);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;display:flex;align-items:center;gap:4px;font-size:0.78rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div style="grid-column:1/-1;">
+                            <div class="retire-label">שכר ברוטו חודשי (₪)</div>
+                            <input type="text" inputmode="decimal" id="salaryGross" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcSalary()">
+                        </div>
+                        <div>
+                            <div class="retire-label">נקודות זיכוי</div>
+                            <input type="number" inputmode="decimal" id="salaryCreditPts" class="retire-input" placeholder="2.25" step="0.25" min="0" max="20" oninput="calcSalary()">
+                        </div>
+                        <div>
+                            <div class="retire-label">% פנסיה עובד</div>
+                            <input type="number" inputmode="decimal" id="salaryPensionPct" class="retire-input" placeholder="6" step="0.5" min="0" max="20" oninput="calcSalary()">
+                        </div>
+                    </div>
+                    <div style="text-align:left;margin-bottom:12px;">
+                        <button onclick="resetSalary()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
+                    </div>
+                    <div id="salaryResult" style="display:none;">
+                        <div class="retire-main-card">
+                            <div class="retire-main-label">שכר נטו לידיים</div>
+                            <div class="retire-main-amount" id="salaryNetAmount">₪0</div>
+                        </div>
+                        <div class="retire-stats-grid" style="grid-template-columns:repeat(4,1fr);">
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-red" id="salaryTaxRow">—</div>
+                                <div class="retire-stat-label">מס הכנסה</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-red" id="salaryNIRow">—</div>
+                                <div class="retire-stat-label">ב"ל + בריאות</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-blue" id="salaryPensionRow">—</div>
+                                <div class="retire-stat-label">פנסיה</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-gold" id="salaryMarginalRow">—</div>
+                                <div class="retire-stat-label">מדרגה שולית</div>
+                            </div>
+                        </div>
+                        <div class="retire-stats-grid" style="margin-top:6px;">
+                            <div class="retire-stat">
+                                <div class="retire-stat-value" id="salaryTotalDeductions">—</div>
+                                <div class="retire-stat-label">ניכויים סה"כ</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-gold" id="salaryEffectiveRow">—</div>
+                                <div class="retire-stat-label">מס אפקטיבי</div>
+                            </div>
+                        </div>
+                        <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:10px;text-align:center;opacity:0.7;">מבוסס על מדרגות מס 2024 · ביטוח לאומי ובריאות לשכיר</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     <!-- About Modal -->
     <div id="aboutModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeAboutModal()">
@@ -7366,15 +7435,87 @@
             document.getElementById('tabPersonal').classList.add('active');
         }
 
+        // ============ SALARY CALCULATOR ============
+        function openSalarySubpage() {
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            document.getElementById('subpageSalary').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        function closeSalarySubpage() {
+            var sub = document.getElementById('subpageSalary');
+            if (sub.style.display === 'none') return;
+            sub.style.display = 'none';
+            document.getElementById('tabPersonal').classList.add('active');
+        }
+        function calcSalary() {
+            var gross = parseNum(document.getElementById('salaryGross').value);
+            var creditPts = parseFloat(document.getElementById('salaryCreditPts').value);
+            if (isNaN(creditPts) || creditPts < 0) creditPts = 2.25;
+            var pensionPct = parseFloat(document.getElementById('salaryPensionPct').value);
+            if (isNaN(pensionPct) || pensionPct < 0) pensionPct = 6;
+            if (!gross || gross <= 0) { document.getElementById('salaryResult').style.display = 'none'; return; }
+
+            // Pension deduction (reduces taxable income)
+            var pension = gross * pensionPct / 100;
+            var taxable = Math.max(0, gross - pension);
+
+            // Israel 2024 income tax brackets (monthly)
+            var brackets = [[6790,0.10],[9730,0.14],[15620,0.20],[21710,0.31],[45040,0.35],[58190,0.47],[Infinity,0.50]];
+            var tax = 0, prev = 0, marginalRate = 10;
+            for (var i = 0; i < brackets.length; i++) {
+                var ceil = brackets[i][0], rate = brackets[i][1];
+                if (taxable > prev) marginalRate = rate * 100;
+                if (taxable <= prev) break;
+                tax += (Math.min(taxable, ceil) - prev) * rate;
+                prev = ceil;
+                if (taxable <= ceil) break;
+            }
+            // Credit points (2024: 242 NIS/month per point)
+            tax = Math.max(0, tax - creditPts * 242);
+
+            // National insurance + health insurance (employee, שכיר, 2024)
+            var niT = 6331, niMax = 44020;
+            var ni, health;
+            if (gross <= niT) {
+                ni = gross * 0.035; health = gross * 0.031;
+            } else if (gross <= niMax) {
+                ni = niT * 0.035 + (gross - niT) * 0.12;
+                health = niT * 0.031 + (gross - niT) * 0.05;
+            } else {
+                ni = niT * 0.035 + (niMax - niT) * 0.12;
+                health = niT * 0.031 + (niMax - niT) * 0.05;
+            }
+            var niTotal = ni + health;
+            var totalDed = tax + niTotal + pension;
+            var net = gross - totalDed;
+            var effectiveRate = (tax + niTotal) / gross * 100;
+
+            var fmt = function(n) { return '₪' + Math.round(n).toLocaleString('he-IL'); };
+            document.getElementById('salaryResult').style.display = '';
+            document.getElementById('salaryNetAmount').textContent = fmt(net);
+            document.getElementById('salaryTaxRow').textContent = fmt(tax);
+            document.getElementById('salaryNIRow').textContent = fmt(niTotal);
+            document.getElementById('salaryPensionRow').textContent = fmt(pension);
+            document.getElementById('salaryMarginalRow').textContent = marginalRate.toFixed(0) + '%';
+            document.getElementById('salaryTotalDeductions').textContent = fmt(totalDed);
+            document.getElementById('salaryEffectiveRow').textContent = effectiveRate.toFixed(1) + '%';
+        }
+        function resetSalary() {
+            ['salaryGross','salaryCreditPts','salaryPensionPct'].forEach(function(id) { document.getElementById(id).value = ''; });
+            document.getElementById('salaryResult').style.display = 'none';
+        }
+
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
             closeBudgetSubpage();
+            closeSalarySubpage();
             _trendsSubpageIds && _trendsSubpageIds.forEach(function(s) { var el = document.getElementById(s); if (el) el.style.display = 'none'; });
             closeMortgageSubpage();
             closeCompoundSubpage();
             closeTaxSubpage();
             closeMashlantaSubpage();
             document.getElementById('subpageBudget').style.display = 'none';
+            document.getElementById('subpageSalary').style.display = 'none';
             document.getElementById('subpageMortgage').style.display = 'none';
             document.getElementById('subpageCompound').style.display = 'none';
             document.getElementById('subpageTax').style.display = 'none';
