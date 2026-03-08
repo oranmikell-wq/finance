@@ -2384,68 +2384,61 @@
 
         <!-- Trends: Gemel Rankings Subpage -->
         <div id="subpageTrendsGemel" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
-            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
-                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
-                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">דירוג קרנות</span>
-                    <button onclick="closeTrendsGemel()" style="background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:4px 6px;font-family:inherit;line-height:1;display:flex;align-items:center;gap:4px;font-size:0.8rem;margin-inline-start:auto;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+            <div class="chart-card" style="margin-bottom:16px;">
+                <!-- Header -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                    <span style="font-size:1rem;font-weight:700;color:var(--text-primary);">דירוג קרנות</span>
+                    <button onclick="closeTrendsGemel()" style="background:none;border:1px solid rgba(244,196,48,0.3);color:var(--accent-gold);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;display:flex;align-items:center;gap:4px;font-size:0.78rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
                 </div>
-                <div style="padding:0 16px 16px;">
-                    <!-- Product type dropdown -->
-                    <div style="position:relative;margin-bottom:14px;" id="gemelDropdownWrap">
-                        <button onclick="toggleGemelDropdown()" id="gemelDropdownBtn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.08);color:var(--accent-gold);font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600;">
-                            <span id="gemelDropdownLabel">💼 גמל להשקעה</span>
-                            <span id="gemelDropdownArrow" style="font-size:0.7rem;transition:transform 0.2s;">▼</span>
-                        </button>
-                        <div id="gemelDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;left:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-                            <div onclick="selectGemelProduct('gemel_invest','💼 גמל להשקעה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--accent-gold);font-weight:600;background:rgba(244,196,48,0.06);">💼 גמל להשקעה</div>
-                            <div onclick="selectGemelProduct('pension','🏦 פנסיה')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏦 פנסיה</div>
-                            <div onclick="selectGemelProduct('hishtalmut','📚 השתלמות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📚 השתלמות</div>
-                            <div onclick="selectGemelProduct('gemel_classic','🏛️ גמל קלאסי')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">🏛️ גמל קלאסי</div>
-                            <div onclick="selectGemelProduct('policies','📋 פוליסות חיסכון')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);border-top:1px solid var(--border-color);">📋 פוליסות חיסכון</div>
-                            <div onclick="selectGemelProduct('mutual_funds','📊 קרנות נאמנות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📊 קרנות נאמנות</div>
-                            <div onclick="selectGemelProduct('bonds','📈 קרנות אג״ח')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">📈 קרנות אג״ח</div>
-                            <div onclick="selectGemelProduct('money_market','💵 כספיות')" class="gprod-opt" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">💵 כספיות</div>
-                        </div>
+                <!-- Product chips – horizontal scroll -->
+                <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
+                    <button onclick="selectGemelProduct('gemel_invest',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.73rem;cursor:pointer;font-family:inherit;font-weight:600;">גמל להשקעה</button>
+                    <button onclick="selectGemelProduct('pension',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.73rem;cursor:pointer;font-family:inherit;">פנסיה</button>
+                    <button onclick="selectGemelProduct('hishtalmut',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.73rem;cursor:pointer;font-family:inherit;">השתלמות</button>
+                    <button onclick="selectGemelProduct('gemel_classic',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.73rem;cursor:pointer;font-family:inherit;">גמל קלאסי</button>
+                    <button onclick="selectGemelProduct('policies',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.73rem;cursor:pointer;font-family:inherit;">פוליסות</button>
+                    <button onclick="selectGemelProduct('mutual_funds',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.73rem;cursor:pointer;font-family:inherit;">קרנות נאמנות</button>
+                    <button onclick="selectGemelProduct('bonds',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.73rem;cursor:pointer;font-family:inherit;">אג"ח</button>
+                    <button onclick="selectGemelProduct('money_market',this)" class="gprod-chip" style="white-space:nowrap;flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--text-secondary);font-size:0.73rem;cursor:pointer;font-family:inherit;">כספיות</button>
+                </div>
+                <!-- Track filter chips -->
+                <div id="gemelTrackFilters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+                    <button id="gemelFilterAll" onclick="setGemelFilter('all',this)" class="gtrack-btn gtrack-active" style="padding:3px 10px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.68rem;cursor:pointer;font-family:inherit;font-weight:600;">הכל</button>
+                    <button onclick="setGemelFilter('כללי',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">כללי</button>
+                    <button onclick="setGemelFilter('מניות',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מנייתי</button>
+                    <button onclick="setGemelFilter('מדד',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מחקה מדד</button>
+                    <button onclick="setGemelFilter('אגח',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">אג״ח</button>
+                </div>
+                <!-- Sort row -->
+                <div style="display:flex;gap:6px;margin-bottom:14px;align-items:center;">
+                    <span style="font-size:0.68rem;color:var(--text-secondary);flex-shrink:0;">מיון:</span>
+                    <button onclick="setGemelSort('y1',this)" class="gemel-sort-btn" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.72rem;cursor:pointer;font-family:inherit;">שנה</button>
+                    <button onclick="setGemelSort('y3',this)" class="gemel-sort-btn" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.72rem;cursor:pointer;font-family:inherit;">3 שנים</button>
+                    <button onclick="setGemelSort('y5',this)" class="gemel-sort-btn" style="padding:4px 10px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.1);color:var(--accent-gold);font-size:0.72rem;cursor:pointer;font-family:inherit;font-weight:600;">5 שנים</button>
+                    <button onclick="setGemelSort('fee',this)" class="gemel-sort-btn" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.72rem;cursor:pointer;font-family:inherit;">דמי ניהול</button>
+                </div>
+                <!-- Table header -->
+                <div style="display:grid;grid-template-columns:1fr 50px 50px 50px 58px;gap:4px;padding:8px 0 6px;border-bottom:1px solid var(--border-color);font-size:0.7rem;color:var(--text-secondary);font-weight:600;">
+                    <div>קרן / מסלול</div>
+                    <div style="text-align:center;">שנה</div>
+                    <div style="text-align:center;">3 שנ׳</div>
+                    <div style="text-align:center;">5 שנ׳</div>
+                    <div style="text-align:center;">ד"נ</div>
+                </div>
+                <!-- Data rows -->
+                <div id="gemelRankingRows" style="min-height:80px;">
+                    <div style="text-align:center;padding:30px;color:var(--text-secondary);font-size:0.8rem;">
+                        <div style="font-size:1.4rem;margin-bottom:6px;">⏳</div>
+                        טוען נתונים...
                     </div>
-                    <!-- Track filter chips -->
-                    <div id="gemelTrackFilters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
-                        <button id="gemelFilterAll" onclick="setGemelFilter('all',this)" class="gtrack-btn gtrack-active" style="padding:3px 10px;border-radius:12px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:0.68rem;cursor:pointer;font-family:inherit;font-weight:600;">הכל</button>
-                        <button onclick="setGemelFilter('כללי',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">כללי</button>
-                        <button onclick="setGemelFilter('מניות',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מנייתי</button>
-                        <button onclick="setGemelFilter('מדד',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">מחקה מדד</button>
-                        <button onclick="setGemelFilter('אגח',this)" class="gtrack-btn" style="padding:3px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-secondary);font-size:0.68rem;cursor:pointer;font-family:inherit;">אג״ח</button>
-                    </div>
-                    <!-- Sort row -->
-                    <div style="display:flex;gap:5px;margin-bottom:10px;align-items:center;">
-                        <span style="font-size:0.65rem;color:var(--text-secondary);flex-shrink:0;">מיון:</span>
-                        <button onclick="setGemelSort('y1',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">שנה</button>
-                        <button onclick="setGemelSort('y3',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">3 שנים</button>
-                        <button onclick="setGemelSort('y5',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid var(--accent-gold);background:rgba(244,196,48,0.1);color:var(--accent-gold);font-size:0.65rem;cursor:pointer;font-family:inherit;font-weight:600;">5 שנים</button>
-                        <button onclick="setGemelSort('fee',this)" class="gemel-sort-btn" style="padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-secondary);font-size:0.65rem;cursor:pointer;font-family:inherit;">דמי ניהול</button>
-                    </div>
-                    <!-- Table header -->
-                    <div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:8px 4px;border-bottom:1px solid var(--border-color);font-size:0.75rem;color:var(--text-secondary);font-weight:600;">
-                        <div>קרן / מסלול</div>
-                        <div style="text-align:center;">שנה</div>
-                        <div style="text-align:center;">3 שנ׳</div>
-                        <div style="text-align:center;">5 שנ׳</div>
-                        <div style="text-align:center;">דמי ניהול</div>
-                    </div>
-                    <!-- Data rows -->
-                    <div id="gemelRankingRows" style="min-height:80px;">
-                        <div style="text-align:center;padding:30px;color:var(--text-secondary);font-size:0.8rem;">
-                            <div style="font-size:1.4rem;margin-bottom:6px;">⏳</div>
-                            טוען נתונים מ-Gemelnet...
-                        </div>
-                    </div>
-                    <div id="gemelError" style="display:none;text-align:center;padding:20px;font-size:0.78rem;">
-                        <div style="font-size:1.3rem;margin-bottom:6px;">⚠️</div>
-                        <div style="color:var(--text-secondary);margin-bottom:10px;" id="gemelErrorMsg">לא ניתן לטעון נתונים</div>
-                        <button onclick="loadGemelData(true)" style="padding:6px 16px;border-radius:10px;border:1px solid var(--accent-gold);background:transparent;color:var(--accent-gold);font-size:0.78rem;cursor:pointer;font-family:inherit;">נסה שוב</button>
-                    </div>
-                    <div id="gemelSourceNote" style="font-size:0.6rem;color:var(--text-secondary);opacity:0.5;text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);">
-                        מקור: Gemelnet / רשות שוק ההון • תשואות לפני דמי ניהול • אינו מהווה ייעוץ השקעות
-                    </div>
+                </div>
+                <div id="gemelError" style="display:none;text-align:center;padding:20px;font-size:0.78rem;">
+                    <div style="font-size:1.3rem;margin-bottom:6px;">⚠️</div>
+                    <div style="color:var(--text-secondary);margin-bottom:10px;" id="gemelErrorMsg">לא ניתן לטעון נתונים</div>
+                    <button onclick="loadGemelData(true)" style="padding:6px 16px;border-radius:10px;border:1px solid var(--accent-gold);background:transparent;color:var(--accent-gold);font-size:0.78rem;cursor:pointer;font-family:inherit;">נסה שוב</button>
+                </div>
+                <div id="gemelSourceNote" style="font-size:0.6rem;color:var(--text-secondary);opacity:0.5;text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);">
+                    מקור: Gemelnet / רשות שוק ההון • תשואות לפני דמי ניהול • אינו מהווה ייעוץ השקעות
                 </div>
             </div>
         </div>
@@ -7943,22 +7936,19 @@
             }
         }
 
-        function selectGemelProduct(product, label) {
-            // close dropdown
-            document.getElementById('gemelDropdownMenu').style.display = 'none';
-            document.getElementById('gemelDropdownArrow').style.transform = '';
-            // update label
-            document.getElementById('gemelDropdownLabel').textContent = label;
-            // highlight selected option
-            document.querySelectorAll('.gprod-opt').forEach(function(el) {
-                el.style.color = 'var(--text-primary)';
-                el.style.fontWeight = 'normal';
+        function selectGemelProduct(product, btn) {
+            document.querySelectorAll('.gprod-chip').forEach(function(el) {
+                el.style.border = '1px solid rgba(255,255,255,0.12)';
                 el.style.background = 'transparent';
+                el.style.color = 'var(--text-secondary)';
+                el.style.fontWeight = 'normal';
             });
-            event.currentTarget.style.color = 'var(--accent-gold)';
-            event.currentTarget.style.fontWeight = '600';
-            event.currentTarget.style.background = 'rgba(244,196,48,0.06)';
-            // call main product setter (no btn needed)
+            if (btn) {
+                btn.style.border = '1px solid var(--accent-gold)';
+                btn.style.background = 'rgba(244,196,48,0.15)';
+                btn.style.color = 'var(--accent-gold)';
+                btn.style.fontWeight = '600';
+            }
             setGemelProduct(product, null);
         }
 
@@ -8258,17 +8248,19 @@
 
             var html = '';
             sorted.forEach(function(r, i) {
-                var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="color:var(--text-secondary);font-size:0.82rem;font-weight:600;">'+(i+1)+'.</span>';
-                var dn = r.name.length > 20 ? r.name.slice(0,20)+'…' : r.name;
-                var df = r.fund && r.fund !== r.name ? (r.fund.length > 22 ? r.fund.slice(0,22)+'…' : r.fund) : '';
-                html += '<div style="display:grid;grid-template-columns:1fr 58px 58px 58px 64px;gap:6px;padding:12px 4px;border-bottom:1px solid var(--border-color);align-items:center;">';
-                html += '<div style="min-width:0;"><div style="font-size:0.84rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + medal + ' ' + dn + '</div>';
-                if (df) html += '<div style="font-size:0.7rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px;">' + df + '</div>';
+                var rankLabel = gemelSort === 'fee'
+                    ? '<span style="color:var(--text-secondary);font-size:0.75rem;font-weight:600;min-width:16px;display:inline-block;">' + (i+1) + '.</span>'
+                    : (i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="color:var(--text-secondary);font-size:0.75rem;font-weight:600;min-width:16px;display:inline-block;">'+(i+1)+'.</span>');
+                var dn = r.name.length > 26 ? r.name.slice(0,26)+'…' : r.name;
+                var df = r.fund && r.fund !== r.name ? (r.fund.length > 20 ? r.fund.slice(0,20)+'…' : r.fund) : '';
+                html += '<div style="display:grid;grid-template-columns:1fr 50px 50px 50px 58px;gap:4px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.05);align-items:center;">';
+                html += '<div style="min-width:0;"><div style="font-size:0.82rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + rankLabel + ' ' + dn + '</div>';
+                if (df) html += '<div style="font-size:0.68rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;padding-right:20px;">' + df + '</div>';
                 html += '</div>';
-                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtPct(r.y1) + '</div>';
-                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtPct(r.y3) + '</div>';
-                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtPct(r.y5) + '</div>';
-                html += '<div style="text-align:center;font-size:0.84rem;">' + fmtFee(r.fee) + '</div>';
+                html += '<div style="text-align:center;font-size:0.82rem;">' + fmtPct(r.y1) + '</div>';
+                html += '<div style="text-align:center;font-size:0.82rem;">' + fmtPct(r.y3) + '</div>';
+                html += '<div style="text-align:center;font-size:0.82rem;">' + fmtPct(r.y5) + '</div>';
+                html += '<div style="text-align:center;font-size:0.82rem;">' + fmtFee(r.fee) + '</div>';
                 html += '</div>';
             });
             container.innerHTML = html;
