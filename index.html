@@ -1964,7 +1964,7 @@
 
             <!-- Compound Interest Calculator -->
             <div class="chart-card" data-no-toggle onclick="openCompoundSubpage()" style="cursor:pointer;">
-                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> מחשבון תשואה</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(16,185,129,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> מחשבון ריבית דריבית</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
             <!-- Capital Gains Tax Calculator -->
@@ -2460,11 +2460,12 @@
         <!-- Compound Interest Subpage -->
         <div id="subpageCompound" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
             <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
-                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
-                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מחשבון תשואה</span>
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מחשבון ריבית דריבית</span>
                     <button onclick="closeCompoundSubpage()" style="background:none;border:1px solid rgba(244,196,48,0.3);color:var(--accent-gold);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;display:flex;align-items:center;gap:4px;font-size:0.78rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
                 </div>
-                <div style="padding:0 16px 16px;">
+                <div style="padding:10px 16px 16px;">
+                    <!-- Main inputs -->
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                         <div>
                             <div class="retire-label">הון התחלתי (₪)</div>
@@ -2475,7 +2476,7 @@
                             <input type="text" inputmode="decimal" id="compMonthly" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcCompound()">
                         </div>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
                         <div>
                             <div class="retire-label">תשואה שנתית (%)</div>
                             <input type="text" inputmode="decimal" id="compRate" class="retire-input" placeholder="0" oninput="calcCompound()">
@@ -2485,12 +2486,36 @@
                             <input type="text" inputmode="decimal" id="compYears" class="retire-input" placeholder="0" oninput="calcCompound()">
                         </div>
                     </div>
+                    <!-- Management fees section -->
+                    <div style="border-top:1px solid var(--border-color);padding-top:10px;margin-bottom:12px;">
+                        <div style="font-size:0.7rem;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">דמי ניהול</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">
+                                <input type="checkbox" id="compFeeDepositCheck" onchange="toggleCompFeeInput('compFeeDeposit',this.checked); calcCompound()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-gold);">
+                                דמי ניהול מהפקדה
+                            </label>
+                            <div style="display:flex;align-items:center;gap:5px;">
+                                <input type="text" inputmode="decimal" id="compFeeDeposit" value="0.5" disabled class="retire-input" style="width:56px;text-align:center;opacity:0.4;" oninput="calcCompound()">
+                                <span style="font-size:0.75rem;color:var(--text-secondary);">%</span>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">
+                                <input type="checkbox" id="compFeeBalanceCheck" onchange="toggleCompFeeInput('compFeeBalance',this.checked); calcCompound()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-gold);">
+                                דמי ניהול מהצבירה
+                            </label>
+                            <div style="display:flex;align-items:center;gap:5px;">
+                                <input type="text" inputmode="decimal" id="compFeeBalance" value="1" disabled class="retire-input" style="width:56px;text-align:center;opacity:0.4;" oninput="calcCompound()">
+                                <span style="font-size:0.75rem;color:var(--text-secondary);">% שנתי</span>
+                            </div>
+                        </div>
+                    </div>
                     <div style="text-align:left;margin-bottom:14px;">
                         <button onclick="resetCompound()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
                     </div>
                     <div id="compoundResult" style="display:none;">
                         <div class="retire-main-card">
-                            <div class="retire-main-label">שווי עתידי</div>
+                            <div class="retire-main-label" id="compResultLabel">שווי עתידי</div>
                             <div class="retire-main-amount" id="compResultTotal">₪0</div>
                         </div>
                         <div class="retire-stats-grid">
@@ -2500,11 +2525,22 @@
                             </div>
                             <div class="retire-stat">
                                 <div class="retire-stat-value" style="color:var(--accent-green);" id="compResultProfit">—</div>
-                                <div class="retire-stat-label">רווח</div>
+                                <div class="retire-stat-label">רווח נטו</div>
                             </div>
                             <div class="retire-stat">
                                 <div class="retire-stat-value retire-stat-gold" id="compResultProfitPct">—</div>
                                 <div class="retire-stat-label">תשואה %</div>
+                            </div>
+                        </div>
+                        <!-- Fee impact row (shown when fees active) -->
+                        <div id="compFeeImpact" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.12);">
+                            <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:5px;">
+                                <span style="color:var(--text-secondary);">ללא דמי ניהול</span>
+                                <span style="font-weight:700;color:var(--text-primary);" id="compNoFeeTotal">₪0</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.75rem;">
+                                <span style="color:var(--text-secondary);">עלות דמי ניהול</span>
+                                <span style="font-weight:700;color:var(--accent-red);" id="compFeeCost">₪0</span>
                             </div>
                         </div>
                         <div style="margin-top:12px;">
@@ -6504,11 +6540,22 @@
         }
 
         // ============ Compound Interest Calculator ============
+        function toggleCompFeeInput(id, enabled) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.disabled = !enabled;
+            el.style.opacity = enabled ? '1' : '0.4';
+        }
+
         function calcCompound() {
-            var principal = parseNum(document.getElementById('compPrincipal').value) || 0;
-            var monthly   = parseNum(document.getElementById('compMonthly').value)   || 0;
-            var rate      = parseFloat((document.getElementById('compRate').value  || '').replace(/,/g,'')) || 0;
-            var years     = parseFloat((document.getElementById('compYears').value || '').replace(/,/g,'')) || 0;
+            var principal    = parseNum(document.getElementById('compPrincipal').value) || 0;
+            var monthly      = parseNum(document.getElementById('compMonthly').value)   || 0;
+            var rate         = parseFloat((document.getElementById('compRate').value  || '').replace(/,/g,'')) || 0;
+            var years        = parseFloat((document.getElementById('compYears').value || '').replace(/,/g,'')) || 0;
+            var feeDepositOn = document.getElementById('compFeeDepositCheck').checked;
+            var feeBalanceOn = document.getElementById('compFeeBalanceCheck').checked;
+            var feeDeposit   = feeDepositOn ? (parseFloat((document.getElementById('compFeeDeposit').value || '0').replace(/,/g,'')) || 0) : 0;
+            var feeBalance   = feeBalanceOn ? (parseFloat((document.getElementById('compFeeBalance').value || '0').replace(/,/g,'')) || 0) : 0;
 
             var resultEl = document.getElementById('compoundResult');
             if (rate <= 0 || years <= 0 || (principal <= 0 && monthly <= 0)) {
@@ -6516,23 +6563,49 @@
                 return;
             }
 
-            var r = rate / 100 / 12;   // monthly rate
-            var n = years * 12;        // total months
+            var n = years * 12; // total months
 
-            var fvPrincipal = principal * Math.pow(1 + r, n);
-            var fvMonthly   = monthly > 0 ? monthly * (Math.pow(1 + r, n) - 1) / r : 0;
-            var total       = fvPrincipal + fvMonthly;
-            var deposited   = principal + monthly * n;
-            var profit      = total - deposited;
-            var profitPct   = deposited > 0 ? (profit / deposited * 100) : 0;
-            var profitRatio = total > 0 ? Math.min(profit / total * 100, 100) : 0;
+            // With fees
+            var netRate = Math.max(0, rate - feeBalance); // annual net rate after balance fee
+            var r = netRate / 100 / 12; // monthly net rate
+            var effPrincipal = principal * (1 - feeDeposit / 100);
+            var effMonthly   = monthly  * (1 - feeDeposit / 100);
+            var fvPrincipal  = effPrincipal * Math.pow(1 + r, n);
+            var fvMonthly    = effMonthly > 0 && r > 0 ? effMonthly * (Math.pow(1 + r, n) - 1) / r :
+                               effMonthly > 0 ? effMonthly * n : 0;
+            var total        = fvPrincipal + fvMonthly;
+            var deposited    = principal + monthly * n;
+            var profit       = total - deposited;
+            var profitPct    = deposited > 0 ? (profit / deposited * 100) : 0;
+            var profitRatio  = total > 0 ? Math.min(profit / total * 100, 100) : 0;
+
+            // Without fees (for comparison)
+            var r0 = rate / 100 / 12;
+            var fvP0 = principal * Math.pow(1 + r0, n);
+            var fvM0 = monthly > 0 && r0 > 0 ? monthly * (Math.pow(1 + r0, n) - 1) / r0 : monthly * n;
+            var totalNoFee = fvP0 + fvM0;
+            var feeCost    = totalNoFee - total;
+            var hasAnyFee  = feeDeposit > 0 || feeBalance > 0;
+
+            var labelEl = document.getElementById('compResultLabel');
+            if (labelEl) labelEl.textContent = hasAnyFee ? 'שווי עתידי (אחרי דמי ניהול)' : 'שווי עתידי';
 
             document.getElementById('compResultTotal').textContent     = '₪' + Math.round(total).toLocaleString('he-IL');
             document.getElementById('compResultDeposited').textContent = '₪' + Math.round(deposited).toLocaleString('he-IL');
             document.getElementById('compResultProfit').textContent    = '₪' + Math.round(profit).toLocaleString('he-IL');
-            document.getElementById('compResultProfitPct').textContent = '+' + profitPct.toFixed(1) + '%';
+            document.getElementById('compResultProfitPct').textContent = (profit >= 0 ? '+' : '') + profitPct.toFixed(1) + '%';
             document.getElementById('compProfitPctLabel').textContent  = profitRatio.toFixed(1) + '%';
             document.getElementById('compProfitBar').style.width       = profitRatio + '%';
+
+            var feeImpactEl = document.getElementById('compFeeImpact');
+            if (feeImpactEl) {
+                feeImpactEl.style.display = hasAnyFee ? 'block' : 'none';
+                if (hasAnyFee) {
+                    document.getElementById('compNoFeeTotal').textContent = '₪' + Math.round(totalNoFee).toLocaleString('he-IL');
+                    document.getElementById('compFeeCost').textContent    = '−₪' + Math.round(feeCost).toLocaleString('he-IL');
+                }
+            }
+
             resultEl.style.display = 'block';
         }
 
@@ -6540,6 +6613,12 @@
             ['compPrincipal','compMonthly','compRate','compYears'].forEach(function(id) {
                 document.getElementById(id).value = '';
             });
+            ['compFeeDepositCheck','compFeeBalanceCheck'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.checked = false;
+            });
+            toggleCompFeeInput('compFeeDeposit', false);
+            toggleCompFeeInput('compFeeBalance', false);
             document.getElementById('compoundResult').style.display = 'none';
         }
 
