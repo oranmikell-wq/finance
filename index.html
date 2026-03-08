@@ -2387,7 +2387,7 @@
                     <button onclick="closeTrendsInsights()" style="background:none;border:1px solid rgba(244,196,48,0.3);color:var(--accent-gold);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;display:flex;align-items:center;gap:4px;font-size:0.78rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
                 </div>
                 <div style="padding:0 16px 16px;">
-                    <div id="trendsInsights" style="color:var(--text-secondary);font-size:0.8rem;text-align:center;padding:12px 0;">טוען...</div>
+                    <div id="trendsInsights" style="color:var(--text-secondary);font-size:0.8rem;padding:4px 0;display:flex;flex-direction:column;gap:8px;direction:rtl;">טוען...</div>
                 </div>
             </div>
         </div>
@@ -8706,9 +8706,9 @@
             };
             return ins.map(function(i) {
                 var c = colors[i.type] || colors.info;
-                return '<div style="padding:12px 14px;background:' + c.bg + ';border-radius:10px;border:1px solid ' + c.border + ';display:flex;gap:10px;align-items:flex-start;">' +
-                    '<span style="font-size:1.1rem;flex-shrink:0;margin-top:1px;">' + i.icon + '</span>' +
-                    '<div><div style="font-size:0.78rem;font-weight:700;color:' + c.label + ';margin-bottom:3px;">' + i.title + '</div>' +
+                return '<div style="padding:12px 14px;background:' + c.bg + ';border-radius:10px;border:1px solid ' + c.border + ';display:flex;flex-direction:row-reverse;gap:10px;align-items:flex-start;text-align:right;">' +
+                    '<span style="font-size:1.1rem;flex-shrink:0;line-height:1.4;">' + i.icon + '</span>' +
+                    '<div style="flex:1;min-width:0;"><div style="font-size:0.78rem;font-weight:700;color:' + c.label + ';margin-bottom:3px;">' + i.title + '</div>' +
                     '<div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">' + i.text + '</div></div></div>';
             }).join('');
         }
