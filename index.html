@@ -8051,13 +8051,16 @@
                 var fName  = findField(['SHEM_MASLUL','MASLUL','SHEM_KUP','NAME']);
                 var fFund  = findField(['SHEM_KUPA','KUPA_SHEM','SHEM_GUF','GUF']);
                 var fType  = findField(['SUG_KUPA','SUG','TYPE','SOOG']);
-                var fRet   = findField(['TSHUAT','TSUAH','TSUAT','RETURN','YIELD','ACHUZ']);
+                // fRet: monthly return field only — do NOT match trailing/annual yield fields
+                var fRet   = findField(['MONTHLY_YIELD','TSHUAT_MASLUL','TSUAT_HODESH','TSHUAT','TSUAH','TSUAT']);
                 var fFee   = findField(['DMEI','FEE','NIHUL','KAUPA']);
-                var fY3    = findField(['YIELD_TRAILING_3_YRS','YIELD_TRAILING_3','TSUA_3','TSUA3','TRAILING_3']);
-                var fY5    = findField(['YIELD_TRAILING_5_YRS','YIELD_TRAILING_5','TSUA_5','TSUA5','TRAILING_5']);
+                // Real trailing return fields from API
+                var fY1    = findField(['YIELD_TRAILING_1_YR','YIELD_TRAILING_1','AVG_ANNUAL_YIELD_TRAILING_1','ANNUAL_YIELD']);
+                var fY3    = findField(['YIELD_TRAILING_3_YRS','YIELD_TRAILING_3','TSUA_3','TSUA3']);
+                var fY5    = findField(['YIELD_TRAILING_5_YRS','YIELD_TRAILING_5','TSUA_5','TSUA5']);
                 var fDate2 = findField(['REPORT_PERIOD','TKUFA','HODESH','DATE','MONTH','YM','YYYYMM','PERIOD']);
 
-                if (!fRet) throw new Error('שדה תשואה לא נמצא. שדות זמינים: ' + fields.slice(0,6).join(', '));
+                if (!fRet && !fY1) throw new Error('שדה תשואה לא נמצא. שדות זמינים: ' + fields.slice(0,8).join(', '));
 
                 // Fetch all records for this product type
                 var allRecords = [];
@@ -8115,24 +8118,24 @@
                 };
 
                 var results = Object.values(groups).map(function(g) {
-                    if (!g.months.length) return null;
-
-                    // Sort by date desc, take only latest 12 months
-                    var sorted12 = g.months.slice().sort(function(a,b) {
-                        return (b.dt || '').localeCompare(a.dt || '');
-                    }).slice(0, 12);
-
-                    // Detect if data is already annual (avg monthly > 5% is suspicious)
-                    var avg = sorted12.reduce(function(s,m){ return s + m.ret; }, 0) / sorted12.length;
-                    var isAnnualData = Math.abs(avg) > 5;  // monthly returns are typically <5%
-
+                    // Try real trailing 1Y from latestRec first
+                    var y1Real = (fY1 && g.latestRec) ? parseFloat(g.latestRec[fY1]) : NaN;
                     var y1;
-                    if (isAnnualData) {
-                        // Data is probably already annual returns — use average of available years
-                        y1 = avg;
-                    } else {
-                        // True monthly data — compound exactly 12 months
+                    if (!isNaN(y1Real) && Math.abs(y1Real) > 0.01 && Math.abs(y1Real) < 150) {
+                        y1 = y1Real;
+                    } else if (g.months.length) {
+                        // Sort by date desc, take only latest 12 months
+                        var sorted12 = g.months.slice().sort(function(a,b) {
+                            return (b.dt || '').localeCompare(a.dt || '');
+                        }).slice(0, 12);
+
+                        // Only compound if we have enough months and values look like monthly returns (<5%)
+                        var avg = sorted12.reduce(function(s,m){ return s + m.ret; }, 0) / sorted12.length;
+                        if (Math.abs(avg) > 5) return null; // skip: looks like annual data leaked into fRet
+
                         y1 = compound(sorted12.map(function(m){ return m.ret; }));
+                    } else {
+                        return null;
                     }
 
                     if (y1 === null || Math.abs(y1) < 0.01) return null;
