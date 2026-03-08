@@ -2818,7 +2818,7 @@
                                 <div class="retire-stat-label">מס אפקטיבי</div>
                             </div>
                         </div>
-                        <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:10px;text-align:center;opacity:0.7;">מבוסס על מדרגות מס 2024 · ביטוח לאומי ובריאות לשכיר</div>
+                        <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:10px;text-align:center;opacity:0.7;">מבוסס על מדרגות מס 2025 · ביטוח לאומי ובריאות לשכיר</div>
                     </div>
                 </div>
             </div>
@@ -7459,8 +7459,8 @@
             var pension = gross * pensionPct / 100;
             var taxable = Math.max(0, gross - pension);
 
-            // Israel 2024 income tax brackets (monthly)
-            var brackets = [[6790,0.10],[9730,0.14],[15620,0.20],[21710,0.31],[45040,0.35],[58190,0.47],[Infinity,0.50]];
+            // Israel 2025 income tax brackets (monthly)
+            var brackets = [[7010,0.10],[10060,0.14],[16150,0.20],[21400,0.31],[44510,0.35],[60130,0.47],[Infinity,0.50]];
             var tax = 0, prev = 0, marginalRate = 10;
             for (var i = 0; i < brackets.length; i++) {
                 var ceil = brackets[i][0], rate = brackets[i][1];
