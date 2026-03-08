@@ -1978,6 +1978,11 @@
                 <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(139,92,246,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></div> מחשבון שכר</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
             </div>
 
+            <!-- FIRE Calculator -->
+            <div class="chart-card" data-no-toggle onclick="openFireSubpage()" style="cursor:pointer;">
+                <h3 style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between;"><span class="h3-label"><div class="settings-row-icon" style="background:rgba(251,146,60,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 6-6 6-6 12a6 6 0 0 0 12 0c0-6-6-6-6-12z"/><path d="M12 22v-4"/></svg></div> מחשבון FIRE</span><span style="color:var(--text-secondary);font-size:1.2rem;opacity:0.4;">›</span></h3>
+            </div>
+
 
           </div>
         </div>
@@ -2759,6 +2764,78 @@
             </div>
         </div>
     </div>
+
+        <!-- FIRE Calculator Subpage -->
+        <div id="subpageFire" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
+            <div class="chart-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                    <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">מחשבון FIRE</span>
+                    <button onclick="closeFireSubpage()" style="background:none;border:1px solid rgba(244,196,48,0.3);color:var(--accent-gold);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;display:flex;align-items:center;gap:4px;font-size:0.78rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
+                </div>
+                <div style="padding:0 16px 16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div style="grid-column:1/-1;">
+                            <div class="retire-label">הוצאות חודשיות בפרישה (₪)</div>
+                            <input type="text" inputmode="decimal" id="fireExpenses" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcFire()">
+                        </div>
+                        <div>
+                            <div class="retire-label">חיסכון קיים (₪)</div>
+                            <input type="text" inputmode="decimal" id="fireSavings" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcFire()">
+                        </div>
+                        <div>
+                            <div class="retire-label">הפקדה חודשית (₪)</div>
+                            <input type="text" inputmode="decimal" id="fireContrib" class="retire-input" placeholder="0" oninput="formatNumberInput(this); calcFire()">
+                        </div>
+                        <div>
+                            <div class="retire-label">תשואה שנתית %</div>
+                            <input type="number" inputmode="decimal" id="fireReturn" class="retire-input" placeholder="7" step="0.5" min="0" max="30" oninput="calcFire()">
+                        </div>
+                        <div>
+                            <div class="retire-label">אינפלציה %</div>
+                            <input type="number" inputmode="decimal" id="fireInflation" class="retire-input" placeholder="3" step="0.5" min="0" max="20" oninput="calcFire()">
+                        </div>
+                        <div>
+                            <div class="retire-label">גיל נוכחי (אופציונלי)</div>
+                            <input type="number" inputmode="numeric" id="fireAge" class="retire-input" placeholder="—" min="18" max="80" oninput="calcFire()">
+                        </div>
+                    </div>
+                    <div style="text-align:left;margin-bottom:12px;">
+                        <button onclick="resetFire()" style="font-size:0.72rem;padding:5px 12px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">איפוס</button>
+                    </div>
+                    <div id="fireResult" style="display:none;">
+                        <div class="retire-main-card">
+                            <div class="retire-main-label">יעד FIRE (כלל ה-4%)</div>
+                            <div class="retire-main-amount" id="fireTargetAmount">₪0</div>
+                        </div>
+                        <div class="retire-stats-grid" style="grid-template-columns:repeat(3,1fr);">
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-blue" id="fireYears">—</div>
+                                <div class="retire-stat-label">שנים לפרישה</div>
+                            </div>
+                            <div class="retire-stat" id="fireRetireAgeWrap" style="display:none;">
+                                <div class="retire-stat-value retire-stat-gold" id="fireRetireAge">—</div>
+                                <div class="retire-stat-label">גיל פרישה</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value" id="fireGap">—</div>
+                                <div class="retire-stat-label">חסר עד יעד</div>
+                            </div>
+                        </div>
+                        <div class="retire-stats-grid" style="margin-top:6px;">
+                            <div class="retire-stat">
+                                <div class="retire-stat-value retire-stat-gold" id="fireRealReturn">—</div>
+                                <div class="retire-stat-label">תשואה ריאלית</div>
+                            </div>
+                            <div class="retire-stat">
+                                <div class="retire-stat-value" style="color:var(--accent-green);">4%</div>
+                                <div class="retire-stat-label">שיעור משיכה</div>
+                            </div>
+                        </div>
+                        <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:10px;text-align:center;opacity:0.7;">מבוסס על כלל ה-4% (Trinity Study) · תשואה ריאלית אחרי אינפלציה</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Salary Calculator Subpage -->
         <div id="subpageSalary" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
@@ -7505,10 +7582,84 @@
             document.getElementById('salaryResult').style.display = 'none';
         }
 
+        // ============ FIRE CALCULATOR ============
+        function openFireSubpage() {
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            document.getElementById('subpageFire').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        function closeFireSubpage() {
+            var sub = document.getElementById('subpageFire');
+            if (sub.style.display === 'none') return;
+            sub.style.display = 'none';
+            document.getElementById('tabPersonal').classList.add('active');
+        }
+        function calcFire() {
+            var expenses = parseNum(document.getElementById('fireExpenses').value);
+            var savings  = parseNum(document.getElementById('fireSavings').value) || 0;
+            var contrib  = parseNum(document.getElementById('fireContrib').value) || 0;
+            var retNom   = parseFloat(document.getElementById('fireReturn').value);
+            if (isNaN(retNom)) retNom = 7;
+            var infl     = parseFloat(document.getElementById('fireInflation').value);
+            if (isNaN(infl)) infl = 3;
+            var age      = parseFloat(document.getElementById('fireAge').value);
+
+            if (!expenses || expenses <= 0) { document.getElementById('fireResult').style.display = 'none'; return; }
+
+            var fireTarget = expenses * 300; // monthly × 12 / 0.04
+
+            // Real (inflation-adjusted) monthly return
+            var realAnnual  = (1 + retNom/100) / (1 + infl/100) - 1;
+            var realMonthly = Math.pow(1 + realAnnual, 1/12) - 1;
+
+            var months = null;
+            if (savings >= fireTarget) {
+                months = 0;
+            } else if (realMonthly > 0 || contrib > 0) {
+                if (realMonthly > 0) {
+                    var r = realMonthly, gap = fireTarget - savings;
+                    var denom = savings * r + contrib;
+                    if (denom > 0) {
+                        var num = fireTarget * r + contrib;
+                        if (num > denom) months = Math.log(num / denom) / Math.log(1 + r);
+                    }
+                }
+                if (months === null) {
+                    var s = savings, m = 0;
+                    while (s < fireTarget && m < 1200) { s = s * (1 + realMonthly) + contrib; m++; }
+                    if (s >= fireTarget) months = m;
+                }
+            }
+
+            var fmt = function(n) { return '₪' + Math.round(n).toLocaleString('he-IL'); };
+            document.getElementById('fireResult').style.display = '';
+            document.getElementById('fireTargetAmount').textContent = fmt(fireTarget);
+            document.getElementById('fireGap').textContent = fmt(Math.max(0, fireTarget - savings));
+            document.getElementById('fireRealReturn').textContent = (realAnnual * 100).toFixed(1) + '%';
+
+            if (months !== null && months / 12 <= 100) {
+                var yrs = months / 12;
+                document.getElementById('fireYears').textContent = yrs < 1 ? 'פחות משנה' : yrs.toFixed(1) + ' שנים';
+                var ageWrap = document.getElementById('fireRetireAgeWrap');
+                if (!isNaN(age) && age > 0) {
+                    document.getElementById('fireRetireAge').textContent = 'גיל ' + Math.ceil(age + yrs);
+                    ageWrap.style.display = '';
+                } else { ageWrap.style.display = 'none'; }
+            } else {
+                document.getElementById('fireYears').textContent = '> 100 שנה';
+                document.getElementById('fireRetireAgeWrap').style.display = 'none';
+            }
+        }
+        function resetFire() {
+            ['fireExpenses','fireSavings','fireContrib','fireReturn','fireInflation','fireAge'].forEach(function(id) { document.getElementById(id).value = ''; });
+            document.getElementById('fireResult').style.display = 'none';
+        }
+
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
             closeBudgetSubpage();
             closeSalarySubpage();
+            closeFireSubpage();
             _trendsSubpageIds && _trendsSubpageIds.forEach(function(s) { var el = document.getElementById(s); if (el) el.style.display = 'none'; });
             closeMortgageSubpage();
             closeCompoundSubpage();
@@ -7516,6 +7667,7 @@
             closeMashlantaSubpage();
             document.getElementById('subpageBudget').style.display = 'none';
             document.getElementById('subpageSalary').style.display = 'none';
+            document.getElementById('subpageFire').style.display = 'none';
             document.getElementById('subpageMortgage').style.display = 'none';
             document.getElementById('subpageCompound').style.display = 'none';
             document.getElementById('subpageTax').style.display = 'none';
