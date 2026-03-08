@@ -1734,6 +1734,10 @@
         .budget-pill-label { font-size:0.6rem; color:var(--text-secondary); margin-bottom:2px; }
         .budget-pill-value { font-size:0.8rem; font-weight:700; }
         .budget-stacked-bar { height:8px; border-radius:4px; overflow:hidden; background:rgba(255,255,255,0.06); display:flex; margin-top:8px; }
+        .budget-section-label { font-size:0.68rem; color:var(--text-secondary); font-weight:600; letter-spacing:0.04em; margin-bottom:4px; }
+        .budget-add-btn { background:none; border:1px dashed rgba(255,255,255,0.12); color:var(--text-secondary); cursor:pointer; padding:5px 10px; border-radius:8px; font-size:0.72rem; width:100%; text-align:center; font-family:inherit; }
+        .budget-add-btn:active { background:rgba(255,255,255,0.04); }
+        body.light-mode .budget-add-btn { border-color:rgba(0,0,0,0.15) !important; }
         /* Retirement Calculator */
         .retire-label { font-size:0.75rem; color:var(--text-secondary); margin-bottom:6px; }
         .retire-input { width:100%; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:10px; color:var(--text-primary); font-family:inherit; font-size:0.9rem; box-sizing:border-box; transition:border-color 0.2s; }
@@ -2571,77 +2575,148 @@
         <!-- Budget Subpage -->
         <div id="subpageBudget" style="display:none;padding-top:12px;animation:fadeIn 0.25s ease;">
             <div class="chart-card budget-card" style="overflow:hidden;margin-bottom:16px;padding:0;">
-                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);margin-bottom:8px;">
+                <!-- Header -->
+                <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:10px 16px 8px;border-bottom:1px solid var(--border-color);">
                     <span style="font-size:1rem;font-weight:600;color:var(--text-primary);">תקציב חודשי</span>
                     <button onclick="closeBudgetSubpage()" style="background:none;border:1px solid rgba(244,196,48,0.3);color:var(--accent-gold);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;display:flex;align-items:center;gap:4px;font-size:0.78rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
                 </div>
-                <!-- Salary + Summary -->
-                <div style="padding:0 16px 8px;margin-top:6px;">
-                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">💵 שכר חודשי נטו</div>
-                    <input type="text" inputmode="decimal" id="profileSalary" placeholder="₪ 0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;font-weight:700;text-align:right;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
-                    <input type="hidden" id="profileExpenses">
-                    <!-- Stacked allocation bar -->
-                    <div id="budgetStackedBar" class="budget-stacked-bar" style="display:none;"></div>
-                    <!-- Summary pills -->
-                    <div id="budgetSummaryRow" style="display:none;gap:8px;margin-top:10px;">
-                        <div class="budget-pill" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.12);">
-                            <div class="budget-pill-label">הוצאות</div>
-                            <div class="budget-pill-value" id="budgetExpensesDisplay" style="color:var(--accent-red);">₪0</div>
+                <!-- Income Section -->
+                <div style="padding:10px 16px 8px;">
+                    <div class="budget-section-label">💵 הכנסות חודשיות</div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(16,185,129,0.12);">💼</span><span>שכר נטו</span></span>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <input type="text" inputmode="decimal" id="profileSalary" placeholder="₪ 0" class="budget-row-input" style="width:90px;" oninput="formatNumberInput(this); saveProfile(); calcBudget()">
+                            <button onclick="openSalaryCalc()" style="background:rgba(244,196,48,0.1);border:1px solid rgba(244,196,48,0.25);color:var(--accent-gold);cursor:pointer;padding:4px 8px;border-radius:7px;font-size:0.72rem;white-space:nowrap;font-family:inherit;">🧮 חשב</button>
                         </div>
-                        <div id="disposableDisplay" class="budget-pill">
-                            <div class="budget-pill-label">פנוי</div>
-                            <div class="budget-pill-value" id="disposableAmount">₪0</div>
-                            <div id="disposablePct" style="font-size:0.6rem;color:var(--text-secondary);margin-top:2px;"></div>
+                    </div>
+                    <div id="additionalIncomeRows"></div>
+                    <button onclick="addBudgetIncomeRow()" class="budget-add-btn" style="margin-top:6px;">+ הוסף הכנסה נוספת</button>
+                    <div id="totalIncomeRow" style="display:none;margin-top:8px;padding:7px 12px;border-radius:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:0.73rem;color:var(--text-secondary);">סה"כ הכנסות</span>
+                            <span style="font-size:0.9rem;font-weight:700;color:var(--accent-green);" id="totalIncomeDisplay">₪0</span>
                         </div>
                     </div>
                 </div>
-                <!-- Divider -->
-                <div style="height:1px;background:var(--border-color);"></div>
-                <!-- Expense breakdown -->
-                <div style="padding:6px 16px 10px;">
-                    <div style="font-size:0.68rem;color:var(--text-secondary);font-weight:600;letter-spacing:0.03em;margin-bottom:2px;">פירוט הוצאות</div>
-                    <div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(239,68,68,0.12);">🏠</span><span>דיור / שכ״ד</span></span>
+                <!-- Health Score + 50/30/20 -->
+                <div id="budgetHealthSection" style="display:none;padding:8px 16px 8px;border-top:1px solid var(--border-color);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                        <span style="font-size:0.72rem;color:var(--text-secondary);">ציון תקציבי</span>
+                        <span id="budgetScoreLabel" style="font-size:0.78rem;font-weight:700;"></span>
+                    </div>
+                    <div style="height:7px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.06);margin-bottom:10px;">
+                        <div id="budgetScoreFill" style="height:100%;border-radius:4px;transition:width 0.5s;width:0%;"></div>
+                    </div>
+                    <div style="font-size:0.67rem;color:var(--text-secondary);margin-bottom:3px;">כלל 50/30/20</div>
+                    <div style="height:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.06);display:flex;margin-bottom:5px;">
+                        <div id="b2030Needs" style="height:100%;background:#ef4444;transition:width 0.4s;width:0%;"></div>
+                        <div id="b2030Wants" style="height:100%;background:#f59e0b;transition:width 0.4s;width:0%;"></div>
+                        <div id="b2030Savings" style="height:100%;background:#10b981;transition:width 0.4s;width:0%;"></div>
+                    </div>
+                    <div id="b2030Labels" style="display:flex;gap:10px;font-size:0.64rem;"></div>
+                </div>
+                <!-- Fixed Expenses -->
+                <div style="padding:8px 16px 4px;border-top:1px solid var(--border-color);">
+                    <div class="budget-section-label">🏠 הוצאות קבועות</div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(239,68,68,0.12);">🏠</span><span>דיור / שכ״ד</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctHousing" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
                             <input type="text" inputmode="decimal" id="expHousing" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(245,158,11,0.12);">🚗</span><span>רכב ותחבורה</span></span>
-                            <input type="text" inputmode="decimal" id="expTransport" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(16,185,129,0.12);">🛒</span><span>מזון וסופר</span></span>
-                            <input type="text" inputmode="decimal" id="expFood" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(59,130,246,0.12);">🛡️</span><span>ביטוחים</span></span>
-                            <input type="text" inputmode="decimal" id="expInsurance" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(139,92,246,0.12);">📱</span><span>חשבונות שוטפים</span></span>
-                            <input type="text" inputmode="decimal" id="expBills" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(236,72,153,0.12);">🎓</span><span>חינוך</span></span>
-                            <input type="text" inputmode="decimal" id="expEducation" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
-                        </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(249,115,22,0.12);">💳</span><span>הלוואות / אשראי</span></span>
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(249,115,22,0.12);">💳</span><span>הלוואות / אשראי</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctDebt" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
                             <input type="text" inputmode="decimal" id="expDebt" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <div class="budget-row">
-                            <span class="budget-row-label"><span class="row-emoji" style="background:rgba(100,116,139,0.12);">📦</span><span>אחר</span></span>
-                            <input type="text" inputmode="decimal" id="expOther" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(59,130,246,0.12);">🛡️</span><span>ביטוחים</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctInsurance" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expInsurance" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
-                        <!-- Expense breakdown bars -->
-                        <div id="expenseBreakdownBars" style="display:none;margin-top:12px;"></div>
                     </div>
                 </div>
-                <!-- Actual savings -->
-                <div id="actualSavingsDisplay" style="display:none;margin:0 16px 16px;padding:10px 14px;border-radius:12px;text-align:center;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);">
-                    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">אחרי הפקדות לנכסים:</div>
-                    <div style="font-size:1.1rem;font-weight:700;" id="actualSavingsAmount">₪0</div>
+                <!-- Flexible Expenses -->
+                <div style="padding:6px 16px 4px;border-top:1px solid var(--border-color);">
+                    <div class="budget-section-label">🔄 הוצאות משתנות</div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(245,158,11,0.12);">🚗</span><span>רכב ותחבורה</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctTransport" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expTransport" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(16,185,129,0.12);">🛒</span><span>מזון וסופר</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctFood" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expFood" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(139,92,246,0.12);">📱</span><span>חשבונות שוטפים</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctBills" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expBills" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(236,72,153,0.12);">🎓</span><span>חינוך</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctEducation" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expEducation" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(100,116,139,0.12);">📦</span><span>אחר</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctOther" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expOther" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                    <div id="customCategoryRows"></div>
+                    <button onclick="addCustomBudgetCategory()" class="budget-add-btn" style="margin-top:6px;">+ הוסף קטגוריה</button>
                 </div>
+                <!-- Savings -->
+                <div style="padding:8px 16px 10px;border-top:1px solid var(--border-color);">
+                    <div class="budget-section-label">💰 חיסכון</div>
+                    <div class="budget-row" id="autoDepositsRow" style="display:none;">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(59,130,246,0.12);">📊</span><span>הפקדות לנכסים</span></span>
+                        <span style="font-size:0.82rem;font-weight:700;color:var(--accent-blue);" id="autoDepositsDisplay">₪0</span>
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(244,196,48,0.12);">💰</span><span>חיסכון נוסף</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctSavings" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expExtraSavings" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                </div>
+                <!-- Stacked bar -->
+                <div id="budgetStackedBar" class="budget-stacked-bar" style="display:none;margin:0 16px 10px;"></div>
+                <!-- Donut chart -->
+                <div id="budgetDonutSection" style="display:none;padding:10px 16px 6px;border-top:1px solid var(--border-color);">
+                    <div class="budget-section-label" style="margin-bottom:8px;">📊 פירוט הוצאות</div>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div style="flex-shrink:0;position:relative;">
+                            <svg id="budgetDonutSvg" width="90" height="90" viewBox="0 0 90 90"></svg>
+                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
+                                <div style="font-size:0.58rem;color:var(--text-secondary);">הוצאות</div>
+                                <div id="budgetDonutTotal" style="font-size:0.7rem;font-weight:700;color:var(--text-primary);white-space:nowrap;"></div>
+                            </div>
+                        </div>
+                        <div id="budgetDonutLegend" style="flex:1;font-size:0.68rem;display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;"></div>
+                    </div>
+                </div>
+                <!-- Summary pills -->
+                <div id="budgetSummaryRow" style="display:none;gap:6px;padding:0 16px 14px;"></div>
+                <!-- Hidden -->
+                <input type="hidden" id="profileExpenses">
             </div>
         </div>
     </div> <!-- end container -->
@@ -3957,6 +4032,10 @@
                 // ─── Stock ticker price fetch ───
         var stockDataCache = {}; // { ticker: { price, prevClose, dailyPct, name, currency, date } }
         var portfolioHoldings = []; // staging area while editing a portfolio in the modal
+        var budgetAdditionalIncome = [];
+        var budgetCustomCategories = [];
+        var budgetIncomeIdCounter = 0;
+        var budgetCatIdCounter = 0;
         var editingHoldingIdx = -1;  // index of holding currently being inline-edited (-1 = none)
 
         async function fetchStockPrice(ticker) {
@@ -5442,8 +5521,34 @@
         // Add event listeners for real estate calculations
         // ============ Profile & Greeting ============
         var expenseKeys = ['expHousing','expTransport','expFood','expInsurance','expBills','expEducation','expDebt','expOther'];
-        var expenseLabels = {expHousing:'🏠 דיור', expTransport:'🚗 רכב', expFood:'🛒 מזון', expInsurance:'🛡️ ביטוח', expBills:'📱 חשבונות', expEducation:'🎓 חינוך', expDebt:'💳 הלוואות', expOther:'📦 אחר'};
-        var expenseColors = {expHousing:'#ef4444', expTransport:'#f59e0b', expFood:'#10b981', expInsurance:'#3b82f6', expBills:'#8b5cf6', expEducation:'#ec4899', expDebt:'#f97316', expOther:'#64748b'};
+        var EXPENSE_DEFS = [
+            { key:'expHousing',   emoji:'🏠', label:'דיור',        color:'#ef4444', needs:true  },
+            { key:'expDebt',      emoji:'💳', label:'הלוואות',     color:'#f97316', needs:true  },
+            { key:'expInsurance', emoji:'🛡️', label:'ביטוחים',     color:'#3b82f6', needs:true  },
+            { key:'expTransport', emoji:'🚗', label:'רכב',          color:'#f59e0b', wants:true  },
+            { key:'expFood',      emoji:'🛒', label:'מזון',         color:'#10b981', needs:true  },
+            { key:'expBills',     emoji:'📱', label:'חשבונות',      color:'#8b5cf6', wants:true  },
+            { key:'expEducation', emoji:'🎓', label:'חינוך',        color:'#ec4899', wants:true  },
+            { key:'expOther',     emoji:'📦', label:'אחר',          color:'#64748b', wants:true  },
+        ];
+
+        function getBudgetAllExpenses() {
+            var result = [];
+            EXPENSE_DEFS.forEach(function(d) {
+                var val = parseNum(document.getElementById(d.key));
+                result.push({ key:d.key, emoji:d.emoji, label:d.label, color:d.color, needs:!!d.needs, wants:!!d.wants, amount:val });
+            });
+            budgetCustomCategories.forEach(function(c) {
+                result.push({ key:'custom_'+c.id, emoji:c.emoji||'📦', label:c.label||'קטגוריה', color:c.color||'#64748b', needs:false, wants:true, amount:c.amount||0 });
+            });
+            return result;
+        }
+
+        function calcBudgetTotalIncome() {
+            var salary = parseNum(document.getElementById('profileSalary'));
+            var extra = budgetAdditionalIncome.reduce(function(s,r){ return s+(r.amount||0); }, 0);
+            return salary + extra;
+        }
 
         function saveProfile() {
             var profile = {
@@ -5453,11 +5558,14 @@
                 gender: document.getElementById('profileGender').value,
                 salary: document.getElementById('profileSalary').value.trim()
             };
-            // Save expense breakdown
             expenseKeys.forEach(function(k) {
                 var el = document.getElementById(k);
                 if (el) profile[k] = el.value.trim();
             });
+            var esSavEl = document.getElementById('expExtraSavings');
+            if (esSavEl) profile.extraSavings = esSavEl.value.trim();
+            profile.additionalIncome = budgetAdditionalIncome.slice();
+            profile.customCategories = budgetCustomCategories.slice();
             try { localStorage.setItem('user-profile', JSON.stringify(profile)); } catch(e){}
             var msg = document.getElementById('profileSavedMsg');
             if (msg) { msg.style.opacity = '1'; setTimeout(function(){ msg.style.opacity = '0'; }, 1500); }
@@ -5495,12 +5603,22 @@
                     document.getElementById('profileAge').value = profile.age || '';
                     document.getElementById('profileGender').value = profile.gender || '';
                     document.getElementById('profileSalary').value = profile.salary || '';
-                    // Load expense breakdown
                     expenseKeys.forEach(function(k) {
                         var el = document.getElementById(k);
                         if (el && profile[k]) el.value = profile[k];
                     });
-                    // Legacy: load old single expenses field
+                    var esSavEl = document.getElementById('expExtraSavings');
+                    if (esSavEl && profile.extraSavings) esSavEl.value = profile.extraSavings;
+                    if (profile.additionalIncome && Array.isArray(profile.additionalIncome)) {
+                        budgetAdditionalIncome = profile.additionalIncome;
+                        budgetIncomeIdCounter = budgetAdditionalIncome.reduce(function(max,r){ return Math.max(max,r.id||0); }, 0);
+                        renderBudgetIncomeRows();
+                    }
+                    if (profile.customCategories && Array.isArray(profile.customCategories)) {
+                        budgetCustomCategories = profile.customCategories;
+                        budgetCatIdCounter = budgetCustomCategories.reduce(function(max,c){ return Math.max(max,c.id||0); }, 0);
+                        renderCustomCategoryRows();
+                    }
                     if (profile.expenses && !profile.expHousing) {
                         document.getElementById('expOther').value = profile.expenses;
                     }
@@ -5513,102 +5631,358 @@
         }
 
         function calcExpenses() {
-            var total = 0;
-            expenseKeys.forEach(function(k) {
-                total += parseNum(document.getElementById(k));
+            var totalIncome = calcBudgetTotalIncome();
+            var allExp = getBudgetAllExpenses();
+            var totalExp = allExp.reduce(function(s,e){ return s+e.amount; }, 0);
+            var extraSavings = parseNum(document.getElementById('expExtraSavings'));
+            var autoDeposits = assets.reduce(function(s,a){ return s+(a.monthly?toILS(a.monthly,a.monthlyCurrency||'ILS'):0); }, 0);
+            document.getElementById('profileExpenses').value = totalExp > 0 ? totalExp.toLocaleString('he-IL') : '';
+            var pctMap = { expHousing:'Housing', expDebt:'Debt', expInsurance:'Insurance', expTransport:'Transport', expFood:'Food', expBills:'Bills', expEducation:'Education', expOther:'Other' };
+            EXPENSE_DEFS.forEach(function(d) {
+                var el = document.getElementById('pct' + (pctMap[d.key]||''));
+                if (!el) return;
+                var amt = parseNum(document.getElementById(d.key));
+                if (totalIncome > 0 && amt > 0) {
+                    var p = amt/totalIncome*100;
+                    el.textContent = Math.round(p) + '%';
+                    el.style.color = (d.key==='expHousing' && p>33) || (d.key==='expDebt' && p>20) ? 'var(--accent-red)' : 'var(--text-secondary)';
+                } else { el.textContent = ''; }
             });
-            document.getElementById('profileExpenses').value = total > 0 ? total.toLocaleString('he-IL') : '';
-            var expDisplay = document.getElementById('budgetExpensesDisplay');
-            if (expDisplay) expDisplay.textContent = total > 0 ? '₪' + total.toLocaleString('he-IL', {maximumFractionDigits:0}) : '₪0';
+            var savEl = document.getElementById('pctSavings');
+            if (savEl) {
+                var totSavForPct = extraSavings + autoDeposits;
+                if (totalIncome > 0 && totSavForPct > 0) {
+                    savEl.textContent = Math.round(totSavForPct/totalIncome*100) + '%';
+                    savEl.style.color = 'var(--text-secondary)';
+                } else { savEl.textContent = ''; }
+            }
+            var autoRow = document.getElementById('autoDepositsRow');
+            var autoDisplay = document.getElementById('autoDepositsDisplay');
+            if (autoRow && autoDisplay) {
+                autoRow.style.display = autoDeposits > 0 ? 'flex' : 'none';
+                autoDisplay.textContent = '₪' + Math.round(autoDeposits).toLocaleString('he-IL');
+            }
+            var totalIncomeRow = document.getElementById('totalIncomeRow');
+            var totalIncomeDisplay = document.getElementById('totalIncomeDisplay');
+            if (totalIncomeRow && totalIncomeDisplay) {
+                var showTotal = totalIncome > 0 && budgetAdditionalIncome.length > 0;
+                totalIncomeRow.style.display = showTotal ? 'block' : 'none';
+                totalIncomeDisplay.textContent = '₪' + totalIncome.toLocaleString('he-IL', {maximumFractionDigits:0});
+            }
             saveProfile();
             calcBudget();
-            renderExpenseBars(total);
+            renderExpenseBars(totalExp, totalIncome, allExp, extraSavings, autoDeposits);
         }
 
-        function renderExpenseBars(total) {
-            var container = document.getElementById('expenseBreakdownBars');
+        function renderExpenseBars(totalExp, totalIncome, allExp, extraSavings, autoDeposits) {
             var stackedBar = document.getElementById('budgetStackedBar');
-            var salary = parseNum(document.getElementById('profileSalary'));
-            if (!container || total <= 0) {
-                if (container) container.style.display = 'none';
+            var donutSection = document.getElementById('budgetDonutSection');
+            if (totalExp <= 0) {
                 if (stackedBar) stackedBar.style.display = 'none';
+                if (donutSection) donutSection.style.display = 'none';
                 return;
             }
-            container.style.display = 'block';
-            // Stacked allocation bar (vs salary)
-            if (stackedBar && salary > 0) {
+            if (stackedBar && totalIncome > 0) {
                 stackedBar.style.display = 'flex';
                 var stackHtml = '';
-                expenseKeys.forEach(function(k) {
-                    var val = parseNum(document.getElementById(k));
-                    if (val <= 0) return;
-                    var pct = (val / salary * 100);
-                    stackHtml += '<div style="width:' + pct + '%;background:' + expenseColors[k] + ';height:100%;transition:width 0.4s;"></div>';
+                allExp.forEach(function(e) {
+                    if (e.amount <= 0) return;
+                    var pct = (e.amount / totalIncome * 100);
+                    stackHtml += '<div style="width:'+pct+'%;background:'+e.color+';height:100%;transition:width 0.4s;" title="'+e.label+'"></div>';
                 });
-                var remaining = salary - total;
-                if (remaining > 0) {
-                    stackHtml += '<div style="flex:1;background:rgba(16,185,129,0.35);height:100%;"></div>';
+                var totalSav = extraSavings + autoDeposits;
+                if (totalSav > 0) {
+                    stackHtml += '<div style="width:'+(totalSav/totalIncome*100)+'%;background:rgba(16,185,129,0.45);height:100%;"></div>';
                 }
                 stackedBar.innerHTML = stackHtml;
             } else if (stackedBar) {
                 stackedBar.style.display = 'none';
             }
-            // Individual breakdown bars
-            var html = '';
-            expenseKeys.forEach(function(k) {
-                var val = parseNum(document.getElementById(k));
-                if (val <= 0) return;
-                var pct = (val / total * 100).toFixed(1);
-                html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
-                    '<span style="font-size:0.7rem;width:72px;color:var(--text-secondary);white-space:nowrap;">' + expenseLabels[k] + '</span>' +
-                    '<div class="budget-bar-track" style="flex:1;"><div class="budget-bar-fill" style="width:' + pct + '%;background:' + expenseColors[k] + ';"></div></div>' +
-                    '<span style="font-size:0.7rem;color:var(--text-secondary);width:58px;text-align:left;">₪' + val.toLocaleString('he-IL') + '</span>' +
+            if (donutSection) {
+                donutSection.style.display = 'block';
+                renderBudgetDonut(allExp, totalExp);
+            }
+        }
+
+        function renderBudgetDonut(allExp, totalExp) {
+            var svg = document.getElementById('budgetDonutSvg');
+            var legend = document.getElementById('budgetDonutLegend');
+            var centerTotal = document.getElementById('budgetDonutTotal');
+            if (!svg || totalExp <= 0) return;
+            var cx=45, cy=45, r=32, sw=11;
+            var circ = 2 * Math.PI * r;
+            var active = allExp.filter(function(e){ return e.amount > 0; });
+            var html = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="'+sw+'"/>';
+            var cumAngle = -90;
+            active.forEach(function(e) {
+                var frac = e.amount / totalExp;
+                var dashLen = frac * circ;
+                var gap = circ - dashLen;
+                html += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+e.color+'" stroke-width="'+sw+'" stroke-linecap="butt" stroke-dasharray="'+dashLen.toFixed(2)+' '+gap.toFixed(2)+'" transform="rotate('+cumAngle.toFixed(2)+' '+cx+' '+cy+')" />';
+                cumAngle += frac * 360;
+            });
+            svg.innerHTML = html;
+            if (centerTotal) centerTotal.textContent = '₪' + Math.round(totalExp).toLocaleString('he-IL');
+            if (legend) {
+                var legHtml = '';
+                active.forEach(function(e) {
+                    var pct = (e.amount/totalExp*100).toFixed(0);
+                    legHtml += '<div style="display:flex;align-items:center;gap:4px;overflow:hidden;">'+
+                        '<div style="width:8px;height:8px;border-radius:50%;background:'+e.color+';flex-shrink:0;"></div>'+
+                        '<span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+e.emoji+' '+e.label+'</span>'+
+                        '<span style="font-weight:600;color:var(--text-primary);margin-right:auto;white-space:nowrap;margin-left:2px;">'+pct+'%</span>'+
                     '</div>';
+                });
+                legend.innerHTML = legHtml;
+            }
+        }
+
+        function calcBudget() {
+            var totalIncome = calcBudgetTotalIncome();
+            var allExp = getBudgetAllExpenses();
+            var totalExp = allExp.reduce(function(s,e){ return s+e.amount; }, 0);
+            var extraSavings = parseNum(document.getElementById('expExtraSavings'));
+            var autoDeposits = assets.reduce(function(s,a){ return s+(a.monthly?toILS(a.monthly,a.monthlyCurrency||'ILS'):0); }, 0);
+            var totalSavings = extraSavings + autoDeposits;
+            var disposable = totalIncome - totalExp - totalSavings;
+            var summaryRow = document.getElementById('budgetSummaryRow');
+            var healthSection = document.getElementById('budgetHealthSection');
+            if (totalIncome > 0) {
+                if (summaryRow) {
+                    summaryRow.style.display = 'flex';
+                    var pillHtml = '<div class="budget-pill" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.12);">'+
+                        '<div class="budget-pill-label">הוצאות</div>'+
+                        '<div class="budget-pill-value" style="color:var(--accent-red);">₪'+Math.round(totalExp).toLocaleString('he-IL',{maximumFractionDigits:0})+'</div>'+
+                        (totalExp>0?'<div style="font-size:0.58rem;color:var(--text-secondary);">'+Math.round(totalExp/totalIncome*100)+'% מההכנסה</div>':'')+
+                    '</div>';
+                    if (totalSavings > 0) {
+                        pillHtml += '<div class="budget-pill" style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);">'+
+                            '<div class="budget-pill-label">חיסכון</div>'+
+                            '<div class="budget-pill-value" style="color:var(--accent-green);">₪'+Math.round(totalSavings).toLocaleString('he-IL')+'</div>'+
+                            '<div style="font-size:0.58rem;color:var(--text-secondary);">'+Math.round(totalSavings/totalIncome*100)+'% מההכנסה</div>'+
+                        '</div>';
+                    }
+                    var isPos = disposable >= 0;
+                    pillHtml += '<div class="budget-pill" style="background:'+(isPos?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.08)')+';border:1px solid '+(isPos?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)')+';">'+
+                        '<div class="budget-pill-label">פנוי</div>'+
+                        '<div class="budget-pill-value" style="color:'+(isPos?'var(--accent-green)':'var(--accent-red)')+';">₪'+disposable.toLocaleString('he-IL',{maximumFractionDigits:0})+'</div>'+
+                        (totalExp>0?'<div style="font-size:0.58rem;color:var(--text-secondary);">'+Math.round(disposable/totalIncome*100)+'% מההכנסה</div>':'')+
+                    '</div>';
+                    summaryRow.innerHTML = pillHtml;
+                }
+                if (healthSection && totalExp > 0) {
+                    healthSection.style.display = 'block';
+                    calcBudgetHealthScore(totalIncome, totalExp, totalSavings, allExp);
+                    render5030(totalIncome, allExp, totalSavings);
+                } else if (healthSection) {
+                    healthSection.style.display = 'none';
+                }
+            } else {
+                if (summaryRow) summaryRow.style.display = 'none';
+                if (healthSection) healthSection.style.display = 'none';
+            }
+        }
+
+        function calcBudgetHealthScore(totalIncome, totalExp, totalSavings, allExp) {
+            var score = 0;
+            var savRate = totalSavings / totalIncome;
+            var expRate = totalExp / totalIncome;
+            var housingPct = parseNum(document.getElementById('expHousing')) / totalIncome;
+            var debtPct = parseNum(document.getElementById('expDebt')) / totalIncome;
+            var disposable = totalIncome - totalExp - totalSavings;
+            score += Math.min(30, Math.round(savRate * 150));
+            if (expRate <= 0.8) score += 20; else if (expRate <= 0.9) score += 10;
+            if (housingPct <= 0.3) score += 15; else if (housingPct <= 0.38) score += 7;
+            if (debtPct <= 0.1) score += 15; else if (debtPct <= 0.15) score += 8; else if (debtPct <= 0.2) score += 4;
+            if (disposable >= 0) score += 20; else if (disposable > -500) score += 5;
+            score = Math.max(0, Math.min(100, score));
+            var label = score >= 80 ? 'מצוין' : score >= 60 ? 'טוב' : score >= 40 ? 'לשיפור' : 'גרוע';
+            var color = score >= 80 ? 'var(--accent-green)' : score >= 60 ? '#f59e0b' : score >= 40 ? '#f97316' : 'var(--accent-red)';
+            var fill = document.getElementById('budgetScoreFill');
+            var lbl = document.getElementById('budgetScoreLabel');
+            if (fill) { fill.style.width = score + '%'; fill.style.background = color; }
+            if (lbl) { lbl.textContent = score + '/100 — ' + label; lbl.style.color = color; }
+        }
+
+        function render5030(totalIncome, allExp, totalSavings) {
+            var needsKeys = { expHousing:1, expDebt:1, expInsurance:1, expFood:1 };
+            var needsVal = 0, wantsVal = 0;
+            allExp.forEach(function(e) {
+                if (needsKeys[e.key]) needsVal += e.amount;
+                else wantsVal += e.amount;
+            });
+            var nP = totalIncome > 0 ? Math.min(needsVal/totalIncome*100, 100) : 0;
+            var wP = totalIncome > 0 ? Math.min(wantsVal/totalIncome*100, 100-nP) : 0;
+            var sP = totalIncome > 0 ? Math.min(totalSavings/totalIncome*100, 100-nP-wP) : 0;
+            var n = document.getElementById('b2030Needs'); var w = document.getElementById('b2030Wants'); var s = document.getElementById('b2030Savings');
+            if (n) n.style.width = nP + '%';
+            if (w) w.style.width = wP + '%';
+            if (s) s.style.width = sP + '%';
+            var labEl = document.getElementById('b2030Labels');
+            if (labEl) {
+                labEl.innerHTML =
+                    '<span style="color:#ef4444;">צרכים '+(totalIncome>0?(needsVal/totalIncome*100).toFixed(0):0)+'%</span>'+
+                    '<span style="color:#f59e0b;">רצונות '+(totalIncome>0?(wantsVal/totalIncome*100).toFixed(0):0)+'%</span>'+
+                    '<span style="color:#10b981;">חיסכון '+(totalIncome>0?(totalSavings/totalIncome*100).toFixed(0):0)+'%</span>';
+            }
+        }
+
+        function addBudgetIncomeRow() {
+            var id = ++budgetIncomeIdCounter;
+            budgetAdditionalIncome.push({ id:id, label:'', amount:0 });
+            renderBudgetIncomeRows();
+            saveProfile();
+        }
+
+        function removeBudgetIncomeRow(id) {
+            budgetAdditionalIncome = budgetAdditionalIncome.filter(function(r){ return r.id !== id; });
+            renderBudgetIncomeRows();
+            saveProfile();
+            calcExpenses();
+        }
+
+        function updateBudgetIncomeLabel(id, val) {
+            var row = budgetAdditionalIncome.find(function(r){ return r.id===id; });
+            if (row) { row.label = val; saveProfile(); }
+        }
+
+        function updateBudgetIncomeAmount(id, val) {
+            var row = budgetAdditionalIncome.find(function(r){ return r.id===id; });
+            if (row) { row.amount = parseNum({value:val}); saveProfile(); calcExpenses(); }
+        }
+
+        function renderBudgetIncomeRows() {
+            var container = document.getElementById('additionalIncomeRows');
+            if (!container) return;
+            var html = '';
+            budgetAdditionalIncome.forEach(function(r) {
+                html += '<div class="budget-row">'+
+                    '<input type="text" placeholder="תיאור הכנסה" value="'+escHtml(r.label||'')+'" style="flex:1;min-width:0;padding:5px 8px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.78rem;text-align:right;" oninput="updateBudgetIncomeLabel('+r.id+',this.value)">'+
+                    '<div style="display:flex;align-items:center;gap:5px;"><input type="text" inputmode="decimal" placeholder="₪ 0" value="'+(r.amount&&r.amount>0?r.amount.toLocaleString('he-IL'):'')+'" style="width:90px;padding:5px 9px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.82rem;text-align:right;box-sizing:border-box;" oninput="formatNumberInput(this); updateBudgetIncomeAmount('+r.id+',this.value)">'+
+                    '<button onclick="removeBudgetIncomeRow('+r.id+')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.1);border-radius:7px;color:var(--accent-red);cursor:pointer;padding:4px 6px;font-size:0.75rem;line-height:1;">✕</button></div>'+
+                '</div>';
             });
             container.innerHTML = html;
         }
 
-        function calcBudget() {
-            var salary = parseNum(document.getElementById('profileSalary'));
-            var expenses = parseNum(document.getElementById('profileExpenses'));
-            calcDisposable(salary, expenses);
-            calcActualSavings(salary, expenses);
+        var budgetCatColors = ['#a855f7','#06b6d4','#84cc16','#fb923c','#e879f9'];
+        var budgetCatEmojis = ['🎮','🎬','🍽','✈️','🏥','🐾','💇','🛍','🎁','🏋️'];
+
+        function addCustomBudgetCategory() {
+            var id = ++budgetCatIdCounter;
+            var emoji = budgetCatEmojis[budgetCustomCategories.length % budgetCatEmojis.length];
+            var color = budgetCatColors[budgetCustomCategories.length % budgetCatColors.length];
+            budgetCustomCategories.push({ id:id, label:'קטגוריה חדשה', emoji:emoji, color:color, amount:0 });
+            renderCustomCategoryRows();
+            saveProfile();
         }
 
-        function calcDisposable(salary, expenses) {
-            var display = document.getElementById('disposableDisplay');
-            var summaryRow = document.getElementById('budgetSummaryRow');
-            if (salary > 0) {
-                var disposable = salary - expenses;
-                var isPositive = disposable >= 0;
-                var color = isPositive ? 'var(--accent-green)' : 'var(--accent-red)';
-                if (summaryRow) summaryRow.style.display = 'flex';
-                display.style.background = isPositive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)';
-                display.style.border = '1px solid ' + (isPositive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)');
-                document.getElementById('disposableAmount').textContent = '₪' + disposable.toLocaleString('he-IL', {maximumFractionDigits: 0});
-                document.getElementById('disposableAmount').style.color = color;
-                if (expenses > 0) {
-                    document.getElementById('disposablePct').textContent = ((disposable / salary) * 100).toFixed(1) + '% מהשכר';
-                } else {
-                    document.getElementById('disposablePct').textContent = '';
-                }
-            } else {
-                if (summaryRow) summaryRow.style.display = 'none';
+        function removeCustomBudgetCategory(id) {
+            budgetCustomCategories = budgetCustomCategories.filter(function(c){ return c.id !== id; });
+            renderCustomCategoryRows();
+            saveProfile();
+            calcExpenses();
+        }
+
+        function updateCustomCatAmount(id, val) {
+            var cat = budgetCustomCategories.find(function(c){ return c.id===id; });
+            if (cat) { cat.amount = parseNum({value:val}); saveProfile(); calcExpenses(); }
+        }
+
+        function updateCustomCatLabel(id, val) {
+            var cat = budgetCustomCategories.find(function(c){ return c.id===id; });
+            if (cat) { cat.label = val; saveProfile(); }
+        }
+
+        function renderCustomCategoryRows() {
+            var container = document.getElementById('customCategoryRows');
+            if (!container) return;
+            var html = '';
+            budgetCustomCategories.forEach(function(c) {
+                html += '<div class="budget-row">'+
+                    '<span class="budget-row-label"><span class="row-emoji" style="background:rgba(100,116,139,0.12);">'+c.emoji+'</span>'+
+                    '<input type="text" value="'+escHtml(c.label||'')+'" style="border:none;background:none;color:var(--text-primary);font-family:inherit;font-size:0.78rem;width:90px;" oninput="updateCustomCatLabel('+c.id+',this.value)"></span>'+
+                    '<div style="display:flex;align-items:center;gap:5px;">'+
+                    '<button onclick="removeCustomBudgetCategory('+c.id+')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.1);border-radius:7px;color:var(--accent-red);cursor:pointer;padding:4px 6px;font-size:0.75rem;line-height:1;">✕</button>'+
+                    '<input type="text" inputmode="decimal" placeholder="₪ 0" value="'+(c.amount&&c.amount>0?c.amount.toLocaleString('he-IL'):'')+'" class="budget-row-input" oninput="formatNumberInput(this); updateCustomCatAmount('+c.id+',this.value)">'+
+                    '</div></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function escHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function openSalaryCalc() {
+            var existing = document.getElementById('salaryCalcModal');
+            if (existing) { existing.remove(); }
+            var modal = document.createElement('div');
+            modal.id = 'salaryCalcModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:10001;display:flex;align-items:center;justify-content:center;';
+            modal.onclick = function(e){ if(e.target===modal) modal.remove(); };
+            modal.innerHTML =
+                '<div style="background:var(--bg-card);border-radius:20px;width:88%;max-width:340px;padding:20px;box-shadow:0 8px 40px rgba(0,0,0,0.6);animation:slideUp 0.2s ease-out;direction:rtl;">'+
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">'+
+                '<div style="font-size:0.95rem;font-weight:700;">🧮 חישוב שכר נטו</div>'+
+                '<button onclick="document.getElementById(\'salaryCalcModal\').remove()" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.85rem;color:var(--text-primary);">✕</button>'+
+                '</div>'+
+                '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;">שכר גולמי חודשי (₪)</div>'+
+                '<input type="text" inputmode="decimal" id="scGross" placeholder="₪ 0" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:1rem;text-align:right;margin-bottom:12px;" oninput="formatNumberInput(this); calcSalaryModal()">'+
+                '<div id="scResult" style="display:none;padding:12px;border-radius:12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);">'+
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.75rem;margin-bottom:10px;">'+
+                '<div><div style="color:var(--text-secondary);font-size:0.62rem;">מס הכנסה</div><div id="scTax" style="font-weight:700;color:var(--accent-red);"></div></div>'+
+                '<div><div style="color:var(--text-secondary);font-size:0.62rem;">ביטוח לאומי + בריאות</div><div id="scNI" style="font-weight:700;color:var(--accent-red);"></div></div>'+
+                '</div>'+
+                '<div style="text-align:center;">'+
+                '<div style="font-size:0.68rem;color:var(--text-secondary);">שכר נטו משוער</div>'+
+                '<div id="scNet" style="font-size:1.5rem;font-weight:800;color:var(--accent-green);"></div>'+
+                '</div></div>'+
+                '<button onclick="applySalaryCalcResult()" id="scApplyBtn" style="display:none;width:100%;margin-top:10px;padding:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;color:var(--accent-green);font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">✓ השתמש בסכום זה</button>'+
+                '<div style="font-size:0.6rem;color:var(--text-secondary);margin-top:8px;text-align:center;">הערכה גסה לשנת 2024. ללא ניכויי פנסיה, קרנות וזיכויים ייחודיים.</div>'+
+                '</div>';
+            document.body.appendChild(modal);
+        }
+
+        function calcSalaryModal() {
+            var gross = parseNum(document.getElementById('scGross'));
+            if (gross <= 0) {
+                document.getElementById('scResult').style.display = 'none';
+                document.getElementById('scApplyBtn').style.display = 'none';
+                return;
             }
+            var r = calcNetSalary(gross);
+            document.getElementById('scTax').textContent = '₪' + Math.round(r.tax).toLocaleString('he-IL');
+            document.getElementById('scNI').textContent = '₪' + Math.round(r.ni).toLocaleString('he-IL');
+            document.getElementById('scNet').textContent = '₪' + Math.round(r.net).toLocaleString('he-IL');
+            document.getElementById('scResult').style.display = 'block';
+            document.getElementById('scApplyBtn').style.display = 'block';
         }
 
-        function calcActualSavings(salary, expenses) {
-            var display = document.getElementById('actualSavingsDisplay');
-            if (salary <= 0) { display.style.display = 'none'; return; }
-            var totalDeposits = assets.reduce(function(s, a) {
-                return s + (a.monthly ? toILS(a.monthly, a.monthlyCurrency || 'ILS') : 0);
-            }, 0);
-            if (totalDeposits <= 0) { display.style.display = 'none'; return; }
-            var actual = salary - expenses - totalDeposits;
-            var isPos = actual >= 0;
-            display.style.display = 'block';
-            document.getElementById('actualSavingsAmount').textContent = '₪' + actual.toLocaleString('he-IL', {maximumFractionDigits: 0});
-            document.getElementById('actualSavingsAmount').style.color = isPos ? 'var(--accent-blue)' : 'var(--accent-red)';
+        function calcNetSalary(gross) {
+            var annual = gross * 12, tax = 0, prev = 0;
+            [[75960,0.1],[108360,0.14],[173880,0.2],[241920,0.31],[502920,0.35],[698280,0.47],[Infinity,0.5]].forEach(function(b){
+                if (annual > prev) { tax += (Math.min(annual,b[0])-prev)*b[1]; prev=b[0]; }
+            });
+            tax = Math.max(0, tax - 2.25*2904) / 12;
+            var ni = gross <= 7522 ? gross*0.004 : 7522*0.004 + (Math.min(gross,49030)-7522)*0.07 + (gross>49030?gross-49030:0)*0.12;
+            var health = gross <= 6331 ? gross*0.031 : 6331*0.031 + (gross-6331)*0.05;
+            return { tax:tax, ni:ni+health, net:gross-tax-ni-health };
+        }
+
+        function applySalaryCalcResult() {
+            var gross = parseNum(document.getElementById('scGross'));
+            if (gross <= 0) return;
+            var r = calcNetSalary(gross);
+            var salInput = document.getElementById('profileSalary');
+            if (salInput) {
+                salInput.value = Math.round(r.net).toLocaleString('he-IL');
+                formatNumberInput(salInput);
+                saveProfile();
+                calcBudget();
+            }
+            var m = document.getElementById('salaryCalcModal');
+            if (m) m.remove();
         }
 
         // ============ Search / Filter ============
