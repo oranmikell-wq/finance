@@ -7779,22 +7779,7 @@
                 insContainer.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">הוסף נכסים כדי לראות תובנות</div>';
                 return;
             }
-
-            var insights = [];
-            var totalMonthly = assets.reduce(function(s,a) { return s + toILS(a.monthly || 0, a.monthlyCurrency || 'ILS'); }, 0);
-            if (totalMonthly > 0) {
-                insights.push('💰 סה"כ הפקדות חודשיות: ₪' + totalMonthly.toLocaleString('he-IL', {maximumFractionDigits: 0}) + ' (₪' + (totalMonthly * 12).toLocaleString('he-IL', {maximumFractionDigits: 0}) + ' בשנה)');
-            }
-            if (totalAll > 0) {
-                insights.push('📊 סה"כ שווי התיק: ₪' + totalAll.toLocaleString('he-IL', {maximumFractionDigits: 0}) + ' ($' + (totalAll / exchangeRate).toLocaleString('en-US', {maximumFractionDigits: 0}) + ')');
-            }
-            var avgRet = assets.length > 0 ? assets.reduce(function(s,a){return s+(a.return||0);},0) / assets.length : 0;
-            insights.push('📈 תשואה ממוצעת: ' + (avgRet >= 0 ? '+' : '') + avgRet.toFixed(1) + '%');
-            insights.push('🏦 מספר נכסים: ' + assets.length);
-
-            insContainer.innerHTML = insights.map(function(i) {
-                return '<div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.05);">' + i + '</div>';
-            }).join('');
+            insContainer.innerHTML = renderSmartInsights();
         }
 
         // ============ SORTING ============
@@ -8572,102 +8557,160 @@
             container.innerHTML = html;
         }
 
-        function generateInsights() {
-            const insightsGrid = document.getElementById('insightsGrid');
-            const insights = [];
-            
-            const total = assets.reduce((sum, a) => sum + toILS(a.value, a.currency || 'ILS'), 0);
-            
-            // Insight 1: Diversification
-            const assetTypes = new Set(assets.map(a => a.type)).size;
-            if (assetTypes < 3 && assets.length > 0) {
-                insights.push({
-                    icon: '🎯',
-                    title: 'פיזור נכסים',
-                    text: `יש לך ${assetTypes} סוגי נכסים בלבד. שקול להוסיף עוד סוגים לפיזור טוב יותר ולהפחתת סיכון.`
-                });
-            } else if (assetTypes >= 4) {
-                insights.push({
-                    icon: '✅',
-                    title: 'פיזור מצוין',
-                    text: `הפורטפוליו שלך מפוזר על פני ${assetTypes} סוגי נכסים - זה מצוין לניהול סיכונים!`
-                });
+        function renderSmartInsights() {
+            var total = assets.reduce(function(s,a){ return s + toILS(a.value||0, a.currency||'ILS'); }, 0);
+            if (total <= 0) return '<div style="text-align:center;color:var(--text-secondary);padding:20px;">הוסף נכסים כדי לראות תובנות</div>';
+
+            var ins = [];
+            var fmt  = function(n){ return '₪' + Math.round(n).toLocaleString('he-IL'); };
+            var fp   = function(n){ return n.toFixed(1) + '%'; };
+            var pct  = function(v){ return total > 0 ? v / total * 100 : 0; };
+
+            // ── breakdown by type ──
+            var byType = {};
+            assets.forEach(function(a){ var v = toILS(a.value||0, a.currency||'ILS'); byType[a.type] = (byType[a.type]||0) + v; });
+            var typeCount    = Object.keys(byType).length;
+            var cryptoVal    = byType['crypto']||0;
+            var realEstVal   = byType['real_estate']||0;
+            var pensionVal   = (byType['pension']||0)+(byType['gemel']||0)+(byType['fund']||0)+(byType['gemel_invest']||0);
+            var liquidVal    = (byType['savings']||0)+(byType['deposit']||0)+(byType['trade']||0);
+            var cryptoPct    = pct(cryptoVal);
+            var realEstPct   = pct(realEstVal);
+            var liquidPct    = pct(liquidVal);
+
+            // ── USD exposure ──
+            var usdVal = assets.reduce(function(s,a){ return s + (a.currency==='USD' ? toILS(a.value||0,'USD') : 0); }, 0);
+            var usdPct = pct(usdVal);
+
+            // ── largest single asset ──
+            var sorted = assets.slice().sort(function(a,b){ return toILS(b.value||0,b.currency||'ILS')-toILS(a.value||0,a.currency||'ILS'); });
+            var bigA = sorted[0], bigPct = bigA ? pct(toILS(bigA.value||0, bigA.currency||'ILS')) : 0;
+
+            // ── returns ──
+            var withRet = assets.filter(function(a){ return a.return!=null && !isNaN(a.return); });
+            var avgRet  = withRet.length ? withRet.reduce(function(s,a){ return s+(a.return||0); },0)/withRet.length : null;
+            var bestA   = withRet.slice().sort(function(a,b){ return (b.return||0)-(a.return||0); })[0];
+            var worstA  = withRet.slice().sort(function(a,b){ return (a.return||0)-(b.return||0); })[0];
+
+            // ── monthly savings ──
+            var totalMonthly = assets.reduce(function(s,a){ return s + toILS(a.monthly||0, a.monthlyCurrency||'ILS'); }, 0);
+
+            // ── fees ──
+            var highFeeAssets = assets.filter(function(a){ return (a.managementFee||0) > 1.0; });
+            var feeCost = highFeeAssets.reduce(function(s,a){ return s + toILS(a.value||0,a.currency||'ILS')*(a.managementFee||0)/100; }, 0);
+
+            // ── history ──
+            var history = [];
+            try { history = JSON.parse(localStorage.getItem('portfolio-history')||'[]'); } catch(e){}
+            var monthChange = null, yearChange = null;
+            if (history.length >= 2) {
+                var now = new Date();
+                var mCut = new Date(now); mCut.setMonth(now.getMonth()-1);
+                var yCut = new Date(now); yCut.setFullYear(now.getFullYear()-1);
+                var mStr = mCut.toISOString().slice(0,10), yStr = yCut.toISOString().slice(0,10);
+                var mE = history.filter(function(h){ return h.date >= mStr; })[0];
+                var yE = history.filter(function(h){ return h.date >= yStr; })[0];
+                if (mE && mE.value > 0) monthChange = (total - mE.value) / mE.value * 100;
+                if (yE && yE.value > 0) yearChange  = (total - yE.value) / yE.value * 100;
             }
-            
-            // Insight 2: Crypto exposure
-            const cryptoTotal = assets
-                .filter(a => a.type === 'crypto')
-                .reduce((sum, a) => sum + toILS(a.value, a.currency || 'ILS'), 0);
-            const cryptoPercent = total > 0 ? (cryptoTotal / total) * 100 : 0;
-            
-            if (cryptoPercent > 20) {
-                insights.push({
-                    icon: '⚠️',
-                    title: 'חשיפה לקריפטו',
-                    text: `${cryptoPercent.toFixed(1)}% מהפורטפוליו שלך בקריפטו - זה נכס תנודתי. שקול איזון.`
-                });
+
+            // ════ BUILD INSIGHTS ════
+            // Monthly portfolio change
+            if (monthChange !== null) {
+                var pos = monthChange >= 0;
+                ins.push({ type: pos?'achievement':'warning', icon: pos?'📈':'📉', title: 'שינוי חודשי',
+                    text: (pos?'+':'') + fp(monthChange) + ' בחודש האחרון (' + fmt(Math.abs(total*monthChange/100)) + (pos?' רווח':' הפסד') + ')' });
             }
-            
-            // Insight 3: Real estate
-            const realEstateTotal = assets
-                .filter(a => a.type === 'real_estate')
-                .reduce((sum, a) => sum + toILS(a.value, a.currency || 'ILS'), 0);
-            const realEstatePercent = total > 0 ? (realEstateTotal / total) * 100 : 0;
-            
-            if (realEstatePercent > 50) {
-                insights.push({
-                    icon: '🏠',
-                    title: 'ריכוז בנדל"ן',
-                    text: `${realEstatePercent.toFixed(1)}% מהנכסים שלך בנדל"ן - שקול פיזור גם לנכסים נזילים יותר.`
-                });
+            // Annual change
+            if (yearChange !== null) {
+                ins.push({ type: yearChange>=0?'achievement':'warning', icon: yearChange>=0?'🚀':'⚠️', title: 'שינוי שנתי',
+                    text: (yearChange>=0?'+':'') + fp(yearChange) + ' ב-12 חודשים האחרונים (' + fmt(Math.abs(total*yearChange/100)) + ')' });
             }
-            
-            // Insight 4: Returns
-            const avgReturn = assets.length > 0
-                ? assets.reduce((sum, a) => sum + a.return, 0) / assets.length
-                : 0;
-            
-            if (avgReturn > 7) {
-                insights.push({
-                    icon: '🚀',
-                    title: 'תשואה מעולה',
-                    text: `תשואה ממוצעת של ${avgReturn.toFixed(1)}% - המשך כך! זה מעל הממוצע בשוק.`
-                });
-            } else if (avgReturn < 3 && assets.length > 0) {
-                insights.push({
-                    icon: '💡',
-                    title: 'שיפור תשואה',
-                    text: `תשואה ממוצעת של ${avgReturn.toFixed(1)}% - שקול נכסים עם פוטנציאל גבוה יותר.`
-                });
+            // Crypto warning
+            if (cryptoPct > 20) {
+                ins.push({ type:'warning', icon:'₿', title:'חשיפה גבוהה לקריפטו',
+                    text: fp(cryptoPct) + ' מהתיק בקריפטו — נכס תנודתי מאוד. מומלץ עד 10–15% בתיק מאוזן.' });
             }
-            
-            // Insight 5: Total wealth
-            if (total > 1000000) {
-                insights.push({
-                    icon: '🎉',
-                    title: 'יעד מיליון!',
-                    text: `מזל טוב! עברת את רף המיליון. סך הנכסים שלך: ₪${(total/1000000).toFixed(2)}M`
-                });
+            // Concentration
+            if (bigPct > 45 && assets.length > 1) {
+                ins.push({ type:'warning', icon:'🎯', title:'ריכוז גבוה בנכס יחיד',
+                    text: '"' + (bigA.name||'') + '" מהווה ' + fp(bigPct) + ' מהתיק. ריכוז מעל 45% מגדיל סיכון.' });
             }
-            
-            // Default insight if none
-            if (insights.length === 0) {
-                insights.push({
-                    icon: '📊',
-                    title: 'התחל לבנות',
-                    text: 'הוסף עוד נכסים כדי לקבל תובנות והמלצות מותאמות אישית לפורטפוליו שלך.'
-                });
+            // Real estate
+            if (realEstPct > 55) {
+                ins.push({ type:'tip', icon:'🏠', title:'ריכוז בנדל"ן',
+                    text: fp(realEstPct) + ' מהנכסים בנדל"ן — לא נזיל. מומלץ לשמור נכסים נזילים במקביל.' });
             }
-            
-            insightsGrid.innerHTML = insights.map(insight => `
-                <div class="insight-card">
-                    <div class="insight-content">
-                        <div class="insight-icon">${insight.icon}</div>
-                        <div class="insight-title">${insight.title}</div>
-                        <div class="insight-text">${insight.text}</div>
-                    </div>
-                </div>
-            `).join('');
+            // No pension
+            if (!byType['pension'] && !byType['gemel'] && !byType['fund'] && !byType['gemel_invest']) {
+                ins.push({ type:'warning', icon:'🏦', title:'חיסכון פנסיוני לא מזוהה',
+                    text: 'לא נמצא חיסכון פנסיוני. פנסיה / גמל / קרן השתלמות הם חסכונות עם הטבות מס משמעותיות.' });
+            }
+            // Emergency fund / liquidity
+            if (liquidPct < 5 && total > 80000) {
+                ins.push({ type:'tip', icon:'💧', title:'קרן חירום',
+                    text: 'פחות מ-5% מהתיק בנכסים נזילים. מומלץ לשמור 3–6 משכורות חודשיות בחיסכון נגיש.' });
+            }
+            // High management fees
+            if (highFeeAssets.length > 0) {
+                ins.push({ type:'tip', icon:'💸', title:'דמי ניהול גבוהים',
+                    text: highFeeAssets.length + ' נכסים עם דמי ניהול מעל 1%. עלות שנתית מוערכת: ' + fmt(feeCost) + '.' });
+            }
+            // No USD exposure
+            if (usdPct < 5 && total > 150000) {
+                ins.push({ type:'tip', icon:'🌍', title:'כל התיק בשקלים',
+                    text: 'כמעט אפס חשיפה למטבע חוץ. חשיפה דולרית יכולה לגדר סיכון מקרו-כלכלי.' });
+            }
+            // Best performer
+            if (bestA && (bestA.return||0) > 8) {
+                ins.push({ type:'achievement', icon:'🏆', title:'מוביל תשואה',
+                    text: '"' + (bestA.name||'') + '" מוביל עם +' + fp(bestA.return||0) });
+            }
+            // Worst performer
+            if (worstA && (worstA.return||0) < -5) {
+                ins.push({ type:'warning', icon:'📉', title:'תשואה שלילית',
+                    text: '"' + (worstA.name||'') + '" עם ' + fp(worstA.return||0) + ' — שקול בחינה מחדש.' });
+            }
+            // Good diversification
+            if (typeCount >= 4 && cryptoPct <= 20 && bigPct <= 45) {
+                ins.push({ type:'achievement', icon:'✅', title:'פיזור תיק טוב',
+                    text: typeCount + ' סוגי נכסים, ללא ריכוז מופרז — אחד הגורמים החשובים ביותר לניהול סיכון.' });
+            }
+            // Monthly savings
+            if (totalMonthly > 0) {
+                ins.push({ type:'info', icon:'💰', title:'קצב חיסכון',
+                    text: fmt(totalMonthly) + ' לחודש — ' + fmt(totalMonthly*12) + ' בשנה. שיעור שנתי מהתיק: ' + fp(totalMonthly*12/total*100) });
+            }
+            // Million milestone
+            if (total >= 1000000) {
+                ins.push({ type:'achievement', icon:'🎉', title:'מעל מיליון',
+                    text: 'סך התיק: ' + fmt(total) + '. מזל טוב!' });
+            }
+            // Average return summary
+            if (avgRet !== null) {
+                var retGood = avgRet > 6;
+                ins.push({ type: retGood?'achievement':'info', icon:'📊', title:'תשואה ממוצעת',
+                    text: (avgRet>=0?'+':'') + fp(avgRet) + ' ממוצע על ' + withRet.length + ' נכסים' + (retGood?' — מעל ממוצע השוק':'') });
+            }
+
+            if (!ins.length) {
+                ins.push({ type:'info', icon:'📊', title:'הוסף נכסים', text: 'הוסף עוד נכסים כדי לקבל תובנות מותאמות אישית.' });
+            }
+
+            // ── Render ──
+            var colors = {
+                warning:     { bg:'rgba(239,68,68,0.08)',   border:'rgba(239,68,68,0.25)',   label:'var(--accent-red)' },
+                achievement: { bg:'rgba(16,185,129,0.08)',  border:'rgba(16,185,129,0.25)',  label:'var(--accent-green)' },
+                tip:         { bg:'rgba(59,130,246,0.08)',  border:'rgba(59,130,246,0.25)',  label:'#60a5fa' },
+                info:        { bg:'rgba(244,196,48,0.07)',  border:'rgba(244,196,48,0.2)',   label:'var(--accent-gold)' }
+            };
+            return ins.map(function(i) {
+                var c = colors[i.type] || colors.info;
+                return '<div style="padding:12px 14px;background:' + c.bg + ';border-radius:10px;border:1px solid ' + c.border + ';display:flex;gap:10px;align-items:flex-start;">' +
+                    '<span style="font-size:1.1rem;flex-shrink:0;margin-top:1px;">' + i.icon + '</span>' +
+                    '<div><div style="font-size:0.78rem;font-weight:700;color:' + c.label + ';margin-bottom:3px;">' + i.title + '</div>' +
+                    '<div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">' + i.text + '</div></div></div>';
+            }).join('');
         }
 
         function exportData() {
