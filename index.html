@@ -2489,24 +2489,28 @@
                     <!-- Management fees section -->
                     <div style="border-top:1px solid var(--border-color);padding-top:10px;margin-bottom:12px;">
                         <div style="font-size:0.7rem;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">דמי ניהול</div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">
+                        <div style="margin-bottom:8px;">
+                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);margin-bottom:6px;">
                                 <input type="checkbox" id="compFeeDepositCheck" onchange="toggleCompFeeInput('compFeeDeposit',this.checked); calcCompound()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-gold);">
                                 דמי ניהול מהפקדה
                             </label>
-                            <div style="display:flex;align-items:center;gap:5px;">
-                                <input type="text" inputmode="decimal" id="compFeeDeposit" value="0.5" disabled class="retire-input" style="width:56px;text-align:center;opacity:0.4;" oninput="calcCompound()">
-                                <span style="font-size:0.75rem;color:var(--text-secondary);">%</span>
+                            <div id="compFeeDepositWrap" style="display:none;padding-right:22px;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <input type="text" inputmode="decimal" id="compFeeDeposit" value="0.5" class="retire-input" style="width:80px;text-align:center;" oninput="calcCompound()">
+                                    <span style="font-size:0.78rem;color:var(--text-secondary);">% מכל הפקדה</span>
+                                </div>
                             </div>
                         </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;">
-                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);">
+                        <div>
+                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);margin-bottom:6px;">
                                 <input type="checkbox" id="compFeeBalanceCheck" onchange="toggleCompFeeInput('compFeeBalance',this.checked); calcCompound()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-gold);">
                                 דמי ניהול מהצבירה
                             </label>
-                            <div style="display:flex;align-items:center;gap:5px;">
-                                <input type="text" inputmode="decimal" id="compFeeBalance" value="1" disabled class="retire-input" style="width:56px;text-align:center;opacity:0.4;" oninput="calcCompound()">
-                                <span style="font-size:0.75rem;color:var(--text-secondary);">% שנתי</span>
+                            <div id="compFeeBalanceWrap" style="display:none;padding-right:22px;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <input type="text" inputmode="decimal" id="compFeeBalance" value="1" class="retire-input" style="width:80px;text-align:center;" oninput="calcCompound()">
+                                    <span style="font-size:0.78rem;color:var(--text-secondary);">% שנתי מהיתרה</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -6541,10 +6545,8 @@
 
         // ============ Compound Interest Calculator ============
         function toggleCompFeeInput(id, enabled) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            el.disabled = !enabled;
-            el.style.opacity = enabled ? '1' : '0.4';
+            var wrap = document.getElementById(id + 'Wrap');
+            if (wrap) wrap.style.display = enabled ? 'block' : 'none';
         }
 
         function calcCompound() {
@@ -6552,10 +6554,8 @@
             var monthly      = parseNum(document.getElementById('compMonthly').value)   || 0;
             var rate         = parseFloat((document.getElementById('compRate').value  || '').replace(/,/g,'')) || 0;
             var years        = parseFloat((document.getElementById('compYears').value || '').replace(/,/g,'')) || 0;
-            var feeDepositOn = document.getElementById('compFeeDepositCheck').checked;
-            var feeBalanceOn = document.getElementById('compFeeBalanceCheck').checked;
-            var feeDeposit   = feeDepositOn ? (parseFloat((document.getElementById('compFeeDeposit').value || '0').replace(/,/g,'')) || 0) : 0;
-            var feeBalance   = feeBalanceOn ? (parseFloat((document.getElementById('compFeeBalance').value || '0').replace(/,/g,'')) || 0) : 0;
+            var feeDeposit = document.getElementById('compFeeDepositCheck').checked ? (parseFloat((document.getElementById('compFeeDeposit').value || '0').replace(/,/g,'')) || 0) : 0;
+            var feeBalance = document.getElementById('compFeeBalanceCheck').checked ? (parseFloat((document.getElementById('compFeeBalance').value || '0').replace(/,/g,'')) || 0) : 0;
 
             var resultEl = document.getElementById('compoundResult');
             if (rate <= 0 || years <= 0 || (principal <= 0 && monthly <= 0)) {
@@ -6619,6 +6619,8 @@
             });
             toggleCompFeeInput('compFeeDeposit', false);
             toggleCompFeeInput('compFeeBalance', false);
+            document.getElementById('compFeeDeposit').value = '0.5';
+            document.getElementById('compFeeBalance').value = '1';
             document.getElementById('compoundResult').style.display = 'none';
         }
 
