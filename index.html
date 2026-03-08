@@ -2488,25 +2488,20 @@
                     </div>
                     <!-- Management fees section -->
                     <div style="border-top:1px solid var(--border-color);padding-top:10px;margin-bottom:12px;">
-                        <div style="font-size:0.7rem;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">דמי ניהול</div>
-                        <div style="margin-bottom:8px;">
-                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);margin-bottom:6px;">
-                                <input type="checkbox" id="compFeeDepositCheck" onchange="toggleCompFeeInput('compFeeDeposit',this.checked); calcCompound()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-gold);">
-                                דמי ניהול מהפקדה
-                            </label>
-                            <div id="compFeeDepositWrap" style="display:none;padding-right:22px;">
+                        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);margin-bottom:6px;">
+                            <input type="checkbox" id="compFeeCheck" onchange="toggleCompFeeInput('compFee',this.checked); calcCompound()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-gold);">
+                            דמי ניהול
+                        </label>
+                        <div id="compFeeWrap" style="display:none;padding-right:22px;">
+                            <div style="margin-bottom:8px;">
+                                <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;">מהפקדה</div>
                                 <div style="display:flex;align-items:center;gap:8px;">
                                     <input type="text" inputmode="decimal" id="compFeeDeposit" value="0.5" class="retire-input" style="width:80px;text-align:center;" oninput="calcCompound()">
                                     <span style="font-size:0.78rem;color:var(--text-secondary);">% מכל הפקדה</span>
                                 </div>
                             </div>
-                        </div>
-                        <div>
-                            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);margin-bottom:6px;">
-                                <input type="checkbox" id="compFeeBalanceCheck" onchange="toggleCompFeeInput('compFeeBalance',this.checked); calcCompound()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-gold);">
-                                דמי ניהול מהצבירה
-                            </label>
-                            <div id="compFeeBalanceWrap" style="display:none;padding-right:22px;">
+                            <div>
+                                <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;">מצבירה</div>
                                 <div style="display:flex;align-items:center;gap:8px;">
                                     <input type="text" inputmode="decimal" id="compFeeBalance" value="1" class="retire-input" style="width:80px;text-align:center;" oninput="calcCompound()">
                                     <span style="font-size:0.78rem;color:var(--text-secondary);">% שנתי מהיתרה</span>
@@ -6554,8 +6549,9 @@
             var monthly      = parseNum(document.getElementById('compMonthly').value)   || 0;
             var rate         = parseFloat((document.getElementById('compRate').value  || '').replace(/,/g,'')) || 0;
             var years        = parseFloat((document.getElementById('compYears').value || '').replace(/,/g,'')) || 0;
-            var feeDeposit = document.getElementById('compFeeDepositCheck').checked ? (parseFloat((document.getElementById('compFeeDeposit').value || '0').replace(/,/g,'')) || 0) : 0;
-            var feeBalance = document.getElementById('compFeeBalanceCheck').checked ? (parseFloat((document.getElementById('compFeeBalance').value || '0').replace(/,/g,'')) || 0) : 0;
+            var feeChecked  = document.getElementById('compFeeCheck').checked;
+            var feeDeposit = feeChecked ? (parseFloat((document.getElementById('compFeeDeposit').value || '0').replace(/,/g,'')) || 0) : 0;
+            var feeBalance = feeChecked ? (parseFloat((document.getElementById('compFeeBalance').value || '0').replace(/,/g,'')) || 0) : 0;
 
             var resultEl = document.getElementById('compoundResult');
             if (rate <= 0 || years <= 0 || (principal <= 0 && monthly <= 0)) {
@@ -6613,12 +6609,9 @@
             ['compPrincipal','compMonthly','compRate','compYears'].forEach(function(id) {
                 document.getElementById(id).value = '';
             });
-            ['compFeeDepositCheck','compFeeBalanceCheck'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.checked = false;
-            });
-            toggleCompFeeInput('compFeeDeposit', false);
-            toggleCompFeeInput('compFeeBalance', false);
+            var feeCheck = document.getElementById('compFeeCheck');
+            if (feeCheck) feeCheck.checked = false;
+            toggleCompFeeInput('compFee', false);
             document.getElementById('compFeeDeposit').value = '0.5';
             document.getElementById('compFeeBalance').value = '1';
             document.getElementById('compoundResult').style.display = 'none';
