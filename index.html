@@ -4874,12 +4874,12 @@
                 if (lines.length < 2) return null;
                 var last = lines[lines.length - 1].split(',');
                 var close = parseFloat(last[5]);
-                var open  = parseFloat(last[2]);
-                return (close > 0) ? { price: close, open: open } : null;
+                var changePct = parseFloat((last[7] || '').replace('%', ''));
+                return (close > 0) ? { price: close, changePct: changePct } : null;
             }
 
             // Sources 1-3: Stooq (direct + 2 CORS proxies)
-            var stooqBaseTA = 'https://stooq.com/q/l/?s=^ta125&f=sd2ohlcv&h&e=csv';
+            var stooqBaseTA = 'https://stooq.com/q/l/?s=^ta125&f=sd2ohlcvc1&h&e=csv';
             var stooqSourcesTA = [
                 stooqBaseTA,
                 'https://api.allorigins.win/raw?url=' + encodeURIComponent(stooqBaseTA),
@@ -4895,7 +4895,7 @@
                         var d = _parseStooq(await r.text());
                         if (d && d.price > 0) {
                             ta125Price  = d.price;
-                            ta125Change = d.open > 0 ? (d.price - d.open) / d.open * 100 : 0;
+                            ta125Change = !isNaN(d.changePct) ? d.changePct : 0;
                             try { localStorage.setItem('ta125-price', ta125Price.toString()); localStorage.setItem('ta125-change', ta125Change.toString()); localStorage.setItem('ta125-date', new Date().toISOString()); } catch(e) {}
                             console.log('[TA-125] ✅ Stooq[' + si + ']:', ta125Price.toFixed(0), ta125Change.toFixed(2) + '%');
                             updateRateDisplay();
@@ -4960,12 +4960,12 @@
                 if (lines.length < 2) return null;
                 var last = lines[lines.length - 1].split(',');
                 var close = parseFloat(last[5]);
-                var open  = parseFloat(last[2]);
-                return (close > 0) ? { price: close, open: open } : null;
+                var changePct = parseFloat((last[7] || '').replace('%', ''));
+                return (close > 0) ? { price: close, changePct: changePct } : null;
             }
 
             // Sources 1-3: Stooq (direct + 2 CORS proxies)
-            var stooqBaseSP = 'https://stooq.com/q/l/?s=^spx&f=sd2ohlcv&h&e=csv';
+            var stooqBaseSP = 'https://stooq.com/q/l/?s=^spx&f=sd2ohlcvc1&h&e=csv';
             var stooqSourcesSP = [
                 stooqBaseSP,
                 'https://api.allorigins.win/raw?url=' + encodeURIComponent(stooqBaseSP),
@@ -4981,7 +4981,7 @@
                         var d = _parseStooqSP(await r.text());
                         if (d && d.price > 0) {
                             sp500Price  = d.price;
-                            sp500Change = d.open > 0 ? (d.price - d.open) / d.open * 100 : 0;
+                            sp500Change = !isNaN(d.changePct) ? d.changePct : 0;
                             try { localStorage.setItem('sp500-price', sp500Price.toString()); localStorage.setItem('sp500-change', sp500Change.toString()); localStorage.setItem('sp500-date', new Date().toISOString()); } catch(e) {}
                             console.log('[S&P500] ✅ Stooq[' + si + ']:', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
                             updateRateDisplay();
@@ -5118,6 +5118,20 @@
             try {
                 var prevRate = exchangeRate;
                 var gotUSD = false;
+
+                // Source -1: Stooq USD/ILS (direct + 2 CORS proxies, real-time)
+                var stooqUSDBase = 'https://stooq.com/q/l/?s=usd/ils&f=sd2c&h&e=csv';
+                var stooqUSDSrcs = [stooqUSDBase, 'https://api.allorigins.win/raw?url=' + encodeURIComponent(stooqUSDBase), 'https://corsproxy.io/?' + encodeURIComponent(stooqUSDBase)];
+                for (var ui = 0; ui < stooqUSDSrcs.length && !gotUSD; ui++) {
+                    try {
+                        var uCtrl = new AbortController(); var uTid = setTimeout(function() { uCtrl.abort(); }, 6000);
+                        var uResp = await fetch(stooqUSDSrcs[ui], { signal: uCtrl.signal }); clearTimeout(uTid);
+                        if (uResp.ok) {
+                            var uLines = (await uResp.text()).trim().split('\n');
+                            if (uLines.length >= 2) { var uRate = parseFloat(uLines[uLines.length-1].split(',')[2]); if (uRate > 0) { exchangeRate = uRate; gotUSD = true; console.log('[Rate] Stooq USD/ILS['+ui+']:', exchangeRate); } }
+                        }
+                    } catch(e) { console.warn('[Rate] Stooq USD['+ui+'] failed:', e.message); }
+                }
 
                 // Source 0: Yahoo Finance (real-time market rate, USDILS=X)
                 var gotPrevClose = false;
