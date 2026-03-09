@@ -4981,33 +4981,57 @@
             } catch(e) {}
         })();
 
-        // ── Crypto rates (BTC / ETH) — independent polling every 60s ──
+        // ── Crypto rates (BTC / ETH) — polling every 15s, CoinGecko → Binance fallback ──
         async function fetchCryptoRates() {
+            // Try CoinGecko first
             try {
-                var resp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
-                if (!resp.ok) return;
-                var data = await resp.json();
-                var changed = false;
-                if (data && data.bitcoin) {
-                    btcRate = data.bitcoin.usd;
-                    btcDailyChangePct = data.bitcoin.usd_24h_change || 0;
-                    try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
-                    changed = true;
-                }
-                if (data && data.ethereum) {
-                    ethRate = data.ethereum.usd;
-                    ethDailyChangePct = data.ethereum.usd_24h_change || 0;
-                    try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
-                    changed = true;
-                }
-                if (changed) {
-                    console.log('[Crypto] BTC:', btcRate.toLocaleString(), '| ETH:', ethRate.toLocaleString());
+                var resp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true', { signal: AbortSignal.timeout(5000) });
+                if (resp.ok) {
+                    var data = await resp.json();
+                    if (data && data.bitcoin && data.bitcoin.usd > 0) {
+                        btcRate = data.bitcoin.usd;
+                        btcDailyChangePct = data.bitcoin.usd_24h_change || 0;
+                        try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
+                    }
+                    if (data && data.ethereum && data.ethereum.usd > 0) {
+                        ethRate = data.ethereum.usd;
+                        ethDailyChangePct = data.ethereum.usd_24h_change || 0;
+                        try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
+                    }
+                    console.log('[Crypto/CoinGecko] BTC:', btcRate.toLocaleString(), '| ETH:', ethRate.toLocaleString());
                     updateRateDisplay();
+                    return;
                 }
-            } catch(e) { console.warn('[Crypto] fetch failed:', e.message); }
+            } catch(e) { console.warn('[Crypto/CoinGecko] failed, trying Binance...'); }
+
+            // Fallback: Binance (no API key needed, no CORS issues)
+            try {
+                var [btcResp, ethResp] = await Promise.all([
+                    fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', { signal: AbortSignal.timeout(5000) }),
+                    fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT', { signal: AbortSignal.timeout(5000) })
+                ]);
+                if (btcResp.ok) {
+                    var btcData = await btcResp.json();
+                    if (btcData.lastPrice > 0) {
+                        btcRate = parseFloat(btcData.lastPrice);
+                        btcDailyChangePct = parseFloat(btcData.priceChangePercent) || 0;
+                        try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
+                    }
+                }
+                if (ethResp.ok) {
+                    var ethData = await ethResp.json();
+                    if (ethData.lastPrice > 0) {
+                        ethRate = parseFloat(ethData.lastPrice);
+                        ethDailyChangePct = parseFloat(ethData.priceChangePercent) || 0;
+                        try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
+                    }
+                }
+                console.log('[Crypto/Binance] BTC:', btcRate.toLocaleString(), '| ETH:', ethRate.toLocaleString());
+                updateRateDisplay();
+            } catch(e) { console.warn('[Crypto/Binance] failed:', e.message); }
         }
         setTimeout(fetchCryptoRates, 1000);
-        setInterval(fetchCryptoRates, 60000);
+        setInterval(fetchCryptoRates, 15000);
 
         // Fetch TA-125 on startup and every 5 min
         setTimeout(fetchTA125, 2000);
