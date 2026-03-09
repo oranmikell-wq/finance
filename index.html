@@ -4893,9 +4893,9 @@
                     clearTimeout(sTid);
                     if (r.ok) {
                         var d = _parseStooq(await r.text());
-                        if (d && d.price > 0) {
+                        if (d && d.price > 0 && !isNaN(d.changePct)) {
                             ta125Price  = d.price;
-                            ta125Change = !isNaN(d.changePct) ? d.changePct : 0;
+                            ta125Change = d.changePct;
                             try { localStorage.setItem('ta125-price', ta125Price.toString()); localStorage.setItem('ta125-change', ta125Change.toString()); localStorage.setItem('ta125-date', new Date().toISOString()); } catch(e) {}
                             console.log('[TA-125] ✅ Stooq[' + si + ']:', ta125Price.toFixed(0), ta125Change.toFixed(2) + '%');
                             updateRateDisplay();
@@ -4979,9 +4979,9 @@
                     clearTimeout(sTid);
                     if (r.ok) {
                         var d = _parseStooqSP(await r.text());
-                        if (d && d.price > 0) {
+                        if (d && d.price > 0 && !isNaN(d.changePct)) {
                             sp500Price  = d.price;
-                            sp500Change = !isNaN(d.changePct) ? d.changePct : 0;
+                            sp500Change = d.changePct;
                             try { localStorage.setItem('sp500-price', sp500Price.toString()); localStorage.setItem('sp500-change', sp500Change.toString()); localStorage.setItem('sp500-date', new Date().toISOString()); } catch(e) {}
                             console.log('[S&P500] ✅ Stooq[' + si + ']:', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
                             updateRateDisplay();
