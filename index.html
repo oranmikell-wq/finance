@@ -5246,7 +5246,7 @@
         }
 
         function updateRateDisplay() {
-            document.getElementById('exchangeRateDisplay').textContent = exchangeRate.toFixed(2);
+            document.getElementById('exchangeRateDisplay').textContent = exchangeRate.toFixed(4);
             document.getElementById('btcRateDisplay').textContent = btcRate.toLocaleString('en-US', {maximumFractionDigits: 0});
             document.getElementById('ethRateDisplay').textContent = ethRate.toLocaleString('en-US', {maximumFractionDigits: 0});
 
