@@ -7686,23 +7686,25 @@
             });
         }
 
-        // Silent background update — only refreshes price-sensitive elements, no fade-out flash
+        // Truly silent background update — only patches textContent, zero DOM structure changes
         function silentUpdateUI() {
             if (_updateUITimer) clearTimeout(_updateUITimer);
             _updateUITimer = setTimeout(function() {
                 _updateUITimer = null;
-                _backgroundUpdate = true;
-                try {
-                    updateTotalWorth();
-                    updateAssetsGrid();
-                    updateChart();
-                    updateSummaryCards();
-                    updateFeeAnalysis();
-                    renderWatchlist();
-                    checkAlerts();
-                } finally {
-                    _backgroundUpdate = false;
-                }
+                // 1. Update header total
+                updateTotalWorth();
+                // 2. Patch only the value text inside each card — no DOM replacement
+                assets.forEach(function(asset) {
+                    var el = document.querySelector('[data-amount-id="' + asset.id + '"]');
+                    if (!el) return;
+                    var valueInILS = toILS(asset.value, asset.currency || 'ILS');
+                    var newText = '₪' + Math.round(valueInILS).toLocaleString('he-IL');
+                    if (el.textContent !== newText) el.textContent = newText;
+                });
+                // 3. Summary numbers (textContent only)
+                updateSummaryCards();
+                // 4. Price alerts
+                checkAlerts();
             }, 150);
         }
 
@@ -9737,7 +9739,7 @@
                             </div>
                             ${rentalYield !== null ? `<div class="asset-row-return positive">${rentalYield.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
-                                <div class="asset-row-amount">₪${eq.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
+                                <div class="asset-row-amount" data-amount-id="${asset.id}">₪${eq.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 <div class="asset-row-sub">הון עצמי</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
@@ -9807,7 +9809,7 @@
                                 ${(asset.provider || mDayPct !== null) ? `<div class="asset-row-provider">${asset.provider ? asset.provider + (mDayPct !== null ? ' • ' : '') : ''}${mDayPct !== null ? `<span style="color:${sc(mDayPct)};font-weight:600;">${ss(mDayPct)}${mDayPct.toFixed(2)}%</span> יומי` : ''}</div>` : ''}
                             </div>
                             <div class="asset-row-values">
-                                <div class="asset-row-amount">₪${Math.round(mValueILS).toLocaleString('he-IL')}</div>
+                                <div class="asset-row-amount" data-amount-id="${asset.id}">₪${Math.round(mValueILS).toLocaleString('he-IL')}</div>
                                 <div class="asset-row-sub">${mCurr === 'USD' ? '<span style="color:var(--text-secondary);">$'+mAmt.toLocaleString('he-IL',{maximumFractionDigits:0})+'</span>' : ''}</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
@@ -9906,7 +9908,7 @@
                                 <div class="asset-row-provider">${asset.provider ? asset.provider + ' • ' : ''}<span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
                             </div>
                             <div class="asset-row-values">
-                                <div class="asset-row-amount">₪${Math.round(totalVal).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
+                                <div class="asset-row-amount" data-amount-id="${asset.id}">₪${Math.round(totalVal).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
                                 ${totalRetPct !== null ? `<div class="asset-row-sub" style="color:${sc(totalRetPct)};">${totalRetILS >= 0 ? '+' : '-'}₪${Math.abs(totalRetILS).toLocaleString('he-IL')}</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
@@ -9976,7 +9978,7 @@
                                 <div class="asset-row-provider">${asset.provider ? asset.provider + ' • ' : ''}<span style="color:${sc2(combinedDailyPct2)};font-weight:600;">${ss2(combinedDailyPct2)}${combinedDailyPct2.toFixed(2)}%</span> יומי</div>
                             </div>
                             <div class="asset-row-values">
-                                <div class="asset-row-amount">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
+                                <div class="asset-row-amount" data-amount-id="${asset.id}">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
                                 <div class="asset-row-sub" style="color:${sc2(combinedDailyPct2)};">${ss2(combinedDailyILS2)}₪${Math.abs(Math.round(combinedDailyILS2)).toLocaleString('he-IL')} היום</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
@@ -10022,7 +10024,7 @@
                             </div>
                             <div class="asset-row-return ${rCls}">${s(rPct)}${rPct.toFixed(1)}%</div>
                             <div class="asset-row-values">
-                                <div class="asset-row-amount">₪${vILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
+                                <div class="asset-row-amount" data-amount-id="${asset.id}">₪${vILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 <div class="asset-row-sub">$${vUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}${spyDailyChangePct ? ` <span style="color:${spyDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${spyDailyChangePct>=0?'+':''}${spyDailyChangePct.toFixed(2)}%</span>` : ''}</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
@@ -10105,7 +10107,7 @@
                             </div>
                             ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
-                                <div class="asset-row-amount">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
+                                <div class="asset-row-amount" data-amount-id="${asset.id}">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 ${fDaily !== 0 ? `<div class="asset-row-sub" style="color:${fc(fDaily)};">${fs(dailyILS)}₪${Math.abs(Math.round(dailyILS)).toLocaleString('he-IL')} היום</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
@@ -10190,7 +10192,7 @@
                             ? `<div class="asset-row-return ${ethDailyChangePct >= 0 ? 'positive' : 'negative'}">${ethDailyChangePct >= 0 ? '+' : ''}${ethDailyChangePct.toFixed(2)}%</div>`
                             : retPct !== 0 ? `<div class="asset-row-return ${retClass}">${retSign}${retPct}%</div>` : ''}
                         <div class="asset-row-values">
-                            <div class="asset-row-amount">₪${valueInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
+                            <div class="asset-row-amount" data-amount-id="${asset.id}">₪${valueInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                             ${showUSD ? `<div class="asset-row-sub">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>` : ''}
                             ${currency !== 'ILS' && !showUSD ? `<div class="asset-row-sub">${formatAmount(asset.value, currency)}${
                                 (currency === 'BTC' && btcDailyChangePct) ? ` <span style="color:${btcDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${btcDailyChangePct>=0?'+':''}${btcDailyChangePct.toFixed(2)}%</span>` :
@@ -10335,8 +10337,14 @@
             }
         });
 
+        var _chartHash = '';
         function updateChart() {
             const total = assets.reduce((sum, a) => sum + toILS(a.value, a.currency || 'ILS'), 0);
+            // Skip rebuild if nothing has changed
+            var newChartHash = assets.map(a => a.type + ':' + Math.round(toILS(a.value, a.currency||'ILS'))).sort().join('|');
+            if (newChartHash === _chartHash && total > 0) return;
+            _chartHash = newChartHash;
+
             const donutEl = document.getElementById('donutChart');
             const miniLegendEl = document.getElementById('miniLegend');
             const chartTotalEl = document.getElementById('chartTotal');
