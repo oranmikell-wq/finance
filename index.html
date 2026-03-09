@@ -7701,9 +7701,32 @@
                     var newText = '₪' + Math.round(valueInILS).toLocaleString('he-IL');
                     if (el.textContent !== newText) el.textContent = newText;
                 });
-                // 3. Summary numbers (textContent only)
+                // 3. Update portfolio holdings tables in open cards
+                assets.forEach(function(asset) {
+                    if (asset.type !== 'trade' || asset.stockMode !== 'portfolio') return;
+                    var tbody = document.getElementById('hbody-' + asset.id);
+                    if (!tbody) return;
+                    var holdings = asset.holdings || [];
+                    tbody.innerHTML = _renderHoldingRows(holdings);
+                    // Update daily % label in card header
+                    var provEl = document.querySelector('[data-provider-id="' + asset.id + '"]');
+                    if (provEl) {
+                        var tVal = 0, wDaily = 0, sVal = 0;
+                        holdings.forEach(function(h) {
+                            var pILS = h.currency === 'ILS' ? (h.price||0) : (h.price||0) * exchangeRate;
+                            var hv = (h.units||0) * pILS; tVal += hv;
+                            if (h.ticker !== '$') { sVal += hv; wDaily += hv * (h.dailyPct||0); }
+                        });
+                        var dp = sVal > 0 ? wDaily / sVal : 0;
+                        var sc = function(v){return v>=0?'var(--accent-green)':'var(--accent-red)';};
+                        var ss = function(v){return v>=0?'+':'';};
+                        provEl.innerHTML = (asset.provider ? asset.provider + ' • ' : '') +
+                            '<span style="color:' + sc(dp) + ';font-weight:600;">' + ss(dp) + dp.toFixed(2) + '%</span> יומי';
+                    }
+                });
+                // 4. Summary numbers (textContent only)
                 updateSummaryCards();
-                // 4. Price alerts
+                // 5. Price alerts
                 checkAlerts();
             }, 150);
         }
@@ -9863,30 +9886,7 @@
                     // Use live totalVal (not stale asset.value) for ILS daily amount
                     const combinedDailyILS = totalVal * (combinedDailyPct / 100);
                     // Holdings table rows
-                    const holdingRows = holdings.map(function(h) {
-                        const isCash = h.ticker === '$';
-                        const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
-                        const hVal = Math.round((h.units || 0) * pILS);
-                        const priceStr = isCash ? '—' : (h.currency === 'ILS' ? '₪' + (h.price || 0).toFixed(2) : '$' + (h.price || 0).toFixed(2));
-                        const retPct = !isCash && h.avgBuyPrice > 0 && h.price > 0 ? (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100 : null;
-                        const currSym = h.currency === 'ILS' ? '₪' : '$';
-                        // Native-currency amounts
-                        const dailyNativeAmt = (h.units || 0) * (h.price || 0) * (h.dailyPct || 0) / 100;
-                        const retNativeAmt = retPct !== null ? (h.units || 0) * ((h.price || 0) - (h.avgBuyPrice || 0)) : 0;
-                        // Value in native currency ($ for USD/cash, ₪ for ILS)
-                        const valStr = isCash
-                            ? '$' + Math.round(h.units || 0).toLocaleString('en-US')
-                            : h.currency === 'USD'
-                                ? '$' + Math.round(hVal / exchangeRate).toLocaleString('en-US')
-                                : '₪' + hVal.toLocaleString('he-IL');
-                        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                            <td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">${h.ticker}</td>
-                            <td style="padding:5px 4px;font-size:0.8rem;text-align:center;">${priceStr}</td>
-                            <td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">${valStr}</td>
-                            <td style="padding:5px 4px;font-size:0.8rem;color:${isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)};text-align:center;font-weight:700;">${isCash ? '—' : `${ss(h.dailyPct || 0)}${(h.dailyPct || 0).toFixed(2)}%${h.dailyPct ? `<br><span style="font-size:0.72rem;font-weight:400;">${ss(dailyNativeAmt)}${currSym}${Math.abs(dailyNativeAmt).toFixed(2)}</span>` : ''}`}</td>
-                            ${retPct !== null ? `<td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:${sc(retPct)};text-align:center;">${ss(retPct)}${retPct.toFixed(2)}%<br><span style="font-size:0.72rem;font-weight:400;">${ss(retNativeAmt)}${currSym}${Math.abs(retNativeAmt).toFixed(2)}</span></td>` : '<td style="padding:5px 4px;font-size:0.8rem;color:var(--text-secondary);text-align:center;">—</td>'}
-                        </tr>`;
-                    }).join('');
+                    const holdingRows = _renderHoldingRows(holdings);
                     // Compute value only for holdings with a known buy price (for accurate return %)
                     let valueWithBasis = 0;
                     holdings.forEach(function(h) {
@@ -9905,7 +9905,7 @@
                             <div class="asset-row-icon" style="background:rgba(255,0,110,0.1);">${icon}</div>
                             <div class="asset-row-info">
                                 <div class="asset-row-name">${asset.name}</div>
-                                <div class="asset-row-provider">${asset.provider ? asset.provider + ' • ' : ''}<span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
+                                <div class="asset-row-provider" data-provider-id="${asset.id}">${asset.provider ? asset.provider + ' • ' : ''}<span style="color:${sc(combinedDailyPct)};font-weight:600;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</span> יומי</div>
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${Math.round(totalVal).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
@@ -9933,7 +9933,7 @@
                                             <th style="padding:6px 4px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:0.75rem;">תשואה</th>
                                         </tr>
                                     </thead>
-                                    <tbody>${holdingRows}</tbody>
+                                    <tbody id="hbody-${asset.id}">${holdingRows}</tbody>
                                     <tfoot>
                                         <tr style="border-top:2px solid var(--border-color);">
                                             <td colspan="2" style="padding:7px 4px;font-weight:700;color:var(--text-secondary);font-size:0.8rem;">סה"כ</td>
@@ -10336,6 +10336,38 @@
                 if (w) w.style.borderColor = '';
             }
         });
+
+        // Standalone holdings-row generator (used by template + silentUpdateUI)
+        function _renderHoldingRows(holdings) {
+            var sc = function(v) { return v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'; };
+            var ss = function(v) { return v >= 0 ? '+' : ''; };
+            return holdings.map(function(h) {
+                var isCash = h.ticker === '$';
+                var pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
+                var hVal = Math.round((h.units || 0) * pILS);
+                var priceStr = isCash ? '—' : (h.currency === 'ILS' ? '₪' + (h.price || 0).toFixed(2) : '$' + (h.price || 0).toFixed(2));
+                var retPct = !isCash && h.avgBuyPrice > 0 && h.price > 0 ? (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100 : null;
+                var currSym = h.currency === 'ILS' ? '₪' : '$';
+                var dailyNativeAmt = (h.units || 0) * (h.price || 0) * (h.dailyPct || 0) / 100;
+                var retNativeAmt = retPct !== null ? (h.units || 0) * ((h.price || 0) - (h.avgBuyPrice || 0)) : 0;
+                var valStr = isCash
+                    ? '$' + Math.round(h.units || 0).toLocaleString('en-US')
+                    : h.currency === 'USD'
+                        ? '$' + Math.round(hVal / exchangeRate).toLocaleString('en-US')
+                        : '₪' + hVal.toLocaleString('he-IL');
+                return '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);">' +
+                    '<td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">' + h.ticker + '</td>' +
+                    '<td style="padding:5px 4px;font-size:0.8rem;text-align:center;">' + priceStr + '</td>' +
+                    '<td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">' + valStr + '</td>' +
+                    '<td style="padding:5px 4px;font-size:0.8rem;color:' + (isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)) + ';text-align:center;font-weight:700;">' +
+                        (isCash ? '—' : ss(h.dailyPct || 0) + (h.dailyPct || 0).toFixed(2) + '%' + (h.dailyPct ? '<br><span style="font-size:0.72rem;font-weight:400;">' + ss(dailyNativeAmt) + currSym + Math.abs(dailyNativeAmt).toFixed(2) + '</span>' : '')) +
+                    '</td>' +
+                    (retPct !== null
+                        ? '<td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:' + sc(retPct) + ';text-align:center;">' + ss(retPct) + retPct.toFixed(2) + '%<br><span style="font-size:0.72rem;font-weight:400;">' + ss(retNativeAmt) + currSym + Math.abs(retNativeAmt).toFixed(2) + '</span></td>'
+                        : '<td style="padding:5px 4px;font-size:0.8rem;color:var(--text-secondary);text-align:center;">—</td>') +
+                    '</tr>';
+            }).join('');
+        }
 
         var _chartHash = '';
         function updateChart() {
