@@ -9946,7 +9946,7 @@
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${Math.round(totalVal).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                ${totalRetPct !== null ? `<div class="asset-row-sub" style="color:${sc(totalRetPct)};">${totalRetILS >= 0 ? '+' : '-'}₪${Math.abs(totalRetILS).toLocaleString('he-IL')}</div>` : ''}
+                                ${totalRetPct !== null ? `<div class="asset-row-sub" style="color:${sc(totalRetPct)};">${ss(totalRetPct)}${totalRetPct.toFixed(2)}%</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
