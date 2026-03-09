@@ -7646,6 +7646,45 @@
         var _updateUITimer = null;
         var _lastGridHash = '';
         var _backgroundUpdate = false;
+        var _cardHashes = {};
+
+        // Surgical per-card DOM patch — replaces only changed asset cards, preserving expanded state
+        function _patchGridSilently(newHtml) {
+            var grid = document.getElementById('assetsGrid');
+            var tmp = document.createElement('div');
+            tmp.innerHTML = newHtml;
+            var newCards = Array.from(tmp.querySelectorAll('[data-asset-id]'));
+
+            // Remove cards for deleted assets
+            Array.from(grid.querySelectorAll('[data-asset-id]')).forEach(function(card) {
+                var id = card.dataset.assetId;
+                if (!assets.find(function(a) { return String(a.id) === id; })) {
+                    grid.removeChild(card);
+                    delete _cardHashes[id];
+                }
+            });
+
+            // Add or update cards
+            newCards.forEach(function(newCard, i) {
+                var id = newCard.dataset.assetId;
+                var asset = assets.find(function(a) { return String(a.id) === id; });
+                var cardHash = asset ? [asset.value, asset.return||0, asset.currency||'ILS',
+                    asset.isSpyPension ? spyPrice : 0, exchangeRate, btcRate, ethRate].join('|') : '';
+                var oldCard = grid.querySelector('[data-asset-id="' + id + '"]');
+                if (!oldCard) {
+                    // New asset added — insert at correct position
+                    var ref = grid.querySelectorAll('[data-asset-id]')[i];
+                    grid.insertBefore(newCard, ref || null);
+                    _cardHashes[id] = cardHash;
+                    return;
+                }
+                if (_cardHashes[id] === cardHash) return; // unchanged — skip
+                _cardHashes[id] = cardHash;
+                var wasExpanded = oldCard.classList.contains('expanded');
+                if (wasExpanded) newCard.classList.add('expanded');
+                grid.replaceChild(newCard, oldCard);
+            });
+        }
 
         // Silent background update — only refreshes price-sensitive elements, no fade-out flash
         function silentUpdateUI() {
@@ -9658,7 +9697,8 @@
                 return;
             }
 
-            grid.innerHTML = assets.map((asset, idx) => {
+            _cardHashes = {}; // reset per-card hashes on full rebuild
+            var newGridHtml = assets.map((asset, idx) => {
                 const currency = asset.currency || 'ILS';
                 const valueInILS = toILS(asset.value, currency);
                 // costBasis may be in a different currency than asset.currency (e.g. legacy USD stock stored as ILS)
@@ -10226,6 +10266,14 @@
                     </div>
                 </div>`;
             }).join('');
+
+            if (_backgroundUpdate && !firstRender) {
+                // Surgical update: patch only changed cards in-place, no full DOM replacement
+                _patchGridSilently(newGridHtml);
+                return;
+            }
+
+            grid.innerHTML = newGridHtml;
 
             // Event delegation on grid — handles both expand and edit
             // Runs fresh after each render
