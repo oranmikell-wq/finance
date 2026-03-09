@@ -5119,20 +5119,6 @@
                 var prevRate = exchangeRate;
                 var gotUSD = false;
 
-                // Source -1: Stooq USD/ILS (direct + 2 CORS proxies, real-time)
-                var stooqUSDBase = 'https://stooq.com/q/l/?s=usd/ils&f=sd2c&h&e=csv';
-                var stooqUSDSrcs = [stooqUSDBase, 'https://api.allorigins.win/raw?url=' + encodeURIComponent(stooqUSDBase), 'https://corsproxy.io/?' + encodeURIComponent(stooqUSDBase)];
-                for (var ui = 0; ui < stooqUSDSrcs.length && !gotUSD; ui++) {
-                    try {
-                        var uCtrl = new AbortController(); var uTid = setTimeout(function() { uCtrl.abort(); }, 6000);
-                        var uResp = await fetch(stooqUSDSrcs[ui], { signal: uCtrl.signal }); clearTimeout(uTid);
-                        if (uResp.ok) {
-                            var uLines = (await uResp.text()).trim().split('\n');
-                            if (uLines.length >= 2) { var uRate = parseFloat(uLines[uLines.length-1].split(',')[2]); if (uRate > 0) { exchangeRate = uRate; gotUSD = true; console.log('[Rate] Stooq USD/ILS['+ui+']:', exchangeRate); } }
-                        }
-                    } catch(e) { console.warn('[Rate] Stooq USD['+ui+'] failed:', e.message); }
-                }
-
                 // Source 0: Yahoo Finance (real-time market rate, USDILS=X)
                 var gotPrevClose = false;
                 if (!gotUSD) {
