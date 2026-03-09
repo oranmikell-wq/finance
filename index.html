@@ -1823,11 +1823,13 @@
                     <div id="chipBTC" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.78rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">₿</span>
                         <span style="font-weight:700;color:var(--text-primary);">$<span id="btcRateDisplay">100,000</span></span>
+                        <span id="btcDailyChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- ETH chip -->
                     <div id="chipETH" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.78rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">Ξ</span>
                         <span style="font-weight:700;color:var(--text-primary);">$<span id="ethRateDisplay">3,500</span></span>
+                        <span id="ethDailyChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- S&P500 chip -->
                     <div id="chipSPY" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.78rem;white-space:nowrap;">
@@ -4984,6 +4986,34 @@
             } catch(e) {}
         })();
 
+        // ── Crypto rates (BTC / ETH) — independent polling every 60s ──
+        async function fetchCryptoRates() {
+            try {
+                var resp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+                if (!resp.ok) return;
+                var data = await resp.json();
+                var changed = false;
+                if (data && data.bitcoin) {
+                    btcRate = data.bitcoin.usd;
+                    btcDailyChangePct = data.bitcoin.usd_24h_change || 0;
+                    try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
+                    changed = true;
+                }
+                if (data && data.ethereum) {
+                    ethRate = data.ethereum.usd;
+                    ethDailyChangePct = data.ethereum.usd_24h_change || 0;
+                    try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
+                    changed = true;
+                }
+                if (changed) {
+                    console.log('[Crypto] BTC:', btcRate.toLocaleString(), '| ETH:', ethRate.toLocaleString());
+                    updateRateDisplay();
+                }
+            } catch(e) { console.warn('[Crypto] fetch failed:', e.message); }
+        }
+        setTimeout(fetchCryptoRates, 1000);
+        setInterval(fetchCryptoRates, 60000);
+
         // Fetch TA-125 on startup and every 5 min
         setTimeout(fetchTA125, 2000);
         setInterval(fetchTA125, 15000);
@@ -5157,23 +5187,7 @@
                     } catch(e) {}
                 }
 
-                // Fetch crypto rates (BTC and ETH in USD)
-                try {
-                    var cryptoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
-                    if (cryptoResponse.ok) {
-                        var cryptoData = await cryptoResponse.json();
-                        if (cryptoData && cryptoData.bitcoin) {
-                            btcRate = cryptoData.bitcoin.usd;
-                            btcDailyChangePct = cryptoData.bitcoin.usd_24h_change || 0;
-                            try { localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
-                        }
-                        if (cryptoData && cryptoData.ethereum) {
-                            ethRate = cryptoData.ethereum.usd;
-                            ethDailyChangePct = cryptoData.ethereum.usd_24h_change || 0;
-                            try { localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
-                        }
-                    }
-                } catch(e) { console.warn('[Rate] Crypto fetch failed:', e.message); }
+                // Crypto fetched separately by fetchCryptoRates()
                 
                 lastRateUpdate = new Date().toISOString();
                 
@@ -5216,7 +5230,23 @@
             document.getElementById('exchangeRateDisplay').textContent = exchangeRate.toFixed(2);
             document.getElementById('btcRateDisplay').textContent = btcRate.toLocaleString('en-US', {maximumFractionDigits: 0});
             document.getElementById('ethRateDisplay').textContent = ethRate.toLocaleString('en-US', {maximumFractionDigits: 0});
-            
+
+            // BTC chip — daily change
+            var btcChgEl = document.getElementById('btcDailyChange');
+            if (btcChgEl && typeof btcDailyChangePct !== 'undefined' && btcDailyChangePct !== 0) {
+                btcChgEl.textContent = (btcDailyChangePct >= 0 ? '+' : '') + btcDailyChangePct.toFixed(2) + '%';
+                btcChgEl.style.color = btcDailyChangePct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                _colorChip('chipBTC', btcDailyChangePct);
+            }
+
+            // ETH chip — daily change
+            var ethChgEl = document.getElementById('ethDailyChange');
+            if (ethChgEl && typeof ethDailyChangePct !== 'undefined' && ethDailyChangePct !== 0) {
+                ethChgEl.textContent = (ethDailyChangePct >= 0 ? '+' : '') + ethDailyChangePct.toFixed(2) + '%';
+                ethChgEl.style.color = ethDailyChangePct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                _colorChip('chipETH', ethDailyChangePct);
+            }
+
             // USD/ILS chip
             var ilsChangeEl = document.getElementById('ilsDailyChange');
             if (ilsChangeEl && exchangeRatePrevClose > 0) {
@@ -7691,8 +7721,9 @@
             if (_updateUITimer) clearTimeout(_updateUITimer);
             _updateUITimer = setTimeout(function() {
                 _updateUITimer = null;
-                // 1. Update header total
+                // 1. Update header total + rate bar chips (USD, BTC, ETH, S&P, TA-125)
                 updateTotalWorth();
+                updateRateDisplay();
                 // 2. Patch only the value text inside each card — no DOM replacement
                 assets.forEach(function(asset) {
                     var el = document.querySelector('[data-amount-id="' + asset.id + '"]');
