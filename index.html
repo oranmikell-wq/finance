@@ -4876,13 +4876,39 @@
 
         // ── TA-125 Index fetch ──
         async function fetchTA125() {
-            // Try Yahoo Finance for ^TA125.TA
+            // Helper: parse Stooq CSV (Symbol,Date,Open,High,Low,Close,Volume)
+            function _parseStooq(text) {
+                var lines = text.trim().split('\n');
+                if (lines.length < 2) return null;
+                var last = lines[lines.length - 1].split(',');
+                var close = parseFloat(last[5]);
+                var open  = parseFloat(last[2]);
+                return (close > 0) ? { price: close, open: open } : null;
+            }
+
+            // Source 1: Stooq — no CORS proxy, reliable
+            try {
+                var r = await fetch('https://stooq.com/q/l/?s=^ta125&f=sd2ohlcv&h&e=csv', { signal: AbortSignal.timeout(5000) });
+                if (r.ok) {
+                    var d = _parseStooq(await r.text());
+                    if (d && d.price > 0) {
+                        var prevForChange = ta125Price > 0 ? ta125Price : d.open;
+                        ta125Price  = d.price;
+                        ta125Change = prevForChange > 0 ? (d.price - prevForChange) / prevForChange * 100 : 0;
+                        try { localStorage.setItem('ta125-price', ta125Price.toString()); localStorage.setItem('ta125-change', ta125Change.toString()); localStorage.setItem('ta125-date', new Date().toISOString()); } catch(e) {}
+                        console.log('[TA-125] ✅ Stooq:', ta125Price.toFixed(0), ta125Change.toFixed(2) + '%');
+                        updateRateDisplay();
+                        return true;
+                    }
+                }
+            } catch(e) { console.warn('[TA-125] Stooq failed:', e.message); }
+
+            // Source 2-4: Yahoo Finance via CORS proxies
             var sources = [
                 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
                 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
                 'https://corsproxy.io/?' + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
             ];
-
             for (var i = 0; i < sources.length; i++) {
                 try {
                     var ctrl = new AbortController();
@@ -4899,19 +4925,13 @@
                         if (price > 0) {
                             ta125Price = price;
                             ta125Change = prevClose > 0 ? ((price - prevClose) / prevClose * 100) : 0;
-                            try {
-                                localStorage.setItem('ta125-price', ta125Price.toString());
-                                localStorage.setItem('ta125-change', ta125Change.toString());
-                                localStorage.setItem('ta125-date', new Date().toISOString());
-                            } catch(e) {}
-                            console.log('[TA-125] ✅ price:', ta125Price.toFixed(0), 'change:', ta125Change.toFixed(2) + '%');
+                            try { localStorage.setItem('ta125-price', ta125Price.toString()); localStorage.setItem('ta125-change', ta125Change.toString()); localStorage.setItem('ta125-date', new Date().toISOString()); } catch(e) {}
+                            console.log('[TA-125] ✅ Yahoo:', ta125Price.toFixed(0), ta125Change.toFixed(2) + '%');
                             updateRateDisplay();
                             return true;
                         }
                     }
-                } catch(e) {
-                    console.warn('[TA-125] source', i, 'failed:', e.message);
-                }
+                } catch(e) { console.warn('[TA-125] source', i, 'failed:', e.message); }
             }
             console.warn('[TA-125] all sources failed');
             return false;
@@ -4932,6 +4952,34 @@
 
         // ── S&P 500 Index fetch ──
         async function fetchSP500() {
+            // Helper: parse Stooq CSV (Symbol,Date,Open,High,Low,Close,Volume)
+            function _parseStooqSP(text) {
+                var lines = text.trim().split('\n');
+                if (lines.length < 2) return null;
+                var last = lines[lines.length - 1].split(',');
+                var close = parseFloat(last[5]);
+                var open  = parseFloat(last[2]);
+                return (close > 0) ? { price: close, open: open } : null;
+            }
+
+            // Source 1: Stooq ^spx — no CORS proxy, reliable
+            try {
+                var r = await fetch('https://stooq.com/q/l/?s=^spx&f=sd2ohlcv&h&e=csv', { signal: AbortSignal.timeout(5000) });
+                if (r.ok) {
+                    var d = _parseStooqSP(await r.text());
+                    if (d && d.price > 0) {
+                        var prevForChange = sp500Price > 0 ? sp500Price : d.open;
+                        sp500Price  = d.price;
+                        sp500Change = prevForChange > 0 ? (d.price - prevForChange) / prevForChange * 100 : 0;
+                        try { localStorage.setItem('sp500-price', sp500Price.toString()); localStorage.setItem('sp500-change', sp500Change.toString()); localStorage.setItem('sp500-date', new Date().toISOString()); } catch(e) {}
+                        console.log('[S&P500] ✅ Stooq:', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
+                        updateRateDisplay();
+                        return true;
+                    }
+                }
+            } catch(e) { console.warn('[S&P500] Stooq failed:', e.message); }
+
+            // Source 2-4: Yahoo Finance via CORS proxies
             var sources = [
                 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d'),
                 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d'),
@@ -4953,12 +5001,8 @@
                         if (price > 0) {
                             sp500Price = price;
                             sp500Change = prev > 0 ? ((price - prev) / prev * 100) : 0;
-                            try {
-                                localStorage.setItem('sp500-price', sp500Price.toString());
-                                localStorage.setItem('sp500-change', sp500Change.toString());
-                                localStorage.setItem('sp500-date', new Date().toISOString());
-                            } catch(e) {}
-                            console.log('[S&P500] ✅', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
+                            try { localStorage.setItem('sp500-price', sp500Price.toString()); localStorage.setItem('sp500-change', sp500Change.toString()); localStorage.setItem('sp500-date', new Date().toISOString()); } catch(e) {}
+                            console.log('[S&P500] ✅ Yahoo:', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
                             updateRateDisplay();
                             return true;
                         }
