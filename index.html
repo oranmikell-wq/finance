@@ -4856,16 +4856,7 @@
             const hasSpyAssets = assets.some(a => a.isSpyPension);
             if (!hasSpyAssets) return;
             fetchSpyPrice();
-        }, 60000); // every 1 min - API calls are lightweight
-
-        // Slower fallback interval when market is closed (every 15 min)
-        setInterval(() => {
-            const hasSpyAssets = assets.some(a => a.isSpyPension);
-            if (!hasSpyAssets) return;
-            if (!isMarketOpen()) {
-                fetchSpyPrice();
-            }
-        }, 15 * 60000);
+        }, 15000);
 
         // Auto-update portfolio stocks every 15 sec during market hours (Finnhub)
         var _portfolioUpdating = false;
@@ -4995,11 +4986,11 @@
 
         // Fetch TA-125 on startup and every 5 min
         setTimeout(fetchTA125, 2000);
-        setInterval(fetchTA125, 5 * 60000);
+        setInterval(fetchTA125, 15000);
 
         // Fetch S&P 500 on startup and every 5 min
         setTimeout(fetchSP500, 3000);
-        setInterval(fetchSP500, 5 * 60000);
+        setInterval(fetchSP500, 15000);
 
         // Retry SPY fetch after initial failure (try again after 10s, 30s, 60s)
         let spyRetryCount = 0;
@@ -6824,7 +6815,7 @@
         // Auto-update rates every 2 hours
         setInterval(function() {
             checkAndUpdateRate();
-        }, 2 * 60 * 60 * 1000);
+        }, 15000);
 
         // Update rate indicator color based on age
         function updateRateIndicator(hoursSinceUpdate) {
