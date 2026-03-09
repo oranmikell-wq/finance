@@ -7808,6 +7808,9 @@
                         var ss = function(v){return v>=0?'+':'';};
                         provEl.innerHTML = (asset.provider ? asset.provider + ' • ' : '') +
                             '<span style="color:' + sc(dp) + ';font-weight:600;">' + ss(dp) + dp.toFixed(2) + '%</span> יומי';
+                        // Keep tfoot "שווי" cell in sync
+                        var footValEl = document.getElementById('hfoot-val-' + asset.id);
+                        if (footValEl) footValEl.textContent = '$' + Math.round(tVal / exchangeRate).toLocaleString('en-US');
                         // Keep tfoot "יומי" cell in sync with card header
                         var footDailyEl = document.getElementById('hfoot-daily-' + asset.id);
                         if (footDailyEl) {
@@ -10051,7 +10054,7 @@
                                     <tfoot>
                                         <tr style="border-top:2px solid var(--border-color);">
                                             <td colspan="2" style="padding:7px 4px;font-weight:700;color:var(--text-secondary);font-size:0.8rem;">סה"כ</td>
-                                            <td style="padding:7px 4px;font-weight:700;font-size:0.9rem;color:var(--text-primary);text-align:left;">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
+                                            <td id="hfoot-val-${asset.id}" style="padding:7px 4px;font-weight:700;font-size:0.9rem;color:var(--text-primary);text-align:left;">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
                                             <td id="hfoot-daily-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;color:${sc(combinedDailyPct)};font-weight:700;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
                                             <td id="hfoot-ret-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(2) + '%' : '—'}</td>
                                         </tr>
