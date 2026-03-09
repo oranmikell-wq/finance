@@ -4386,7 +4386,7 @@
                     else calculateSpyValue();
                 }
             }
-            updateUI();
+            silentUpdateUI();
             return true;
         }
 
@@ -4814,7 +4814,7 @@
             try {
                 var success = await fetchSpyPrice();
                 if (success && spyPrice > 0) {
-                    updateUI();
+                    silentUpdateUI();
                 }
                 return success;
             } catch (error) {
@@ -4880,7 +4880,7 @@
             try {
                 var before = JSON.stringify(assets);
                 await updateTradeAssets();
-                if (JSON.stringify(assets) !== before) updateUI();
+                if (JSON.stringify(assets) !== before) silentUpdateUI();
             } finally {
                 _portfolioUpdating = false;
             }
@@ -5196,7 +5196,7 @@
                 
                 updateRateDisplay();
                 updateRateIndicator(0);
-                updateUI();
+                silentUpdateUI();
                 console.log('[Rate] Updated successfully: $1 = ₪' + exchangeRate.toFixed(4));
                 return true;
             } catch (error) {
@@ -7654,6 +7654,28 @@
 
         var _updateUITimer = null;
         var _lastGridHash = '';
+        var _backgroundUpdate = false;
+
+        // Silent background update — only refreshes price-sensitive elements, no fade-out flash
+        function silentUpdateUI() {
+            if (_updateUITimer) clearTimeout(_updateUITimer);
+            _updateUITimer = setTimeout(function() {
+                _updateUITimer = null;
+                _backgroundUpdate = true;
+                try {
+                    updateTotalWorth();
+                    updateAssetsGrid();
+                    updateChart();
+                    updateSummaryCards();
+                    updateFeeAnalysis();
+                    renderWatchlist();
+                    checkAlerts();
+                } finally {
+                    _backgroundUpdate = false;
+                }
+            }, 150);
+        }
+
         function updateUI() {
             // Debounce: batch rapid sequential calls into one render (prevents page jumps on load)
             if (_updateUITimer) clearTimeout(_updateUITimer);
@@ -9626,9 +9648,9 @@
             if (gridHash === _lastGridHash) return;
             _lastGridHash = gridHash;
 
-            // Hide grid while rebuilding DOM (no visible flash)
+            // Hide grid while rebuilding DOM — skip for background price updates (no flash)
             var firstRender = grid.children.length === 0;
-            if (!firstRender) {
+            if (!firstRender && !_backgroundUpdate) {
                 grid.style.transition = 'none';
                 grid.style.opacity = '0';
             }
@@ -10231,9 +10253,8 @@
             grid.addEventListener('click', grid._delegationHandler);
             grid._delegationAttached = true;
 
-            // Fade in after DOM update (hides the re-render flash)
-            grid.getBoundingClientRect(); // force reflow so opacity:0 is painted
-            grid.style.transition = 'opacity 0.18s ease';
+            // Restore visibility — instant for background updates, fade-in for user-triggered
+            grid.style.transition = _backgroundUpdate ? 'none' : 'opacity 0.18s ease';
             grid.style.opacity = '1';
         }
 
