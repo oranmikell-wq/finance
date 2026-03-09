@@ -6861,9 +6861,9 @@
             }
         }
 
-        // Auto-update rates every 2 hours
+        // Auto-update exchange rate every 15s (calls fetchExchangeRate directly, bypasses 2hr guard)
         setInterval(function() {
-            checkAndUpdateRate();
+            fetchExchangeRate();
         }, 15000);
 
         // Update rate indicator color based on age
