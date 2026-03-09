@@ -7814,6 +7814,28 @@
                             footDailyEl.style.color = sc(dp);
                             footDailyEl.textContent = ss(dp) + dp.toFixed(2) + '%';
                         }
+                        // Update total return % (tfoot + card sub-text)
+                        var valueWithBasis = 0;
+                        holdings.forEach(function(h) {
+                            if (h.avgBuyPrice > 0) {
+                                var pILS = h.currency === 'ILS' ? (h.price||0) : (h.price||0) * exchangeRate;
+                                valueWithBasis += (h.units||0) * pILS;
+                            }
+                        });
+                        var costBasis = asset.costBasis || 0;
+                        var retPct = costBasis > 0 ? (valueWithBasis - costBasis) / costBasis * 100 : null;
+                        if (retPct !== null) {
+                            var footRetEl = document.getElementById('hfoot-ret-' + asset.id);
+                            if (footRetEl) {
+                                footRetEl.style.color = sc(retPct);
+                                footRetEl.textContent = ss(retPct) + retPct.toFixed(2) + '%';
+                            }
+                            var subRetEl = document.querySelector('[data-ret-id="' + asset.id + '"]');
+                            if (subRetEl) {
+                                subRetEl.style.color = sc(retPct);
+                                subRetEl.textContent = ss(retPct) + retPct.toFixed(2) + '%';
+                            }
+                        }
                     }
                 });
                 // 4. Summary numbers (textContent only)
@@ -10001,7 +10023,7 @@
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${Math.round(totalVal).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                ${totalRetPct !== null ? `<div class="asset-row-sub" style="color:${sc(totalRetPct)};">${ss(totalRetPct)}${totalRetPct.toFixed(2)}%</div>` : ''}
+                                ${totalRetPct !== null ? `<div class="asset-row-sub" data-ret-id="${asset.id}" style="color:${sc(totalRetPct)};">${ss(totalRetPct)}${totalRetPct.toFixed(2)}%</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -10031,7 +10053,7 @@
                                             <td colspan="2" style="padding:7px 4px;font-weight:700;color:var(--text-secondary);font-size:0.8rem;">סה"כ</td>
                                             <td style="padding:7px 4px;font-weight:700;font-size:0.9rem;color:var(--text-primary);text-align:left;">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
                                             <td id="hfoot-daily-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;color:${sc(combinedDailyPct)};font-weight:700;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
-                                            <td style="padding:7px 4px;text-align:center;font-size:0.82rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(2) + '%' : '—'}</td>
+                                            <td id="hfoot-ret-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(2) + '%' : '—'}</td>
                                         </tr>
                                     </tfoot>
                                 </table>
