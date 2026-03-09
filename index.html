@@ -4878,24 +4878,34 @@
                 return (close > 0) ? { price: close, open: open } : null;
             }
 
-            // Source 1: Stooq — no CORS proxy, reliable
-            try {
-                var r = await fetch('https://stooq.com/q/l/?s=^ta125&f=sd2ohlcv&h&e=csv', { signal: AbortSignal.timeout(5000) });
-                if (r.ok) {
-                    var d = _parseStooq(await r.text());
-                    if (d && d.price > 0) {
-                        var prevForChange = ta125Price > 0 ? ta125Price : d.open;
-                        ta125Price  = d.price;
-                        ta125Change = prevForChange > 0 ? (d.price - prevForChange) / prevForChange * 100 : 0;
-                        try { localStorage.setItem('ta125-price', ta125Price.toString()); localStorage.setItem('ta125-change', ta125Change.toString()); localStorage.setItem('ta125-date', new Date().toISOString()); } catch(e) {}
-                        console.log('[TA-125] ✅ Stooq:', ta125Price.toFixed(0), ta125Change.toFixed(2) + '%');
-                        updateRateDisplay();
-                        return true;
+            // Sources 1-3: Stooq (direct + 2 CORS proxies)
+            var stooqBaseTA = 'https://stooq.com/q/l/?s=^ta125&f=sd2ohlcv&h&e=csv';
+            var stooqSourcesTA = [
+                stooqBaseTA,
+                'https://api.allorigins.win/raw?url=' + encodeURIComponent(stooqBaseTA),
+                'https://corsproxy.io/?' + encodeURIComponent(stooqBaseTA),
+            ];
+            for (var si = 0; si < stooqSourcesTA.length; si++) {
+                try {
+                    var sCtrl = new AbortController();
+                    var sTid = setTimeout(function() { sCtrl.abort(); }, 6000);
+                    var r = await fetch(stooqSourcesTA[si], { signal: sCtrl.signal });
+                    clearTimeout(sTid);
+                    if (r.ok) {
+                        var d = _parseStooq(await r.text());
+                        if (d && d.price > 0) {
+                            ta125Price  = d.price;
+                            ta125Change = d.open > 0 ? (d.price - d.open) / d.open * 100 : 0;
+                            try { localStorage.setItem('ta125-price', ta125Price.toString()); localStorage.setItem('ta125-change', ta125Change.toString()); localStorage.setItem('ta125-date', new Date().toISOString()); } catch(e) {}
+                            console.log('[TA-125] ✅ Stooq[' + si + ']:', ta125Price.toFixed(0), ta125Change.toFixed(2) + '%');
+                            updateRateDisplay();
+                            return true;
+                        }
                     }
-                }
-            } catch(e) { console.warn('[TA-125] Stooq failed:', e.message); }
+                } catch(e) { console.warn('[TA-125] Stooq[' + si + '] failed:', e.message); }
+            }
 
-            // Source 2-4: Yahoo Finance via CORS proxies
+            // Source 4-6: Yahoo Finance via CORS proxies
             var sources = [
                 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
                 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETA125.TA?interval=1d&range=1d'),
@@ -4954,24 +4964,34 @@
                 return (close > 0) ? { price: close, open: open } : null;
             }
 
-            // Source 1: Stooq ^spx — no CORS proxy, reliable
-            try {
-                var r = await fetch('https://stooq.com/q/l/?s=^spx&f=sd2ohlcv&h&e=csv', { signal: AbortSignal.timeout(5000) });
-                if (r.ok) {
-                    var d = _parseStooqSP(await r.text());
-                    if (d && d.price > 0) {
-                        var prevForChange = sp500Price > 0 ? sp500Price : d.open;
-                        sp500Price  = d.price;
-                        sp500Change = prevForChange > 0 ? (d.price - prevForChange) / prevForChange * 100 : 0;
-                        try { localStorage.setItem('sp500-price', sp500Price.toString()); localStorage.setItem('sp500-change', sp500Change.toString()); localStorage.setItem('sp500-date', new Date().toISOString()); } catch(e) {}
-                        console.log('[S&P500] ✅ Stooq:', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
-                        updateRateDisplay();
-                        return true;
+            // Sources 1-3: Stooq (direct + 2 CORS proxies)
+            var stooqBaseSP = 'https://stooq.com/q/l/?s=^spx&f=sd2ohlcv&h&e=csv';
+            var stooqSourcesSP = [
+                stooqBaseSP,
+                'https://api.allorigins.win/raw?url=' + encodeURIComponent(stooqBaseSP),
+                'https://corsproxy.io/?' + encodeURIComponent(stooqBaseSP),
+            ];
+            for (var si = 0; si < stooqSourcesSP.length; si++) {
+                try {
+                    var sCtrl = new AbortController();
+                    var sTid = setTimeout(function() { sCtrl.abort(); }, 6000);
+                    var r = await fetch(stooqSourcesSP[si], { signal: sCtrl.signal });
+                    clearTimeout(sTid);
+                    if (r.ok) {
+                        var d = _parseStooqSP(await r.text());
+                        if (d && d.price > 0) {
+                            sp500Price  = d.price;
+                            sp500Change = d.open > 0 ? (d.price - d.open) / d.open * 100 : 0;
+                            try { localStorage.setItem('sp500-price', sp500Price.toString()); localStorage.setItem('sp500-change', sp500Change.toString()); localStorage.setItem('sp500-date', new Date().toISOString()); } catch(e) {}
+                            console.log('[S&P500] ✅ Stooq[' + si + ']:', sp500Price.toFixed(0), sp500Change.toFixed(2) + '%');
+                            updateRateDisplay();
+                            return true;
+                        }
                     }
-                }
-            } catch(e) { console.warn('[S&P500] Stooq failed:', e.message); }
+                } catch(e) { console.warn('[S&P500] Stooq[' + si + '] failed:', e.message); }
+            }
 
-            // Source 2-4: Yahoo Finance via CORS proxies
+            // Source 4-6: Yahoo Finance via CORS proxies
             var sources = [
                 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d'),
                 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d'),
@@ -5126,6 +5146,34 @@
                             }
                         }
                     } catch(e) { console.warn('[Rate] Yahoo Finance failed:', e.message); }
+                }
+
+                // Source 0a: Yahoo Finance via allorigins.win (real-time, second proxy)
+                if (!gotUSD) {
+                    try {
+                        const yUrl2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USDILS%3DX');
+                        const yCtrl2 = new AbortController();
+                        const yTimeout2 = setTimeout(() => yCtrl2.abort(), 6000);
+                        const yResp2 = await fetch(yUrl2, { signal: yCtrl2.signal });
+                        clearTimeout(yTimeout2);
+                        if (yResp2.ok) {
+                            const yData2 = await yResp2.json();
+                            const meta2 = yData2 && yData2.chart && yData2.chart.result && yData2.chart.result[0] && yData2.chart.result[0].meta;
+                            const rate2 = meta2 ? (meta2.regularMarketPrice || meta2.previousClose) : 0;
+                            if (rate2 > 0) {
+                                exchangeRate = rate2;
+                                gotUSD = true;
+                                if (meta2.previousClose > 0 && !gotPrevClose) {
+                                    exchangeRatePrevClose = meta2.previousClose;
+                                    gotPrevClose = true;
+                                    var todayStr2 = new Date().toISOString().split('T')[0];
+                                    localStorage.setItem('usdils-prev-close', exchangeRatePrevClose.toString());
+                                    localStorage.setItem('usdils-prev-date', todayStr2);
+                                }
+                                console.log('[Rate] allorigins Yahoo USD/ILS:', exchangeRate, '| prevClose:', exchangeRatePrevClose);
+                            }
+                        }
+                    } catch(e) { console.warn('[Rate] allorigins Yahoo failed:', e.message); }
                 }
 
                 // Source 0b: Bank of Israel (official daily rate, XML)
@@ -10467,11 +10515,13 @@
                 var currSym = h.currency === 'ILS' ? '₪' : '$';
                 var dailyNativeAmt = (h.units || 0) * (h.price || 0) * (h.dailyPct || 0) / 100;
                 var retNativeAmt = retPct !== null ? (h.units || 0) * ((h.price || 0) - (h.avgBuyPrice || 0)) : 0;
+                var rawValUSD = (h.units || 0) * (h.price || 0);
+                var rawValILS = (h.units || 0) * pILS;
                 var valStr = isCash
                     ? '$' + Math.round(h.units || 0).toLocaleString('en-US')
                     : h.currency === 'USD'
-                        ? '$' + Math.round(hVal / exchangeRate).toLocaleString('en-US')
-                        : '₪' + hVal.toLocaleString('he-IL');
+                        ? '$' + rawValUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                        : '₪' + rawValILS.toLocaleString('he-IL', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 return '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);">' +
                     '<td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">' + h.ticker + '</td>' +
                     '<td style="padding:5px 4px;font-size:0.8rem;text-align:center;">' + priceStr + '</td>' +
