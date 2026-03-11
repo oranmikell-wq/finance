@@ -1856,7 +1856,7 @@
                     <div class="total-change positive" id="totalChange">
                         <span>▲</span>
                         <span>+₪0 (0%)</span>
-                        <span>החודש</span>
+                        <span>היום</span>
                     </div>
                     <div id="totalBreakdown" style="display:flex;justify-content:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.15);border-radius:10px;padding:6px 10px;">
@@ -7999,39 +7999,39 @@
             var breakdownEl = document.getElementById('totalBreakdown');
             if (breakdownEl) breakdownEl.style.display = assets.length > 0 ? 'flex' : 'none';
             
-            // Calculate monthly change from history snapshot (last entry before start of current month)
+            // Calculate daily change from history snapshot (yesterday's entry)
             var historyForChange = [];
             try { historyForChange = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
-            const monthStart = new Date().toISOString().slice(0, 7) + '-01'; // 'YYYY-MM-01'
-            const prevEntries = historyForChange.filter(e => e.date < monthStart);
+            const today = new Date().toISOString().slice(0, 10);
+            const prevEntries = historyForChange.filter(e => e.date < today);
             const baselineEntry = prevEntries.length > 0 ? prevEntries[prevEntries.length - 1] : null;
-            let monthlyChange, changePercent;
+            let dailyChange, changePercent;
             if (baselineEntry) {
-                monthlyChange = totalILS - baselineEntry.value;
-                changePercent = baselineEntry.value > 0 ? (monthlyChange / baselineEntry.value * 100) : 0;
+                dailyChange = totalILS - baselineEntry.value;
+                changePercent = baselineEntry.value > 0 ? (dailyChange / baselineEntry.value * 100) : 0;
             } else {
                 // No history yet — fall back to estimated formula
-                monthlyChange = assets.reduce((sum, asset) => {
+                dailyChange = assets.reduce((sum, asset) => {
                     const valueInILS = toILS(asset.value, asset.currency || 'ILS');
-                    return sum + (valueInILS * (asset.return || 0) / 100 / 12) + toILS(asset.monthly || 0, asset.monthlyCurrency || 'ILS');
+                    return sum + (valueInILS * (asset.return || 0) / 100 / 365) + toILS(asset.monthly || 0, asset.monthlyCurrency || 'ILS') / 30;
                 }, 0);
-                changePercent = totalILS > 0 ? (monthlyChange / totalILS * 100) : 0;
+                changePercent = totalILS > 0 ? (dailyChange / totalILS * 100) : 0;
             }
             const changeElement = document.getElementById('totalChange');
-            
-            if (monthlyChange >= 0) {
+
+            if (dailyChange >= 0) {
                 changeElement.className = 'total-change positive';
                 changeElement.innerHTML = `
                     <span>▲</span>
-                    <span>+₪${monthlyChange.toLocaleString('he-IL', {maximumFractionDigits: 0})} (${changePercent.toFixed(1)}%)</span>
-                    <span>החודש</span>
+                    <span>+₪${dailyChange.toLocaleString('he-IL', {maximumFractionDigits: 0})} (${changePercent.toFixed(1)}%)</span>
+                    <span>היום</span>
                 `;
             } else {
                 changeElement.className = 'total-change negative';
                 changeElement.innerHTML = `
                     <span>▼</span>
-                    <span>-₪${Math.abs(monthlyChange).toLocaleString('he-IL', {maximumFractionDigits: 0})} (${Math.abs(changePercent).toFixed(1)}%)</span>
-                    <span>החודש</span>
+                    <span>-₪${Math.abs(dailyChange).toLocaleString('he-IL', {maximumFractionDigits: 0})} (${Math.abs(changePercent).toFixed(1)}%)</span>
+                    <span>היום</span>
                 `;
             }
         }
