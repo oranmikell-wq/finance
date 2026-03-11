@@ -1848,31 +1848,35 @@
         </div>
 
         <div style="display:flex;gap:8px;align-items:stretch;direction:rtl;">
-            <!-- Right column: total + breakdown in one card, two visual sections -->
-            <div class="total-worth-card" style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;">
-                <!-- Section 1: total + daily change -->
-                <div class="total-worth-content">
-                    <div class="total-label">סך כל הנכסים</div>
-                    <div class="total-amount" id="totalWorth">₪0</div>
-                    <div class="total-change positive" id="totalChange">
-                        <span>▲</span>
-                        <span>+₪0 (0%)</span>
-                        <span>היום</span>
+            <!-- Right column: two separate cards stacked -->
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;">
+                <!-- Card 1: total + daily change -->
+                <div class="total-worth-card" style="flex:1;padding:14px 16px;">
+                    <div class="total-worth-content">
+                        <div class="total-label">סך כל הנכסים</div>
+                        <div class="total-amount" id="totalWorth">₪0</div>
+                        <div class="total-change positive" id="totalChange">
+                            <span>▲</span>
+                            <span>+₪0 (0%)</span>
+                            <span>היום</span>
+                        </div>
                     </div>
                 </div>
-                <!-- Section 2: breakdown -->
-                <div id="totalBreakdown" style="display:none;flex-direction:column;gap:4px;direction:rtl;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:7px;background:rgba(0,217,255,0.07);">
-                        <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> נזילים</span>
-                        <span id="totalLiquid" style="font-size:0.78rem;font-weight:600;color:#fff;">₪0</span>
-                    </div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:7px;background:rgba(176,38,255,0.07);">
-                        <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> פנסיה</span>
-                        <span id="totalPension" style="font-size:0.78rem;font-weight:600;color:#fff;">₪0</span>
-                    </div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:7px;background:rgba(16,185,129,0.07);">
-                        <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> נדל"ן</span>
-                        <span id="totalRealEstate" style="font-size:0.78rem;font-weight:600;color:#fff;">₪0</span>
+                <!-- Card 2: breakdown -->
+                <div class="total-worth-card" style="padding:10px 12px;">
+                    <div id="totalBreakdown" style="display:none;flex-direction:column;gap:5px;direction:rtl;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.15);">
+                            <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> נזילים</span>
+                            <span id="totalLiquid" style="font-size:0.8rem;font-weight:600;color:#fff;">₪0</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;background:rgba(176,38,255,0.08);border:1px solid rgba(176,38,255,0.15);">
+                            <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> פנסיה</span>
+                            <span id="totalPension" style="font-size:0.8rem;font-weight:600;color:#fff;">₪0</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);">
+                            <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> נדל"ן</span>
+                            <span id="totalRealEstate" style="font-size:0.8rem;font-weight:600;color:#fff;">₪0</span>
+                        </div>
                     </div>
                 </div>
             </div>
