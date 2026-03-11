@@ -2305,12 +2305,26 @@
                     <button onclick="closeTrendsChart()" style="background:none;border:1px solid rgba(244,196,48,0.3);color:var(--accent-gold);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;display:flex;align-items:center;gap:4px;font-size:0.78rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> חזרה</button>
                 </div>
                 <div style="padding:0 16px 16px;">
+                    <div style="display:flex;gap:4px;margin-bottom:6px;" id="chartTypeBtns">
+                        <button class="range-btn active" onclick="setChartMode('line',this)">קו</button>
+                        <button class="range-btn" onclick="setChartMode('candle',this)">נרות</button>
+                    </div>
                     <div style="display:flex;gap:4px;margin-bottom:8px;" id="chartRangeBtns">
                         <button class="range-btn" onclick="setChartRange('week',this)">שבוע</button>
                         <button class="range-btn" onclick="setChartRange('month',this)">חודש</button>
                         <button class="range-btn" onclick="setChartRange('3month',this)">3 חודשים</button>
                         <button class="range-btn" onclick="setChartRange('year',this)">שנה</button>
                         <button class="range-btn active" onclick="setChartRange('all',this)">הכל</button>
+                    </div>
+                    <div style="display:none;gap:4px;margin-bottom:6px;" id="candleResBtns">
+                        <button class="range-btn active" onclick="setCandleResolution('hourly',this)">שעתי</button>
+                        <button class="range-btn" onclick="setCandleResolution('daily',this)">יומי</button>
+                    </div>
+                    <div style="display:none;gap:4px;margin-bottom:8px;" id="candleRangeBtns">
+                        <button class="range-btn" onclick="setCandleRange('week',this)">שבוע</button>
+                        <button class="range-btn" onclick="setCandleRange('month',this)">חודש</button>
+                        <button class="range-btn active" onclick="setCandleRange('year',this)">שנה</button>
+                        <button class="range-btn" onclick="setCandleRange('all',this)">הכל</button>
                     </div>
                     <div id="chartValueHeader" style="display:none;align-items:baseline;gap:10px;margin-bottom:10px;">
                         <span id="chartCurrentValue" style="font-size:1.5rem;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums;"></span>
@@ -2322,6 +2336,7 @@
                             <div id="chartTooltipDate" style="color:rgba(255,255,255,0.5);font-size:0.7rem;margin-bottom:3px;"></div>
                             <div id="chartTooltipValue" style="color:#f4c430;font-weight:700;font-size:0.9rem;"></div>
                             <div id="chartTooltipChange" style="font-size:0.72rem;margin-top:2px;"></div>
+                            <div id="chartTooltipOHLC" style="display:none;margin-top:4px;font-size:0.7rem;color:rgba(255,255,255,0.6);line-height:1.6;"></div>
                         </div>
                     </div>
                     <div id="historyEmpty" style="text-align:center;color:var(--text-secondary);padding:30px;display:none;">
@@ -6226,9 +6241,48 @@
 
         // ============ Chart Range Selector ============
         var chartRange = 'all';
+        var chartMode = 'line';         // 'line' | 'candle'
+        var candleResolution = 'hourly'; // 'hourly' | 'daily'
+        var candleRange = 'year';        // range when in candle+daily mode
+
         function setChartRange(range, btn) {
             chartRange = range;
             document.querySelectorAll('#chartRangeBtns .range-btn').forEach(function(b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            renderHistoryChart();
+        }
+
+        function setChartMode(mode, btn) {
+            chartMode = mode;
+            document.querySelectorAll('#chartTypeBtns .range-btn').forEach(function(b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            var lineRng   = document.getElementById('chartRangeBtns');
+            var candleRes = document.getElementById('candleResBtns');
+            var candleRng = document.getElementById('candleRangeBtns');
+            if (mode === 'candle') {
+                if (lineRng) lineRng.style.display = 'none';
+                if (candleRes) candleRes.style.display = 'flex';
+                if (candleRng) candleRng.style.display = candleResolution === 'daily' ? 'flex' : 'none';
+            } else {
+                if (lineRng) lineRng.style.display = 'flex';
+                if (candleRes) candleRes.style.display = 'none';
+                if (candleRng) candleRng.style.display = 'none';
+            }
+            renderHistoryChart();
+        }
+
+        function setCandleResolution(res, btn) {
+            candleResolution = res;
+            document.querySelectorAll('#candleResBtns .range-btn').forEach(function(b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            var candleRng = document.getElementById('candleRangeBtns');
+            if (candleRng) candleRng.style.display = res === 'daily' ? 'flex' : 'none';
+            renderHistoryChart();
+        }
+
+        function setCandleRange(range, btn) {
+            candleRange = range;
+            document.querySelectorAll('#candleRangeBtns .range-btn').forEach(function(b) { b.classList.remove('active'); });
             if (btn) btn.classList.add('active');
             renderHistoryChart();
         }
@@ -8532,6 +8586,83 @@
                 if (history.length > 365) history = history.slice(-365);
                 localStorage.setItem('portfolio-history', JSON.stringify(history));
             } catch(e) {}
+            saveIntradaySnapshot();
+        }
+
+        function saveIntradaySnapshot() {
+            try {
+                var total = assets.reduce(function(s, a) { return s + toILS(a.value, a.currency || 'ILS'); }, 0);
+                if (total <= 0) return;
+                var now = Date.now();
+                var data = [];
+                try { data = JSON.parse(localStorage.getItem('portfolio-history-intraday') || '[]'); } catch(e) {}
+                // Rate-limit: at most once per 20 minutes
+                if (data.length > 0 && now - data[data.length - 1].ts < 20 * 60 * 1000) return;
+                data.push({ ts: now, v: total });
+                // Keep only last 7 days, cap at 1500 entries
+                var cutoff = now - 7 * 24 * 3600 * 1000;
+                data = data.filter(function(d) { return d.ts >= cutoff; });
+                if (data.length > 1500) data = data.slice(-1500);
+                localStorage.setItem('portfolio-history-intraday', JSON.stringify(data));
+            } catch(e) {}
+        }
+
+        function buildCandles(data, resolution) {
+            // data: [{ts, v}] sorted by ts ascending
+            // returns [{label, ts, open, high, low, close}]
+            if (!data || data.length === 0) return [];
+
+            function getPeriodKey(ts) {
+                var d = new Date(ts);
+                if (resolution === 'hourly') {
+                    return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate() + '-' + d.getHours();
+                }
+                return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+            }
+
+            function formatLabel(ts) {
+                var d = new Date(ts);
+                var dd = ('0' + d.getDate()).slice(-2);
+                var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+                if (resolution === 'hourly') {
+                    return dd + '/' + mm + ' ' + ('0' + d.getHours()).slice(-2) + ':00';
+                }
+                return dd + '/' + mm;
+            }
+
+            var groups = {}, order = [];
+            data.forEach(function(pt) {
+                var key = getPeriodKey(pt.ts);
+                if (!groups[key]) {
+                    groups[key] = { ts: pt.ts, open: pt.v, high: pt.v, low: pt.v, close: pt.v };
+                    order.push(key);
+                } else {
+                    groups[key].close = pt.v;
+                    if (pt.v > groups[key].high) groups[key].high = pt.v;
+                    if (pt.v < groups[key].low)  groups[key].low  = pt.v;
+                }
+            });
+
+            return order.map(function(k) {
+                var g = groups[k];
+                return { label: formatLabel(g.ts), ts: g.ts, open: g.open, high: g.high, low: g.low, close: g.close };
+            });
+        }
+
+        // Build daily pseudo-candles from the daily history array when no intraday data exists
+        function buildDailyCandlesFromHistory(history) {
+            if (!history || history.length < 2) return [];
+            var candles = [];
+            for (var i = 1; i < history.length; i++) {
+                var o = history[i - 1].value;
+                var c = history[i].value;
+                candles.push({
+                    label: history[i].date.split('-').slice(1).reverse().join('/'),
+                    ts: new Date(history[i].date).getTime(),
+                    open: o, high: Math.max(o, c), low: Math.min(o, c), close: c
+                });
+            }
+            return candles;
         }
 
         function renderHistoryChart() {
@@ -8544,6 +8675,14 @@
             var chartVisible = (trendsTab && trendsTab.classList.contains('active')) ||
                                (chartSubpage && chartSubpage.style.display !== 'none');
             if (!chartVisible) return;
+            // Delegate to candle chart if in candle mode
+            if (chartMode === 'candle') {
+                // Hide OHLC from line tooltip on mode switch
+                var ohlcEl = document.getElementById('chartTooltipOHLC');
+                if (ohlcEl) ohlcEl.style.display = 'none';
+                renderCandlestickChart();
+                return;
+            }
 
             var history = [];
             try { history = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
@@ -8820,6 +8959,295 @@
 
 
         }
+
+        function renderCandlestickChart() {
+            var canvas = document.getElementById('historyChart');
+            var emptyMsg = document.getElementById('historyEmpty');
+            if (!canvas) return;
+
+            var candles = [];
+
+            if (candleResolution === 'hourly') {
+                // Load intraday data, last 48h
+                var intraday = [];
+                try { intraday = JSON.parse(localStorage.getItem('portfolio-history-intraday') || '[]'); } catch(e) {}
+                var cutoff48 = Date.now() - 48 * 3600 * 1000;
+                intraday = intraday.filter(function(d) { return d.ts >= cutoff48; });
+                candles = buildCandles(intraday, 'hourly');
+            } else {
+                // Daily candles — prefer intraday grouped by day, fall back to daily history
+                var intraday2 = [];
+                try { intraday2 = JSON.parse(localStorage.getItem('portfolio-history-intraday') || '[]'); } catch(e) {}
+
+                if (intraday2.length >= 4) {
+                    // Apply date range filter
+                    var now2 = new Date(), cutoffD = new Date();
+                    if      (candleRange === 'week')  cutoffD.setDate(now2.getDate() - 7);
+                    else if (candleRange === 'month') cutoffD.setMonth(now2.getMonth() - 1);
+                    else if (candleRange === 'year')  cutoffD.setFullYear(now2.getFullYear() - 1);
+                    else cutoffD = new Date(0);
+                    var cutoffTs = cutoffD.getTime();
+                    var filtered = intraday2.filter(function(d) { return d.ts >= cutoffTs; });
+                    candles = buildCandles(filtered, 'daily');
+                } else {
+                    // Fall back to daily history
+                    var history2 = [];
+                    try { history2 = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
+                    if (candleRange !== 'all' && history2.length > 0) {
+                        var now3 = new Date(), cutoffD2 = new Date();
+                        if      (candleRange === 'week')  cutoffD2.setDate(now3.getDate() - 7);
+                        else if (candleRange === 'month') cutoffD2.setMonth(now3.getMonth() - 1);
+                        else if (candleRange === 'year')  cutoffD2.setFullYear(now3.getFullYear() - 1);
+                        var cutStr2 = cutoffD2.toISOString().slice(0, 10);
+                        history2 = history2.filter(function(h) { return h.date >= cutStr2; });
+                    }
+                    candles = buildDailyCandlesFromHistory(history2);
+                }
+            }
+
+            if (candles.length < 2) {
+                canvas.style.display = 'none';
+                if (emptyMsg) {
+                    emptyMsg.style.display = 'block';
+                    emptyMsg.textContent = candleResolution === 'hourly'
+                        ? '⏳ נתוני נרות שעתיים יתחילו להצטבר לאחר מספר ביקורים. חזור מחר!'
+                        : '📊 נתונים היסטוריים יתחילו להצטבר מהיום. חזור מחר!';
+                }
+                var hdr0 = document.getElementById('chartValueHeader');
+                if (hdr0) hdr0.style.display = 'none';
+                return;
+            }
+            canvas.style.display = 'block';
+            if (emptyMsg) emptyMsg.style.display = 'none';
+
+            var ctx = canvas.getContext('2d');
+            var dpr = window.devicePixelRatio || 1;
+            var rect = canvas.getBoundingClientRect();
+            canvas.width  = rect.width  * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            var W = rect.width, H = rect.height;
+
+            var isLight = document.body.classList.contains('light-mode');
+            var clrGrid  = isLight ? 'rgba(0,0,0,0.07)'  : 'rgba(255,255,255,0.05)';
+            var clrLabel = isLight ? 'rgba(0,0,0,0.45)'  : 'rgba(255,255,255,0.28)';
+            var clrDate  = isLight ? 'rgba(0,0,0,0.4)'   : 'rgba(255,255,255,0.3)';
+            var clrBull  = '#10b981';
+            var clrBear  = '#ef4444';
+
+            var padL = 68, padR = 16, padT = 16, padB = 32;
+            var chartW = W - padL - padR;
+            var chartH = H - padT - padB;
+
+            // Value range
+            var allHigh = candles.map(function(c) { return c.high; });
+            var allLow  = candles.map(function(c) { return c.low; });
+            var maxV = Math.max.apply(null, allHigh);
+            var minV = Math.min.apply(null, allLow);
+            var range = maxV - minV || 1;
+            minV -= range * 0.08;
+            maxV += range * 0.12;
+            range = maxV - minV;
+
+            function toY(v) { return padT + (1 - (v - minV) / range) * chartH; }
+
+            // Update HTML value header
+            var lastCandle = candles[candles.length - 1];
+            var firstCandle = candles[0];
+            var isUp = lastCandle.close >= firstCandle.open;
+            var changePct = firstCandle.open > 0 ? ((lastCandle.close - firstCandle.open) / firstCandle.open * 100) : 0;
+            var hdrEl = document.getElementById('chartValueHeader');
+            var cvEl  = document.getElementById('chartCurrentValue');
+            var pcEl  = document.getElementById('chartPeriodChange');
+            if (hdrEl && cvEl && pcEl) {
+                hdrEl.style.display = 'flex';
+                cvEl.textContent = '₪' + Math.round(lastCandle.close).toLocaleString('he-IL');
+                pcEl.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(changePct).toFixed(1) + '%';
+                pcEl.style.background = isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                pcEl.style.color = isUp ? clrBull : clrBear;
+            }
+
+            ctx.clearRect(0, 0, W, H);
+
+            // Grid lines
+            var gridCount = 4;
+            ctx.lineWidth = 1;
+            for (var g = 0; g <= gridCount; g++) {
+                var gy = padT + (chartH / gridCount) * g;
+                ctx.strokeStyle = clrGrid;
+                ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
+                var gv = maxV - (range * g / gridCount);
+                ctx.fillStyle = clrLabel;
+                ctx.font = '10px -apple-system,sans-serif';
+                ctx.textAlign = 'right';
+                var lbl = gv >= 1000000 ? '₪' + (gv/1000000).toFixed(1) + 'M' :
+                          gv >= 1000    ? '₪' + Math.round(gv/1000) + 'K' :
+                          '₪' + Math.round(gv);
+                ctx.fillText(lbl, padL - 6, gy + 3.5);
+            }
+
+            // Draw candles
+            var n = candles.length;
+            var candleSlot = chartW / n;
+            var bodyW = Math.max(2, candleSlot * 0.6);
+            var halfBody = bodyW / 2;
+
+            // Store candle positions for tooltip
+            var candlePositions = [];
+
+            for (var i = 0; i < n; i++) {
+                var c = candles[i];
+                var cx = padL + (i + 0.5) * candleSlot;
+                var bullish = c.close >= c.open;
+                var clr = bullish ? clrBull : clrBear;
+
+                var yOpen  = toY(c.open);
+                var yClose = toY(c.close);
+                var yHigh  = toY(c.high);
+                var yLow   = toY(c.low);
+                var yBodyTop    = Math.min(yOpen, yClose);
+                var yBodyBottom = Math.max(yOpen, yClose);
+                var bodyHeight  = Math.max(1, yBodyBottom - yBodyTop);
+
+                // Wick (high-low line)
+                ctx.strokeStyle = clr;
+                ctx.lineWidth = Math.max(1, candleSlot * 0.08);
+                ctx.beginPath();
+                ctx.moveTo(cx, yHigh);
+                ctx.lineTo(cx, yLow);
+                ctx.stroke();
+
+                // Body
+                ctx.fillStyle = clr;
+                ctx.globalAlpha = bullish ? 0.9 : 0.85;
+                ctx.fillRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
+                ctx.globalAlpha = 1;
+
+                // Hollow body for bullish (optional — solid body always)
+                // Border for candle body
+                ctx.strokeStyle = clr;
+                ctx.lineWidth = 0.5;
+                ctx.strokeRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
+
+                candlePositions.push({ cx: cx, c: c, yBodyTop: yBodyTop, yBodyBottom: yBodyBottom, yHigh: yHigh, yLow: yLow });
+            }
+
+            // Date labels — show at most 6
+            var maxLabels = Math.min(6, n);
+            var labelIdxs = [];
+            if (maxLabels >= 2) {
+                var step = (n - 1) / (maxLabels - 1);
+                for (var li = 0; li < maxLabels; li++) labelIdxs.push(Math.round(li * step));
+            }
+            labelIdxs = labelIdxs.filter(function(v, idx, arr) { return arr.indexOf(v) === idx; });
+            ctx.fillStyle = clrDate;
+            ctx.font = '9px -apple-system,sans-serif';
+            ctx.textAlign = 'center';
+            labelIdxs.forEach(function(idx) {
+                ctx.fillText(candles[idx].label, padL + (idx + 0.5) * candleSlot, H - 6);
+            });
+
+            // ---- Interactive tooltip ----
+            canvas._candlePositions = candlePositions;
+            canvas._candleData = candles;
+            canvas._padL = padL; canvas._padR = padR; canvas._padT = padT; canvas._padB = padB;
+            canvas._chartW = chartW; canvas._candleSlot = candleSlot;
+            canvas._prevIdx = -1;
+
+            var wrapper = canvas.parentElement;
+            var overlay = wrapper.querySelector('canvas.chart-overlay');
+            if (!overlay) {
+                overlay = document.createElement('canvas');
+                overlay.className = 'chart-overlay';
+                overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+                wrapper.appendChild(overlay);
+            }
+            overlay.width  = canvas.width;
+            overlay.height = canvas.height;
+
+            if (!canvas._candleTooltipBound) {
+                canvas._candleTooltipBound = true;
+
+                function _showCandleTip(clientX) {
+                    var r = canvas.getBoundingClientRect();
+                    var mx = clientX - r.left;
+                    var cps = canvas._candlePositions;
+                    if (!cps || !cps.length) return;
+                    var slot = canvas._candleSlot;
+                    var pL = canvas._padL;
+                    var idx = Math.floor((mx - pL) / slot);
+                    idx = Math.max(0, Math.min(cps.length - 1, idx));
+                    if (idx === canvas._prevIdx) return;
+                    canvas._prevIdx = idx;
+
+                    var tip = document.getElementById('chartTooltip');
+                    if (!tip) return;
+                    var cd = cps[idx].c;
+                    var bullish = cd.close >= cd.open;
+                    var chgAbs = cd.close - cd.open;
+                    var chgPct = cd.open > 0 ? chgAbs / cd.open * 100 : 0;
+
+                    document.getElementById('chartTooltipDate').textContent = cd.label;
+                    document.getElementById('chartTooltipValue').style.color = bullish ? clrBull : clrBear;
+                    document.getElementById('chartTooltipValue').textContent = '₪' + Math.round(cd.close).toLocaleString('he-IL');
+                    var tChg = document.getElementById('chartTooltipChange');
+                    tChg.textContent = (chgAbs >= 0 ? '+' : '') + Math.round(chgAbs).toLocaleString('he-IL') + ' ₪ (' + (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%)';
+                    tChg.style.color = bullish ? clrBull : clrBear;
+
+                    var ohlcEl = document.getElementById('chartTooltipOHLC');
+                    if (ohlcEl) {
+                        ohlcEl.style.display = 'block';
+                        ohlcEl.innerHTML =
+                            'פתיחה: ₪' + Math.round(cd.open).toLocaleString('he-IL') + '<br>' +
+                            'גבוה: ₪'   + Math.round(cd.high).toLocaleString('he-IL') + '<br>' +
+                            'נמוך: ₪'   + Math.round(cd.low).toLocaleString('he-IL');
+                    }
+
+                    var tipW = tip.offsetWidth || 180;
+                    var left = cps[idx].cx - tipW / 2;
+                    if (left < 0) left = 0;
+                    if (left + tipW > r.width - 4) left = r.width - tipW - 4;
+                    var top = cps[idx].yBodyTop - 80;
+                    if (top < 4) top = cps[idx].yBodyBottom + 8;
+                    tip.style.left = left + 'px';
+                    tip.style.top  = top + 'px';
+                    tip.style.display = 'block';
+
+                    // Crosshair overlay
+                    var ov2 = canvas.parentElement.querySelector('canvas.chart-overlay');
+                    if (!ov2) return;
+                    var dpr2 = window.devicePixelRatio || 1;
+                    var oc2 = ov2.getContext('2d');
+                    oc2.setTransform(dpr2, 0, 0, dpr2, 0, 0);
+                    oc2.clearRect(0, 0, ov2.width / dpr2, ov2.height / dpr2);
+                    oc2.strokeStyle = document.body.classList.contains('light-mode') ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
+                    oc2.lineWidth = 1;
+                    oc2.setLineDash([3, 3]);
+                    oc2.beginPath();
+                    oc2.moveTo(cps[idx].cx, padT);
+                    oc2.lineTo(cps[idx].cx, H - padB);
+                    oc2.stroke();
+                    oc2.setLineDash([]);
+                }
+
+                function _hideCandleTip() {
+                    var tip = document.getElementById('chartTooltip');
+                    if (tip) tip.style.display = 'none';
+                    var ohlcEl = document.getElementById('chartTooltipOHLC');
+                    if (ohlcEl) ohlcEl.style.display = 'none';
+                    canvas._prevIdx = -1;
+                    var ov3 = canvas.parentElement.querySelector('canvas.chart-overlay');
+                    if (ov3) { var oc3 = ov3.getContext('2d'); oc3.setTransform(1,0,0,1,0,0); oc3.clearRect(0,0,ov3.width,ov3.height); }
+                }
+
+                canvas.addEventListener('mousemove',  function(e) { _showCandleTip(e.clientX); });
+                canvas.addEventListener('mouseleave', _hideCandleTip);
+                canvas.addEventListener('touchstart', function(e) { if (e.touches[0]) _showCandleTip(e.touches[0].clientX); }, {passive:true});
+                canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); if (e.touches[0]) _showCandleTip(e.touches[0].clientX); }, {passive:false});
+                canvas.addEventListener('touchend',   function() { setTimeout(_hideCandleTip, 2500); });
+            }
+        }
+
         // ============ GEMEL / PENSION RANKINGS ============
         var gemelDataCache = {};   // keyed by product type
         var gemelFilter = 'all';
