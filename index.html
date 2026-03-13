@@ -1907,13 +1907,20 @@
         <!-- TAB 1: Dashboard -->
         <div class="tab-content active" id="tabDashboard">
 
-        <div style="display:flex;justify-content:flex-start;align-items:center;gap:8px;margin-bottom:10px;direction:ltr;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;direction:ltr;min-width:0;">
             <div style="display:flex;gap:4px;flex-wrap:nowrap;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;">
                 <button onclick="sortAssets('value', event)" class="sort-btn active-sort" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:rgba(244,196,48,0.15);color:var(--accent-gold);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">שווי ↓</button>
                 <button onclick="sortAssets('type', event)" class="sort-btn" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">סוג</button>
                 <button onclick="sortAssets('return', event)" class="sort-btn" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">תשואה ↓</button>
                 <button onclick="sortAssets('name', event)" class="sort-btn" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">שם</button>
             </div>
+            <select id="assetFilterSelect" onchange="filterAssets(this.value)" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;outline:none;flex-shrink:0;direction:rtl;">
+                <option value="all">ראשי</option>
+                <option value="long">טווח ארוך</option>
+                <option value="mid">טווח בינוני</option>
+                <option value="short">טווח קצר</option>
+                <option value="realestate">נדל"ן</option>
+            </select>
         </div>
         <div class="assets-grid" id="assetsGrid">
             <div class="skeleton-row"></div>
@@ -8594,8 +8601,38 @@
             insContainer.innerHTML = renderSmartInsights();
         }
 
-        // ============ SORTING ============
+        // ============ SORTING & FILTERING ============
         var currentSort = localStorage.getItem('portfolio-sort') || 'value';
+        var currentFilter = 'all';
+
+        function filterAssets(value) {
+            currentFilter = value;
+            _lastGridHash = null; // force re-render
+            updateAssetsGrid();
+        }
+
+        function applyFilter(assetsList) {
+            if (currentFilter === 'all') return assetsList;
+            return assetsList.filter(function(a) {
+                if (currentFilter === 'long') {
+                    // pension + classic gemel (gemelFundType !== 'gemel')
+                    return a.type === 'pension' || (a.type === 'gemel' && a.gemelFundType !== 'gemel');
+                }
+                if (currentFilter === 'mid') {
+                    // קרן השתלמות only
+                    return a.type === 'fund';
+                }
+                if (currentFilter === 'short') {
+                    // savings, deposit, גמל להשקעה, trade, crypto, other
+                    return a.type === 'savings' || a.type === 'deposit' || a.type === 'crypto' || a.type === 'trade' || a.type === 'other' ||
+                           (a.type === 'gemel' && a.gemelFundType === 'gemel');
+                }
+                if (currentFilter === 'realestate') {
+                    return a.type === 'real_estate';
+                }
+                return true;
+            });
+        }
         function sortAssets(by, ev) {
             currentSort = by;
             localStorage.setItem('portfolio-sort', by);
@@ -10349,9 +10386,16 @@
             // Hash: if nothing visual changed, skip re-render entirely
             var gridHash = assets.map(function(a) {
                 return a.id + ',' + a.value + ',' + (a.return||0) + ',' + (a.currency||'ILS') + ',' + (a.spyLinked?spyPrice:0);
-            }).join('|') + '||' + exchangeRate + '|' + btcRate + '|' + ethRate;
+            }).join('|') + '||' + exchangeRate + '|' + btcRate + '|' + ethRate + '|' + currentFilter;
             if (gridHash === _lastGridHash) return;
             _lastGridHash = gridHash;
+
+            // Apply category filter
+            var displayAssets = applyFilter(assets);
+
+            // Sync filter select
+            var filterSel = document.getElementById('assetFilterSelect');
+            if (filterSel && filterSel.value !== currentFilter) filterSel.value = currentFilter;
 
             // Hide grid while rebuilding DOM — skip for background price updates (no flash)
             var firstRender = grid.children.length === 0;
@@ -10372,8 +10416,19 @@
                 return;
             }
 
+            if (displayAssets.length === 0) {
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: var(--text-secondary);">
+                        <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.3;">🔍</div>
+                        <p>אין נכסים בקטגוריה זו</p>
+                    </div>
+                `;
+                grid.style.opacity = '1';
+                return;
+            }
+
             _cardHashes = {}; // reset per-card hashes on full rebuild
-            var newGridHtml = assets.map((asset, idx) => {
+            var newGridHtml = displayAssets.map((asset, idx) => {
                 const currency = asset.currency || 'ILS';
                 const valueInILS = toILS(asset.value, currency);
                 // costBasis may be in a different currency than asset.currency (e.g. legacy USD stock stored as ILS)
