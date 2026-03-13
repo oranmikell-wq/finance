@@ -123,6 +123,10 @@
             display: flex;
             flex-direction: column;
         }
+        /* When a subpage is open outside the container, don't let container grow */
+        body.subpage-active .container { flex: 0 0 auto; }
+        /* Subpages outside .container — match its width constraints */
+        [id^="subpage"] { max-width: 1400px; width: 100%; margin-left: auto; margin-right: auto; box-sizing: border-box; }
 
         .header {
             margin-bottom: 8px;
@@ -505,9 +509,9 @@
 
             /* Breakdown pills */
             #totalBreakdown {
-                gap: 4px !important;
-                margin-top: 6px !important;
-                padding-top: 6px !important;
+                gap: 3px !important;
+                margin-top: 0 !important;
+                padding-top: 0 !important;
                 justify-content: center !important;
             }
             #totalBreakdown > div {
@@ -1863,19 +1867,19 @@
                     </div>
                 </div>
                 <!-- Card 2: breakdown -->
-                <div class="total-worth-card" style="padding:10px 12px;">
-                    <div id="totalBreakdown" style="display:none;flex-direction:column;gap:5px;direction:rtl;">
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.15);">
-                            <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> נזילים</span>
-                            <span id="totalLiquid" style="font-size:0.8rem;font-weight:600;color:#fff;">₪0</span>
+                <div class="total-worth-card" style="padding:6px 8px;display:flex;flex-direction:column;justify-content:center;">
+                    <div id="totalBreakdown" style="display:none;flex-direction:column;gap:3px;direction:rtl;max-width:200px;align-self:center;width:100%;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:7px;background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.15);">
+                            <span style="font-size:0.62rem;color:var(--text-secondary);display:flex;align-items:center;gap:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> נזילים</span>
+                            <span id="totalLiquid" style="font-size:0.72rem;font-weight:600;color:#fff;">₪0</span>
                         </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;background:rgba(176,38,255,0.08);border:1px solid rgba(176,38,255,0.15);">
-                            <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> פנסיה</span>
-                            <span id="totalPension" style="font-size:0.8rem;font-weight:600;color:#fff;">₪0</span>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:7px;background:rgba(176,38,255,0.08);border:1px solid rgba(176,38,255,0.15);">
+                            <span style="font-size:0.62rem;color:var(--text-secondary);display:flex;align-items:center;gap:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> פנסיה</span>
+                            <span id="totalPension" style="font-size:0.72rem;font-weight:600;color:#fff;">₪0</span>
                         </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);">
-                            <span style="font-size:0.68rem;color:var(--text-secondary);display:flex;align-items:center;gap:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> נדל"ן</span>
-                            <span id="totalRealEstate" style="font-size:0.8rem;font-weight:600;color:#fff;">₪0</span>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:7px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);">
+                            <span style="font-size:0.62rem;color:var(--text-secondary);display:flex;align-items:center;gap:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> נדל"ן</span>
+                            <span id="totalRealEstate" style="font-size:0.72rem;font-weight:600;color:#fff;">₪0</span>
                         </div>
                     </div>
                 </div>
@@ -5135,7 +5139,11 @@
         }
 
         // Fetch current exchange rates from API
+        var _lastRateFetchTime = 0;
         async function fetchExchangeRate() {
+            // Throttle: skip if fetched successfully less than 60 seconds ago
+            var now = Date.now();
+            if (now - _lastRateFetchTime < 60000 && exchangeRate > 1) return true;
             try {
                 var prevRate = exchangeRate;
                 var gotUSD = false;
@@ -5314,7 +5322,8 @@
                 // Crypto fetched separately by fetchCryptoRates()
                 
                 lastRateUpdate = new Date().toISOString();
-                
+                _lastRateFetchTime = Date.now();
+
                 // Save to storage
                 try {
                     localStorage.setItem('exchange-rate', exchangeRate.toString());
@@ -7005,10 +7014,10 @@
             }
         }
 
-        // Auto-update exchange rate every 15s (calls fetchExchangeRate directly, bypasses 2hr guard)
+        // Auto-update exchange rate every 5 minutes (rate doesn't change faster)
         setInterval(function() {
             fetchExchangeRate();
-        }, 15000);
+        }, 300000);
 
         // Update rate indicator color based on age
         function updateRateIndicator(hoursSinceUpdate) {
@@ -8046,12 +8055,14 @@
         function openMashlantaSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             document.getElementById('subpageMashlanta').style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
         }
         function closeMashlantaSubpage() {
             var sub = document.getElementById('subpageMashlanta');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabPersonal').classList.add('active');
         }
         function mashlantaAutoCalc() {
@@ -8198,6 +8209,7 @@
             _trendsSubpageIds.forEach(function(s) { var el = document.getElementById(s); if (el) el.style.display = 'none'; });
             var sub = document.getElementById(id);
             if (sub) sub.style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
             if (cb) { setTimeout(cb, 50); }
         }
@@ -8205,6 +8217,7 @@
             var sub = document.getElementById(id);
             if (!sub || sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabTrends').classList.add('active');
         }
         function openTrendsChart()    { _openTrendsSubpage('subpageTrendsChart',    function() { renderHistoryChart(); }); }
@@ -8224,12 +8237,14 @@
         function openCompoundSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             document.getElementById('subpageCompound').style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
         }
         function closeCompoundSubpage() {
             var sub = document.getElementById('subpageCompound');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabPersonal').classList.add('active');
         }
 
@@ -8237,12 +8252,14 @@
         function openTaxSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             document.getElementById('subpageTax').style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
         }
         function closeTaxSubpage() {
             var sub = document.getElementById('subpageTax');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabPersonal').classList.add('active');
         }
 
@@ -8250,6 +8267,7 @@
         function openMortgageSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             document.getElementById('subpageMortgage').style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
             calcRetirement();
         }
@@ -8257,6 +8275,7 @@
             var sub = document.getElementById('subpageMortgage');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabPersonal').classList.add('active');
         }
 
@@ -8264,12 +8283,14 @@
         function openBudgetSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             document.getElementById('subpageBudget').style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
         }
         function closeBudgetSubpage() {
             var sub = document.getElementById('subpageBudget');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabPersonal').classList.add('active');
         }
 
@@ -8277,12 +8298,14 @@
         function openSalarySubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             document.getElementById('subpageSalary').style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
         }
         function closeSalarySubpage() {
             var sub = document.getElementById('subpageSalary');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabPersonal').classList.add('active');
         }
         function calcSalary() {
@@ -8347,12 +8370,14 @@
         function openFireSubpage() {
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
             document.getElementById('subpageFire').style.display = 'block';
+            document.body.classList.add('subpage-active');
             window.scrollTo(0, 0);
         }
         function closeFireSubpage() {
             var sub = document.getElementById('subpageFire');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
+            document.body.classList.remove('subpage-active');
             document.getElementById('tabPersonal').classList.add('active');
         }
         function calcFire() {
@@ -8418,6 +8443,7 @@
 
         // ============ TAB SWITCHING ============
         function switchTab(tabName, btn) {
+            document.body.classList.remove('subpage-active');
             closeBudgetSubpage();
             closeSalarySubpage();
             closeFireSubpage();
