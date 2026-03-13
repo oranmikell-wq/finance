@@ -9144,6 +9144,17 @@
                     tChg.textContent = (chgFromStart >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(chgFromStart)).toLocaleString('he-IL') + ' (' + (chgPctFromStart >= 0 ? '+' : '') + chgPctFromStart.toFixed(2) + '%)';
                     tChg.style.color = chgFromStart >= 0 ? '#10b981' : '#ef4444';
 
+                    // Update main header dynamically (TradingView style)
+                    var cvElL = document.getElementById('chartCurrentValue');
+                    var pcElL = document.getElementById('chartPeriodChange');
+                    if (cvElL) cvElL.textContent = '₪' + Math.round(cv[idx]).toLocaleString('he-IL');
+                    if (pcElL) {
+                        var upL = chgFromStart >= 0;
+                        pcElL.textContent = (upL ? '▲ +' : '▼ ') + Math.abs(chgPctFromStart).toFixed(2) + '%';
+                        pcElL.style.background = upL ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                        pcElL.style.color = upL ? '#10b981' : '#ef4444';
+                    }
+
                     // Position tooltip
                     var tipW = tip.offsetWidth || 170;
                     var left = cp[idx].x - tipW/2;
@@ -9438,8 +9449,15 @@
             labelIdxs.forEach(function(idx) {
                 var cd2 = candles[idx];
                 var lbl2 = cd2.label;
-                // Try to parse label into Hebrew format if it looks like dd/mm
-                if (cd2.label && /^\d{2}\/\d{2}$/.test(cd2.label)) {
+                if (candleResolution === 'hourly') {
+                    // Show only HH:00 for hourly candles
+                    var dtH = new Date(cd2.ts);
+                    lbl2 = ('0' + dtH.getHours()).slice(-2) + ':00';
+                    // Prefix day if it's midnight or first candle
+                    if (dtH.getHours() === 0 || idx === 0) {
+                        lbl2 = dtH.getDate() + '/' + ('0' + (dtH.getMonth()+1)).slice(-2) + ' ' + lbl2;
+                    }
+                } else if (cd2.label && /^\d{2}\/\d{2}$/.test(cd2.label)) {
                     var parts = cd2.label.split('/');
                     var mon2 = parseInt(parts[1], 10);
                     lbl2 = parts[0] + ' ' + (heMonthsC[mon2 - 1] || parts[1]);
@@ -9474,6 +9492,8 @@
             canvas._padL = padL; canvas._padR = padR; canvas._padT = padT; canvas._padB = padB;
             canvas._chartW = chartW; canvas._candleSlot = candleSlot;
             canvas._minV = minV; canvas._maxV = maxV; canvas._range = range;
+            canvas._firstOpen = firstCandle.open;
+            canvas._candleResolution = candleResolution;
             canvas._prevIdx = -1;
 
             var wrapper = canvas.parentElement;
@@ -9513,16 +9533,28 @@
                     var tip = document.getElementById('chartTooltip');
                     if (!tip) return;
                     var cd = cps[idx].c;
-                    var bullish = cd.close >= cd.open;
-                    var chgAbs = cd.close - cd.open;
-                    var chgPct = cd.open > 0 ? chgAbs / cd.open * 100 : 0;
+                    var firstOpen = canvas._firstOpen || cps[0].c.open;
+                    // Change from period start (like TradingView)
+                    var chgAbs = cd.close - firstOpen;
+                    var chgPct = firstOpen > 0 ? chgAbs / firstOpen * 100 : 0;
+                    var bullish = chgAbs >= 0;
 
                     document.getElementById('chartTooltipDate').textContent = cd.label;
                     document.getElementById('chartTooltipValue').style.color = bullish ? clrBull : clrBear;
                     document.getElementById('chartTooltipValue').textContent = '₪' + Math.round(cd.close).toLocaleString('he-IL');
                     var tChg = document.getElementById('chartTooltipChange');
-                    tChg.textContent = (chgAbs >= 0 ? '+' : '') + Math.round(chgAbs).toLocaleString('he-IL') + ' ₪ (' + (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%)';
+                    tChg.textContent = (chgAbs >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(chgAbs)).toLocaleString('he-IL') + ' (' + (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%)';
                     tChg.style.color = bullish ? clrBull : clrBear;
+
+                    // Update main header dynamically (TradingView style)
+                    var cvEl2 = document.getElementById('chartCurrentValue');
+                    var pcEl2 = document.getElementById('chartPeriodChange');
+                    if (cvEl2) cvEl2.textContent = '₪' + Math.round(cd.close).toLocaleString('he-IL');
+                    if (pcEl2) {
+                        pcEl2.textContent = (bullish ? '▲ +' : '▼ ') + Math.abs(chgPct).toFixed(2) + '%';
+                        pcEl2.style.background = bullish ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                        pcEl2.style.color = bullish ? clrBull : clrBear;
+                    }
 
                     var ohlcEl = document.getElementById('chartTooltipOHLC');
                     if (ohlcEl) {
@@ -9592,6 +9624,23 @@
                     var ohlcEl = document.getElementById('chartTooltipOHLC');
                     if (ohlcEl) ohlcEl.style.display = 'none';
                     canvas._prevIdx = -1;
+                    // Restore header to last candle values
+                    var cpsR = canvas._candlePositions;
+                    if (cpsR && cpsR.length) {
+                        var lastC = cpsR[cpsR.length - 1].c;
+                        var f0 = canvas._firstOpen || cpsR[0].c.open;
+                        var chgR = lastC.close - f0;
+                        var chgPctR = f0 > 0 ? chgR / f0 * 100 : 0;
+                        var cvR = document.getElementById('chartCurrentValue');
+                        var pcR = document.getElementById('chartPeriodChange');
+                        if (cvR) cvR.textContent = '₪' + Math.round(lastC.close).toLocaleString('he-IL');
+                        if (pcR) {
+                            var upR = chgR >= 0;
+                            pcR.textContent = (upR ? '▲ +' : '▼ ') + Math.abs(chgPctR).toFixed(2) + '%';
+                            pcR.style.background = upR ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                            pcR.style.color = upR ? '#10b981' : '#ef4444';
+                        }
+                    }
                     var ov3 = canvas.parentElement.querySelector('canvas.chart-overlay');
                     if (ov3) { var oc3 = ov3.getContext('2d'); oc3.setTransform(1,0,0,1,0,0); oc3.clearRect(0,0,ov3.width,ov3.height); }
                 }
