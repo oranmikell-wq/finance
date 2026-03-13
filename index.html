@@ -10620,17 +10620,18 @@
                     const combinedDailyILS = totalVal * (combinedDailyPct / 100);
                     // Holdings table rows
                     const holdingRows = _renderHoldingRows(holdings);
-                    // Compute value only for holdings with a known buy price (for accurate return %)
-                    let valueWithBasis = 0;
+                    // Compute value and cost basis live with the same FX rate — keeps return% FX-neutral for USD holdings
+                    let valueWithBasis = 0, costBasisLive = 0;
                     holdings.forEach(function(h) {
                         if (h.avgBuyPrice > 0) {
                             const pILS = h.currency === 'ILS' ? (h.price || 0) : (h.price || 0) * exchangeRate;
+                            const bILS = h.currency === 'ILS' ? h.avgBuyPrice : h.avgBuyPrice * exchangeRate;
                             valueWithBasis += (h.units || 0) * pILS;
+                            costBasisLive  += (h.units || 0) * bILS;
                         }
                     });
-                    const totalCostBasis = asset.costBasis || 0;
-                    const totalRetPct = totalCostBasis > 0 ? (valueWithBasis - totalCostBasis) / totalCostBasis * 100 : null;
-                    const totalRetILS = totalRetPct !== null ? Math.round(valueWithBasis - totalCostBasis) : 0;
+                    const totalRetPct = costBasisLive > 0 ? (valueWithBasis - costBasisLive) / costBasisLive * 100 : null;
+                    const totalRetILS = totalRetPct !== null ? Math.round(valueWithBasis - costBasisLive) : 0;
 
                     return `
                     <div class="asset-row" data-asset-id="${asset.id}" style="animation-delay:${delay}s">
