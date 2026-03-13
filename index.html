@@ -8103,8 +8103,7 @@
             var sub = document.getElementById('subpageMashlanta');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
-            document.body.classList.remove('subpage-active');
-            document.getElementById('tabPersonal').classList.add('active');
+            openCalcListSubpage();
         }
         function mashlantaAutoCalc() {
             var propVal = parseNum(document.getElementById('mashlantaPropVal').value) || 0;
@@ -8285,8 +8284,7 @@
             var sub = document.getElementById('subpageCompound');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
-            document.body.classList.remove('subpage-active');
-            document.getElementById('tabPersonal').classList.add('active');
+            openCalcListSubpage();
         }
 
         // ============ TAX SUBPAGE ============
@@ -8300,8 +8298,7 @@
             var sub = document.getElementById('subpageTax');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
-            document.body.classList.remove('subpage-active');
-            document.getElementById('tabPersonal').classList.add('active');
+            openCalcListSubpage();
         }
 
         // ============ MORTGAGE SUBPAGE ============
@@ -8316,8 +8313,7 @@
             var sub = document.getElementById('subpageMortgage');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
-            document.body.classList.remove('subpage-active');
-            document.getElementById('tabPersonal').classList.add('active');
+            openCalcListSubpage();
         }
 
         // ============ BUDGET SUBPAGE ============
@@ -8359,8 +8355,7 @@
             var sub = document.getElementById('subpageSalary');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
-            document.body.classList.remove('subpage-active');
-            document.getElementById('tabPersonal').classList.add('active');
+            openCalcListSubpage();
         }
         function calcSalary() {
             var gross = parseNum(document.getElementById('salaryGross').value);
@@ -8431,8 +8426,7 @@
             var sub = document.getElementById('subpageFire');
             if (sub.style.display === 'none') return;
             sub.style.display = 'none';
-            document.body.classList.remove('subpage-active');
-            document.getElementById('tabPersonal').classList.add('active');
+            openCalcListSubpage();
         }
         function calcFire() {
             var expenses = parseNum(document.getElementById('fireExpenses').value);
