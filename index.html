@@ -2328,12 +2328,28 @@
                         <button class="range-btn active" onclick="setCandleRange('year',this)">שנה</button>
                         <button class="range-btn" onclick="setCandleRange('all',this)">הכל</button>
                     </div>
-                    <div id="chartValueHeader" style="display:none;align-items:baseline;gap:10px;margin-bottom:10px;">
-                        <span id="chartCurrentValue" style="font-size:1.5rem;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums;"></span>
-                        <span id="chartPeriodChange" style="font-size:0.82rem;font-weight:600;padding:2px 8px;border-radius:6px;"></span>
+                    <div id="chartValueHeader" style="display:none;flex-direction:column;gap:4px;margin-bottom:10px;">
+                        <div style="display:flex;align-items:baseline;gap:10px;">
+                            <span id="chartCurrentValue" style="font-size:1.6rem;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums;letter-spacing:-0.5px;"></span>
+                            <span id="chartPeriodChange" style="font-size:0.82rem;font-weight:600;padding:2px 8px;border-radius:6px;"></span>
+                        </div>
+                        <div id="chartStatsBar" style="display:flex;gap:16px;direction:rtl;">
+                            <div style="display:flex;flex-direction:column;gap:1px;">
+                                <span style="font-size:0.62rem;color:var(--text-secondary);letter-spacing:0.03em;">גבוה</span>
+                                <span id="chartHighVal" style="font-size:0.75rem;font-weight:600;color:#10b981;font-variant-numeric:tabular-nums;"></span>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:1px;">
+                                <span style="font-size:0.62rem;color:var(--text-secondary);letter-spacing:0.03em;">נמוך</span>
+                                <span id="chartLowVal" style="font-size:0.75rem;font-weight:600;color:#ef4444;font-variant-numeric:tabular-nums;"></span>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:1px;">
+                                <span style="font-size:0.62rem;color:var(--text-secondary);letter-spacing:0.03em;">שינוי</span>
+                                <span id="chartAbsChange" style="font-size:0.75rem;font-weight:600;font-variant-numeric:tabular-nums;"></span>
+                            </div>
+                        </div>
                     </div>
                     <div style="position:relative;width:100%;">
-                        <canvas id="historyChart" style="width:100%;height:240px;cursor:crosshair;"></canvas>
+                        <canvas id="historyChart" style="width:100%;height:300px;cursor:crosshair;"></canvas>
                         <div id="chartTooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(15,20,40,0.92);border:1px solid rgba(244,196,48,0.3);border-radius:10px;padding:8px 12px;font-size:0.78rem;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:10;direction:rtl;">
                             <div id="chartTooltipDate" style="color:rgba(255,255,255,0.5);font-size:0.7rem;margin-bottom:3px;"></div>
                             <div id="chartTooltipValue" style="color:#f4c430;font-weight:700;font-size:0.9rem;"></div>
@@ -8879,6 +8895,7 @@
             var pcEl  = document.getElementById('chartPeriodChange');
             if (hdrEl && cvEl && pcEl) {
                 hdrEl.style.display = 'flex';
+                hdrEl.style.flexDirection = 'column';
                 cvEl.textContent = '₪' + Math.round(values[values.length-1]).toLocaleString('he-IL');
                 pcEl.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(changePct).toFixed(1) + '%';
                 pcEl.style.background = isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
@@ -8892,18 +8909,30 @@
             maxV += range * 0.12;
             range = maxV - minV;
 
-            var padL = 68, padR = 16, padT = 16, padB = 32;
+            var padL = 8, padR = 68, padT = 20, padB = 36;
             var chartW = W - padL - padR;
             var chartH = H - padT - padB;
 
             var lineColor   = isUp ? '#10b981' : '#ef4444';
-            var gradStart   = isUp ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)';
-            var gradEnd     = isUp ? 'rgba(16,185,129,0)' : 'rgba(239,68,68,0)';
 
             ctx.clearRect(0, 0, W, H);
 
-            // Grid lines
-            var gridCount = 4;
+            // Update stats bar
+            var realMin = Math.min.apply(null, values);
+            var realMax = Math.max.apply(null, values);
+            var absChange = values[values.length-1] - values[0];
+            var highEl = document.getElementById('chartHighVal');
+            var lowEl = document.getElementById('chartLowVal');
+            var absEl = document.getElementById('chartAbsChange');
+            if (highEl) highEl.textContent = '₪' + Math.round(realMax).toLocaleString('he-IL');
+            if (lowEl)  lowEl.textContent  = '₪' + Math.round(realMin).toLocaleString('he-IL');
+            if (absEl) {
+                absEl.textContent = (absChange >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(absChange)).toLocaleString('he-IL');
+                absEl.style.color = absChange >= 0 ? '#10b981' : '#ef4444';
+            }
+
+            // Grid lines + Y-axis labels (RIGHT side, TradingView style)
+            var gridCount = 5;
             ctx.lineWidth = 1;
             for (var g = 0; g <= gridCount; g++) {
                 var gy = padT + (chartH / gridCount) * g;
@@ -8911,13 +8940,21 @@
                 ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
                 var gv = maxV - (range * g / gridCount);
                 ctx.fillStyle = clrLabel;
-                ctx.font = '10px -apple-system,sans-serif';
-                ctx.textAlign = 'right';
-                var label = gv >= 1000000 ? '₪' + (gv/1000000).toFixed(1) + 'M' :
-                            gv >= 1000    ? '₪' + Math.round(gv/1000) + 'K' :
-                            '₪' + Math.round(gv);
-                ctx.fillText(label, padL - 6, gy + 3.5);
+                ctx.font = '10px system-ui,Arial,sans-serif';
+                ctx.textAlign = 'left';
+                var label = gv >= 1000000 ? (gv/1000000).toFixed(2) + 'M' :
+                            gv >= 1000    ? Math.round(gv/1000) + 'K' :
+                            Math.round(gv).toString();
+                ctx.fillText(label, W - padR + 5, gy + 3.5);
             }
+
+            // Y-axis vertical line (right side)
+            ctx.strokeStyle = clrGrid;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(W - padR, padT);
+            ctx.lineTo(W - padR, padT + chartH);
+            ctx.stroke();
 
             // Calculate points
             var pts = [];
@@ -8937,26 +8974,67 @@
                 }
             }
 
+            // Reference line (starting value — dashed)
+            var refY = padT + (1 - (values[0] - minV) / range) * chartH;
+            ctx.setLineDash([3, 5]);
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padL, refY);
+            ctx.lineTo(W - padR, refY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
             // Gradient fill
-            var grad = ctx.createLinearGradient(0, padT, 0, H - padB);
-            grad.addColorStop(0, gradStart);
-            grad.addColorStop(1, gradEnd);
+            var grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+            grad.addColorStop(0,   isUp ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)');
+            grad.addColorStop(0.5, isUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)');
+            grad.addColorStop(1,   'rgba(0,0,0,0)');
 
             ctx.beginPath();
             bezierPath(pts);
-            ctx.lineTo(pts[pts.length-1].x, H - padB);
-            ctx.lineTo(pts[0].x, H - padB);
+            ctx.lineTo(pts[pts.length-1].x, padT + chartH);
+            ctx.lineTo(pts[0].x, padT + chartH);
             ctx.closePath();
             ctx.fillStyle = grad;
             ctx.fill();
 
-            // Line
+            // Line with glow
+            ctx.shadowColor = lineColor;
+            ctx.shadowBlur = 6;
             ctx.beginPath();
             bezierPath(pts);
             ctx.strokeStyle = lineColor;
-            ctx.lineWidth = 2.5;
+            ctx.lineWidth = 2.8;
             ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
             ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Moving Average line (MA20 or shorter if fewer points)
+            if (values.length >= 5) {
+                var maPeriod = Math.min(20, Math.max(5, Math.floor(values.length / 4)));
+                var maVals = [];
+                for (var mi = 0; mi < values.length; mi++) {
+                    if (mi < maPeriod - 1) { maVals.push(null); continue; }
+                    var mSum = 0;
+                    for (var mj = mi - maPeriod + 1; mj <= mi; mj++) mSum += values[mj];
+                    maVals.push(mSum / maPeriod);
+                }
+                ctx.beginPath();
+                var maStarted = false;
+                for (var mi2 = 0; mi2 < pts.length; mi2++) {
+                    if (maVals[mi2] === null) continue;
+                    var maY = padT + (1 - (maVals[mi2] - minV) / range) * chartH;
+                    if (!maStarted) { ctx.moveTo(pts[mi2].x, maY); maStarted = true; }
+                    else { ctx.lineTo(pts[mi2].x, maY); }
+                }
+                ctx.strokeStyle = 'rgba(244,196,48,0.55)';
+                ctx.lineWidth = 1.4;
+                ctx.lineJoin = 'round';
+                ctx.setLineDash([]);
+                ctx.stroke();
+            }
 
             // End dot with glow
             var last = pts[pts.length - 1];
@@ -8967,6 +9045,22 @@
             ctx.fillStyle = lineColor;
             ctx.fill();
             ctx.shadowBlur = 0;
+
+            // Floating current price label on right axis (TradingView style)
+            (function() {
+                var priceTxt = '₪' + Math.round(values[values.length-1]).toLocaleString('he-IL');
+                ctx.font = 'bold 9.5px system-ui,Arial,sans-serif';
+                var txtW = ctx.measureText(priceTxt).width;
+                var lbH = 17, lbW = txtW + 12;
+                var lbX = W - padR + 1;
+                var lbY = last.y - lbH / 2;
+                lbY = Math.max(padT + 1, Math.min(padT + chartH - lbH - 1, lbY));
+                ctx.fillStyle = lineColor;
+                ctx.fillRect(lbX, lbY, lbW, lbH);
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'left';
+                ctx.fillText(priceTxt, lbX + 6, lbY + lbH / 2 + 3.5);
+            })();
 
             // Date labels — adaptive count based on range and point count
             var maxLabels = chartRange === 'week' ? Math.min(7, pts.length) :
@@ -8983,12 +9077,17 @@
             datesToShow = datesToShow.filter(function(v, i, a) { return a.indexOf(v) === i; });
 
             ctx.fillStyle = clrDate;
-            ctx.font = '10px -apple-system,sans-serif';
+            ctx.font = '10px system-ui,Arial,sans-serif';
             ctx.textAlign = 'center';
+            var heMonths = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
             datesToShow.forEach(function(idx) {
                 if (!pts[idx]) return;
                 var d = history[idx].date.split('-');
-                ctx.fillText(d[2] + '/' + d[1], pts[idx].x, H - 6);
+                var mon = heMonths[parseInt(d[1],10) - 1];
+                var lbl = (chartRange === 'week' || chartRange === 'month')
+                    ? d[2] + '/' + d[1]
+                    : d[2] + ' ' + mon;
+                ctx.fillText(lbl, pts[idx].x, padT + chartH + 20);
             });
 
             // (% change badge removed — shown in HTML header above chart)
@@ -9013,6 +9112,8 @@
             canvas._chartVals   = values;
             canvas._padL = padL; canvas._padR = padR; canvas._padT = padT; canvas._padB = padB;
             canvas._chartW = chartW; canvas._lineColor = lineColor;
+            canvas._minV = minV; canvas._maxV = maxV; canvas._range = range;
+            canvas._W = W; canvas._H = H;
             canvas._prevIdx = -1;
 
             // Remove old listeners by replacing canvas clone trick — use flag instead
@@ -9037,11 +9138,11 @@
                     var d = ch[idx].date.split('-');
                     document.getElementById('chartTooltipDate').textContent = d[2]+'/'+d[1]+'/'+d[0];
                     document.getElementById('chartTooltipValue').textContent = '₪' + Math.round(cv[idx]).toLocaleString('he-IL');
-                    var chg = idx > 0 ? cv[idx] - cv[idx-1] : 0;
-                    var chgP = idx > 0 && cv[idx-1] > 0 ? chg/cv[idx-1]*100 : 0;
+                    var chgFromStart = cv[idx] - cv[0];
+                    var chgPctFromStart = cv[0] > 0 ? chgFromStart / cv[0] * 100 : 0;
                     var tChg = document.getElementById('chartTooltipChange');
-                    tChg.textContent = (chg>=0?'+':'') + Math.round(chg).toLocaleString('he-IL') + ' ₪ (' + (chgP>=0?'+':'') + chgP.toFixed(2) + '%)';
-                    tChg.style.color = chg >= 0 ? '#10b981' : '#ef4444';
+                    tChg.textContent = (chgFromStart >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(chgFromStart)).toLocaleString('he-IL') + ' (' + (chgPctFromStart >= 0 ? '+' : '') + chgPctFromStart.toFixed(2) + '%)';
+                    tChg.style.color = chgFromStart >= 0 ? '#10b981' : '#ef4444';
 
                     // Position tooltip
                     var tipW = tip.offsetWidth || 170;
@@ -9054,22 +9155,31 @@
                     tip.style.top  = top + 'px';
                     tip.style.display = 'block';
 
-                    // Draw crosshair on overlay
+                    // Draw full crosshair on overlay (TradingView style)
                     var ov = canvas.parentElement.querySelector('canvas.chart-overlay');
                     if (!ov) return;
                     var oc = ov.getContext('2d');
                     var dpr2 = window.devicePixelRatio || 1;
-                    // setTransform resets any accumulated scales before drawing
+                    var pR2 = canvas._padR || 68;
+                    var cW2 = r.width;
                     oc.setTransform(dpr2, 0, 0, dpr2, 0, 0);
                     oc.clearRect(0, 0, ov.width / dpr2, ov.height / dpr2);
-                    oc.strokeStyle = document.body.classList.contains('light-mode') ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
+                    var isLight2 = document.body.classList.contains('light-mode');
+                    oc.strokeStyle = isLight2 ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.25)';
                     oc.lineWidth = 1;
-                    oc.setLineDash([4,4]);
+                    oc.setLineDash([4, 4]);
+                    // Vertical crosshair
                     oc.beginPath();
                     oc.moveTo(cp[idx].x, pT);
-                    oc.lineTo(cp[idx].x, H2 - pB);
+                    oc.lineTo(cp[idx].x, pT + (H2 - pT - pB));
+                    oc.stroke();
+                    // Horizontal crosshair
+                    oc.beginPath();
+                    oc.moveTo(canvas._padL || 8, cp[idx].y);
+                    oc.lineTo(cW2 - pR2, cp[idx].y);
                     oc.stroke();
                     oc.setLineDash([]);
+                    // Dot at intersection
                     oc.beginPath();
                     oc.arc(cp[idx].x, cp[idx].y, 5, 0, Math.PI*2);
                     oc.fillStyle = canvas._lineColor;
@@ -9077,6 +9187,20 @@
                     oc.shadowBlur = 12;
                     oc.fill();
                     oc.shadowBlur = 0;
+                    // Right-axis price label at crosshair Y
+                    var curVal2 = cv[idx];
+                    var axTxt = '₪' + Math.round(curVal2).toLocaleString('he-IL');
+                    oc.font = 'bold 9.5px system-ui,Arial,sans-serif';
+                    var axTxtW = oc.measureText(axTxt).width;
+                    var axLbW = axTxtW + 12, axLbH = 17;
+                    var axLbX = cW2 - pR2 + 1;
+                    var axLbY = cp[idx].y - axLbH / 2;
+                    axLbY = Math.max(0, Math.min(H2 - axLbH, axLbY));
+                    oc.fillStyle = canvas._lineColor;
+                    oc.fillRect(axLbX, axLbY, axLbW, axLbH);
+                    oc.fillStyle = '#ffffff';
+                    oc.textAlign = 'left';
+                    oc.fillText(axTxt, axLbX + 6, axLbY + axLbH / 2 + 3.5);
                 }
 
                 function _hideTip() {
