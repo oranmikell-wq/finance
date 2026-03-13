@@ -1914,13 +1914,18 @@
                 <button onclick="sortAssets('return', event)" class="sort-btn" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">תשואה ↓</button>
                 <button onclick="sortAssets('name', event)" class="sort-btn" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">שם</button>
             </div>
-            <select id="assetFilterSelect" onchange="filterAssets(this.value)" style="padding:4px 8px;border-radius:16px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;outline:none;flex-shrink:0;direction:rtl;">
-                <option value="all">ראשי</option>
-                <option value="long">טווח ארוך</option>
-                <option value="mid">טווח בינוני</option>
-                <option value="short">טווח קצר</option>
-                <option value="realestate">נדל"ן</option>
-            </select>
+            <div style="position:relative;flex-shrink:0;" id="filterDropdownWrap">
+                <button id="filterBtn" onclick="toggleFilterDropdown(event)" style="padding:4px 10px;border-radius:16px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.6rem,2vw,0.72rem);cursor:pointer;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:5px;direction:rtl;">
+                    <span id="filterBtnLabel">ראשי</span><span style="font-size:0.75em;opacity:0.7;">▾</span>
+                </button>
+                <div id="filterMenu" style="display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;z-index:200;min-width:110px;box-shadow:0 6px 24px rgba(0,0,0,0.35);">
+                    <div onclick="selectFilter('all','ראשי')" id="fopt-all" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);text-align:right;direction:rtl;background:rgba(244,196,48,0.1);font-weight:600;">ראשי</div>
+                    <div onclick="selectFilter('long','טווח ארוך')" id="fopt-long" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-secondary);text-align:right;direction:rtl;">טווח ארוך</div>
+                    <div onclick="selectFilter('mid','טווח בינוני')" id="fopt-mid" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-secondary);text-align:right;direction:rtl;">טווח בינוני</div>
+                    <div onclick="selectFilter('short','טווח קצר')" id="fopt-short" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-secondary);text-align:right;direction:rtl;">טווח קצר</div>
+                    <div onclick="selectFilter('realestate','נדל&quot;ן')" id="fopt-realestate" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-secondary);text-align:right;direction:rtl;">נדל"ן</div>
+                </div>
+            </div>
         </div>
         <div class="assets-grid" id="assetsGrid">
             <div class="skeleton-row"></div>
@@ -8611,6 +8616,36 @@
             updateAssetsGrid();
         }
 
+        function toggleFilterDropdown(e) {
+            e.stopPropagation();
+            var menu = document.getElementById('filterMenu');
+            if (!menu) return;
+            var isOpen = menu.style.display !== 'none';
+            menu.style.display = isOpen ? 'none' : 'block';
+        }
+
+        function selectFilter(value, label) {
+            document.getElementById('filterBtnLabel').textContent = label;
+            document.getElementById('filterMenu').style.display = 'none';
+            // highlight active option
+            document.querySelectorAll('.filter-opt').forEach(function(el) {
+                el.style.background = '';
+                el.style.color = 'var(--text-secondary)';
+                el.style.fontWeight = '';
+            });
+            var active = document.getElementById('fopt-' + value);
+            if (active) { active.style.background = 'rgba(244,196,48,0.1)'; active.style.color = 'var(--accent-gold)'; active.style.fontWeight = '600'; }
+            // update button color when filtered
+            var btn = document.getElementById('filterBtn');
+            if (btn) { btn.style.color = value === 'all' ? 'var(--text-secondary)' : 'var(--accent-gold)'; btn.style.borderColor = value === 'all' ? 'var(--border-color)' : 'rgba(244,196,48,0.5)'; }
+            filterAssets(value);
+        }
+
+        document.addEventListener('click', function() {
+            var menu = document.getElementById('filterMenu');
+            if (menu) menu.style.display = 'none';
+        });
+
         function applyFilter(assetsList) {
             if (currentFilter === 'all') return assetsList;
             return assetsList.filter(function(a) {
@@ -10392,10 +10427,6 @@
 
             // Apply category filter
             var displayAssets = applyFilter(assets);
-
-            // Sync filter select
-            var filterSel = document.getElementById('assetFilterSelect');
-            if (filterSel && filterSel.value !== currentFilter) filterSel.value = currentFilter;
 
             // Hide grid while rebuilding DOM — skip for background price updates (no flash)
             var firstRender = grid.children.length === 0;
