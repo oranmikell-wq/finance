@@ -1591,7 +1591,8 @@
         /* Rate / update chips (inline-styled) */
         body.light-mode #chipUSD, body.light-mode #chipBTC,
         body.light-mode #chipETH, body.light-mode #chipSPY,
-        body.light-mode #chipTA,  body.light-mode #chipUpdate {
+        body.light-mode #chipNASDAQ, body.light-mode #chipTA,
+        body.light-mode #chipUpdate {
             background: rgba(0,0,0,0.04) !important;
             border-color: rgba(0,0,0,0.12) !important;
         }
@@ -1842,6 +1843,12 @@
                         <span style="font-size:0.7rem;color:var(--text-secondary);">S&P</span>
                         <span style="font-weight:700;color:var(--text-primary);" id="spyIndexDisplay">—</span>
                         <span id="spyIndexChange" style="font-size:0.72rem;"></span>
+                    </div>
+                    <!-- NASDAQ chip -->
+                    <div id="chipNASDAQ" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.78rem;white-space:nowrap;">
+                        <span style="font-size:0.7rem;color:var(--text-secondary);">NASDAQ</span>
+                        <span style="font-weight:700;color:var(--text-primary);" id="nasdaqDisplay">—</span>
+                        <span id="nasdaqChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- TA125 chip -->
                     <div id="chipTA" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.78rem;white-space:nowrap;">
@@ -3739,6 +3746,8 @@
         let ta125Change = 0; // TA-125 daily change %
         let sp500Price = 0; // S&P 500 index
         let sp500Change = 0; // S&P 500 daily change %
+        let nasdaqPrice = 0; // NASDAQ Composite
+        let nasdaqChange = 0; // NASDAQ daily change %
         let lastRateUpdate = null;
         let lastSpyUpdate = null;
         const FINNHUB_DEFAULT_KEY = 'd69gf19r01qjmno57nngd69gf19r01qjmno57no0';
@@ -4422,6 +4431,59 @@
 
             console.error('[SPY] ❌ All sources failed:', lastError);
             return spyPrice > 0;
+        }
+
+        // Fetch NASDAQ Composite (^IXIC) price
+        async function fetchNasdaqPrice() {
+            const SYMBOL = '%5EIXIC'; // ^IXIC URL-encoded
+            const STOOQ  = 'ixic.us';
+
+            // Source 1: Yahoo via corsproxy
+            try {
+                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/^IXIC?interval=1d&range=1d');
+                const res = await _fetchTimeout(url, 7000);
+                if (res.ok) {
+                    const data = await res.json();
+                    const meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+                    const price = meta ? (meta.regularMarketPrice || meta.previousClose) : 0;
+                    if (price > 0) {
+                        nasdaqPrice = price;
+                        if (meta.previousClose > 0) nasdaqChange = (price - meta.previousClose) / meta.previousClose * 100;
+                        try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
+                        console.log('[NASDAQ] ✅ corsproxy:', price.toFixed(0));
+                        updateRateDisplay(); return true;
+                    }
+                }
+            } catch(e) {}
+
+            // Source 2: Stooq via allorigins
+            try {
+                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/l/?s=' + STOOQ + '&f=sd2t2ohlcv&h&e=csv');
+                const res = await _fetchTimeout(url, 8000);
+                if (res.ok) {
+                    const raw = await res.json();
+                    const csv = raw && raw.contents ? raw.contents : '';
+                    const lines = csv.trim().split('\n');
+                    if (lines.length >= 2) {
+                        const cols = lines[1].split(',');
+                        const p = parseFloat(cols[6]);
+                        if (p > 0) {
+                            nasdaqPrice = p;
+                            try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); } catch(e) {}
+                            console.log('[NASDAQ] ✅ stooq:', p.toFixed(0));
+                            updateRateDisplay(); return true;
+                        }
+                    }
+                }
+            } catch(e) {}
+
+            // Restore from cache
+            try {
+                const cached = localStorage.getItem('nasdaq-price');
+                const cachedChg = localStorage.getItem('nasdaq-change');
+                if (cached) { nasdaqPrice = parseFloat(cached); nasdaqChange = cachedChg ? parseFloat(cachedChg) : 0; updateRateDisplay(); }
+            } catch(e) {}
+            return nasdaqPrice > 0;
         }
 
         // Apply new SPY price and update everything
@@ -5447,6 +5509,18 @@
                     }
                     _colorChip('chipSPY', sp500Chg);
                 }
+            }
+
+            // NASDAQ
+            var nasdaqEl = document.getElementById('nasdaqDisplay');
+            var nasdaqChgEl = document.getElementById('nasdaqChange');
+            if (nasdaqEl && nasdaqPrice > 0) {
+                nasdaqEl.textContent = nasdaqPrice.toLocaleString('en-US', {maximumFractionDigits: 0});
+                if (nasdaqChgEl && nasdaqChange !== 0) {
+                    nasdaqChgEl.textContent = (nasdaqChange >= 0 ? '+' : '') + nasdaqChange.toFixed(2) + '%';
+                    nasdaqChgEl.style.color = nasdaqChange >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                }
+                _colorChip('chipNASDAQ', nasdaqChange);
             }
 
             // TA-125
@@ -7230,6 +7304,9 @@
                 if (spyDC) spyDailyChangePct = parseFloat(spyDC);
                 var usdPC = localStorage.getItem('usdils-prev-close');
                 if (usdPC) exchangeRatePrevClose = parseFloat(usdPC);
+                var ndqP = localStorage.getItem('nasdaq-price');
+                var ndqC = localStorage.getItem('nasdaq-change');
+                if (ndqP) { nasdaqPrice = parseFloat(ndqP); nasdaqChange = ndqC ? parseFloat(ndqC) : 0; }
                 
                 updateRateDisplay();
             } catch (e) {
@@ -7277,6 +7354,8 @@
                 } else {
                     tasks.push(fetchSpyPrice());
                 }
+
+                tasks.push(fetchNasdaqPrice());
 
                 if (hasFundAssets) tasks.push(updateFundAssets());
                 if (hasGemelAssets) tasks.push(updateGemelAssets());
