@@ -8522,15 +8522,12 @@
             closeCompoundSubpage();
             closeTaxSubpage();
             closeMashlantaSubpage();
-            document.getElementById('subpageCalcList').style.display = 'none';
-            document.getElementById('subpageBudget').style.display = 'none';
-            document.getElementById('subpageSalary').style.display = 'none';
-            document.getElementById('subpageFire').style.display = 'none';
-            document.getElementById('subpageMortgage').style.display = 'none';
-            document.getElementById('subpageCompound').style.display = 'none';
-            document.getElementById('subpageTax').style.display = 'none';
-            document.getElementById('subpageMashlanta').style.display = 'none';
+            // Force-hide all subpages and clear subpage-active (closeMortgage/Compound etc. may re-add it via openCalcListSubpage)
+            ['subpageCalcList','subpageBudget','subpageSalary','subpageFire','subpageMortgage','subpageCompound','subpageTax','subpageMashlanta'].forEach(function(id) {
+                var el = document.getElementById(id); if (el) el.style.display = 'none';
+            });
             _trendsSubpageIds && _trendsSubpageIds.forEach(function(s) { var el = document.getElementById(s); if (el) el.style.display = 'none'; });
+            document.body.classList.remove('subpage-active'); // re-remove in case close fns re-added it
             document.body.setAttribute('data-tab', tabName);
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(function(t) {
