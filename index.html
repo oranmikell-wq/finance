@@ -1859,7 +1859,7 @@
                 <!-- Card 1: total + daily change -->
                 <div class="total-worth-card" style="flex:1;padding:14px 16px;">
                     <div class="total-worth-content">
-                        <div class="total-label">סך כל הנכסים</div>
+                        <div class="total-label">הון נוכחי</div>
                         <div class="total-amount" id="totalWorth">₪0</div>
                         <div class="total-change positive" id="totalChange">
                             <span>▲</span>
@@ -1914,9 +1914,9 @@
                 <button onclick="sortAssets('name', event)" class="sort-btn" style="padding:4px 12px;border-radius:50px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:clamp(0.55rem,2vw,0.65rem);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">שם</button>
             </div>
             <div style="position:relative;flex-shrink:0;" id="filterDropdownWrap">
-                <button id="filterBtn" onclick="toggleFilterDropdown(event)" style="padding:4px 20px;border-radius:50px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap;direction:rtl;min-width:100px;"><span id="filterBtnLabel">ראשי</span> <span style="opacity:0.9;">▾</span></button>
+                <button id="filterBtn" onclick="toggleFilterDropdown(event)" style="padding:4px 20px;border-radius:50px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap;direction:rtl;min-width:100px;"><span id="filterBtnLabel">כל הנכסים</span> <span style="opacity:0.9;">▾</span></button>
                 <div id="filterMenu" style="display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;z-index:200;min-width:110px;box-shadow:0 6px 24px rgba(0,0,0,0.35);">
-                    <div onclick="selectFilter('all','ראשי')" id="fopt-all" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);text-align:right;direction:rtl;background:rgba(244,196,48,0.1);font-weight:600;">ראשי</div>
+                    <div onclick="selectFilter('all','כל הנכסים')" id="fopt-all" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-primary);text-align:right;direction:rtl;background:rgba(244,196,48,0.1);font-weight:600;">כל הנכסים</div>
                     <div onclick="selectFilter('long','טווח ארוך')" id="fopt-long" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-secondary);text-align:right;direction:rtl;">טווח ארוך</div>
                     <div onclick="selectFilter('mid','טווח בינוני')" id="fopt-mid" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-secondary);text-align:right;direction:rtl;">טווח בינוני</div>
                     <div onclick="selectFilter('short','טווח קצר')" id="fopt-short" class="filter-opt" style="padding:8px 14px;cursor:pointer;font-size:0.78rem;color:var(--text-secondary);text-align:right;direction:rtl;">טווח קצר</div>
