@@ -2336,11 +2336,11 @@
                         <div id="chartStatsBar" style="display:flex;gap:16px;direction:rtl;">
                             <div style="display:flex;flex-direction:column;gap:1px;">
                                 <span style="font-size:0.62rem;color:var(--text-secondary);letter-spacing:0.03em;">גבוה</span>
-                                <span id="chartHighVal" style="font-size:0.75rem;font-weight:600;color:#10b981;font-variant-numeric:tabular-nums;"></span>
+                                <span id="chartHighVal" style="font-size:0.75rem;font-weight:600;color:#26a69a;font-variant-numeric:tabular-nums;"></span>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:1px;">
                                 <span style="font-size:0.62rem;color:var(--text-secondary);letter-spacing:0.03em;">נמוך</span>
-                                <span id="chartLowVal" style="font-size:0.75rem;font-weight:600;color:#ef4444;font-variant-numeric:tabular-nums;"></span>
+                                <span id="chartLowVal" style="font-size:0.75rem;font-weight:600;color:#ef5350;font-variant-numeric:tabular-nums;"></span>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:1px;">
                                 <span style="font-size:0.62rem;color:var(--text-secondary);letter-spacing:0.03em;">שינוי</span>
@@ -7321,8 +7321,10 @@
         function updateExchangeRate() { updateAllRates(); }
 
         function updateLastUpdate() {
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent = now.toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit'}) + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+            var el = document.getElementById('lastUpdate');
+            if (!el) return;
+            var now = new Date();
+            el.textContent = now.toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit'}) + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
         }
 
         function selectAssetType(type) {
@@ -8896,8 +8898,8 @@
                 hdrEl.style.flexDirection = 'column';
                 cvEl.textContent = '₪' + Math.round(values[values.length-1]).toLocaleString('he-IL');
                 pcEl.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(changePct).toFixed(1) + '%';
-                pcEl.style.background = isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-                pcEl.style.color = isUp ? '#10b981' : '#ef4444';
+                pcEl.style.background = isUp ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
+                pcEl.style.color = isUp ? '#26a69a' : '#ef5350';
             }
 
             var minV = Math.min.apply(null, values);
@@ -8911,7 +8913,7 @@
             var chartW = W - padL - padR;
             var chartH = H - padT - padB;
 
-            var lineColor   = isUp ? '#10b981' : '#ef4444';
+            var lineColor   = isUp ? '#26a69a' : '#ef5350';
 
             ctx.clearRect(0, 0, W, H);
 
@@ -8926,7 +8928,7 @@
             if (lowEl)  lowEl.textContent  = '₪' + Math.round(realMin).toLocaleString('he-IL');
             if (absEl) {
                 absEl.textContent = (absChange >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(absChange)).toLocaleString('he-IL');
-                absEl.style.color = absChange >= 0 ? '#10b981' : '#ef4444';
+                absEl.style.color = absChange >= 0 ? '#26a69a' : '#ef5350';
             }
 
             // Grid lines + Y-axis labels (RIGHT side, TradingView style)
@@ -9140,7 +9142,7 @@
                     var chgPctFromStart = cv[0] > 0 ? chgFromStart / cv[0] * 100 : 0;
                     var tChg = document.getElementById('chartTooltipChange');
                     tChg.textContent = (chgFromStart >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(chgFromStart)).toLocaleString('he-IL') + ' (' + (chgPctFromStart >= 0 ? '+' : '') + chgPctFromStart.toFixed(2) + '%)';
-                    tChg.style.color = chgFromStart >= 0 ? '#10b981' : '#ef4444';
+                    tChg.style.color = chgFromStart >= 0 ? '#26a69a' : '#ef5350';
 
                     // Update main header dynamically (TradingView style)
                     var cvElL = document.getElementById('chartCurrentValue');
@@ -9149,8 +9151,8 @@
                     if (pcElL) {
                         var upL = chgFromStart >= 0;
                         pcElL.textContent = (upL ? '▲ +' : '▼ ') + Math.abs(chgPctFromStart).toFixed(2) + '%';
-                        pcElL.style.background = upL ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-                        pcElL.style.color = upL ? '#10b981' : '#ef4444';
+                        pcElL.style.background = upL ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
+                        pcElL.style.color = upL ? '#26a69a' : '#ef5350';
                     }
 
                     // Position tooltip
@@ -9311,8 +9313,8 @@
             var clrGrid  = isLight ? 'rgba(0,0,0,0.07)'  : 'rgba(255,255,255,0.05)';
             var clrLabel = isLight ? 'rgba(0,0,0,0.45)'  : 'rgba(255,255,255,0.28)';
             var clrDate  = isLight ? 'rgba(0,0,0,0.4)'   : 'rgba(255,255,255,0.3)';
-            var clrBull  = '#10b981';
-            var clrBear  = '#ef4444';
+            var clrBull  = '#26a69a';
+            var clrBear  = '#ef5350';
 
             var padL = 8, padR = 68, padT = 20, padB = 36;
             var chartW = W - padL - padR;
@@ -9348,7 +9350,7 @@
                 hdrEl.style.flexDirection = 'column';
                 cvEl.textContent = '₪' + Math.round(lastCandle.close).toLocaleString('he-IL');
                 pcEl.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(changePct).toFixed(1) + '%';
-                pcEl.style.background = isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                pcEl.style.background = isUp ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
                 pcEl.style.color = isUp ? clrBull : clrBear;
             }
             // Stats bar — high/low/change across the displayed candles
@@ -9362,7 +9364,7 @@
             if (lowEl)  lowEl.textContent  = '₪' + Math.round(realMin).toLocaleString('he-IL');
             if (absEl) {
                 absEl.textContent = (absChange >= 0 ? '+' : '') + Math.round(absChange).toLocaleString('he-IL') + ' ₪';
-                absEl.style.color = absChange >= 0 ? '#10b981' : '#ef4444';
+                absEl.style.color = absChange >= 0 ? '#26a69a' : '#ef5350';
             }
 
             ctx.clearRect(0, 0, W, H);
@@ -9417,20 +9419,37 @@
                 ctx.lineTo(cx, yLow);
                 ctx.stroke();
 
-                // Body
-                ctx.fillStyle = clr;
-                ctx.globalAlpha = bullish ? 0.9 : 0.85;
-                ctx.fillRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
-                ctx.globalAlpha = 1;
-
-                // Hollow body for bullish (optional — solid body always)
-                // Border for candle body
-                ctx.strokeStyle = clr;
-                ctx.lineWidth = 0.5;
-                ctx.strokeRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
+                // Body — hollow for bullish (TradingView style), solid for bearish
+                if (bullish) {
+                    // Hollow: transparent fill, colored border
+                    ctx.strokeStyle = clr;
+                    ctx.lineWidth = Math.max(1, Math.min(2, candleSlot * 0.12));
+                    ctx.strokeRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
+                } else {
+                    // Solid bearish candle
+                    ctx.fillStyle = clr;
+                    ctx.fillRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
+                    // Thin border to sharpen edges
+                    ctx.strokeStyle = clr;
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
+                }
 
                 candlePositions.push({ cx: cx, c: c, yBodyTop: yBodyTop, yBodyBottom: yBodyBottom, yHigh: yHigh, yLow: yLow });
             }
+
+            // Reference dashed line at period open (TradingView style baseline)
+            var yRef = toY(firstCandle.open);
+            ctx.save();
+            ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(padL, yRef);
+            ctx.lineTo(W - padR, yRef);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
 
             // Date/time labels — auto-spaced to avoid overlap
             var heMonthsC = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
@@ -9479,7 +9498,7 @@
             // Floating current-price label on right axis
             var lastClose = lastCandle.close;
             var yLastClose = toY(lastClose);
-            var floatBg = isUp ? '#10b981' : '#ef4444';
+            var floatBg = isUp ? '#26a69a' : '#ef5350';
             var floatLbl = '₪' + Math.round(lastClose).toLocaleString('he-IL');
             ctx.font = 'bold 10px system-ui,Arial,sans-serif';
             var fLblW = ctx.measureText(floatLbl).width + 8;
@@ -9560,7 +9579,7 @@
                     if (cvEl2) cvEl2.textContent = '₪' + Math.round(cd.close).toLocaleString('he-IL');
                     if (pcEl2) {
                         pcEl2.textContent = (bullish ? '▲ +' : '▼ ') + Math.abs(chgPct).toFixed(2) + '%';
-                        pcEl2.style.background = bullish ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+                        pcEl2.style.background = bullish ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
                         pcEl2.style.color = bullish ? clrBull : clrBear;
                     }
 
@@ -9645,8 +9664,8 @@
                         if (pcR) {
                             var upR = chgR >= 0;
                             pcR.textContent = (upR ? '▲ +' : '▼ ') + Math.abs(chgPctR).toFixed(2) + '%';
-                            pcR.style.background = upR ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-                            pcR.style.color = upR ? '#10b981' : '#ef4444';
+                            pcR.style.background = upR ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
+                            pcR.style.color = upR ? '#26a69a' : '#ef5350';
                         }
                     }
                     var ov3 = canvas.parentElement.querySelector('canvas.chart-overlay');
