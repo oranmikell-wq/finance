@@ -9390,8 +9390,13 @@
 
             // Draw candles
             var n = candles.length;
-            var candleSlot = chartW / n;
-            var bodyW = Math.max(2, candleSlot * 0.6);
+            // Cap candle slot width so candles don't become enormous when few data points
+            var maxCandleSlot = 28;
+            var candleSlot = Math.min(chartW / n, maxCandleSlot);
+            // Right-align candles (TradingView style) when fewer than fill the chart
+            var totalCandlesW = n * candleSlot;
+            var candleStartX = padL + (chartW - totalCandlesW);
+            var bodyW = Math.max(2, Math.min(20, candleSlot * 0.65));
             var halfBody = bodyW / 2;
 
             // Store candle positions for tooltip
@@ -9399,7 +9404,7 @@
 
             for (var i = 0; i < n; i++) {
                 var c = candles[i];
-                var cx = padL + (i + 0.5) * candleSlot;
+                var cx = candleStartX + (i + 0.5) * candleSlot;
                 var bullish = c.close >= c.open;
                 var clr = bullish ? clrBull : clrBear;
 
@@ -9445,7 +9450,7 @@
             ctx.lineWidth = 1;
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
-            ctx.moveTo(padL, yRef);
+            ctx.moveTo(candleStartX, yRef);
             ctx.lineTo(W - padR, yRef);
             ctx.stroke();
             ctx.setLineDash([]);
@@ -9482,7 +9487,7 @@
                     var dtC = new Date(cd2.ts);
                     lbl2 = dtC.getDate() + ' ' + heMonthsC[dtC.getMonth()];
                 }
-                var xLbl = padL + (idx + 0.5) * candleSlot;
+                var xLbl = candleStartX + (idx + 0.5) * candleSlot;
                 var lblW3 = ctx.measureText(lbl2).width + 10;
                 // Background pill
                 ctx.fillStyle = isLight ? 'rgba(240,240,245,0.85)' : 'rgba(18,18,28,0.8)';
@@ -9517,7 +9522,7 @@
             canvas._candlePositions = candlePositions;
             canvas._candleData = candles;
             canvas._padL = padL; canvas._padR = padR; canvas._padT = padT; canvas._padB = padB;
-            canvas._chartW = chartW; canvas._candleSlot = candleSlot;
+            canvas._chartW = chartW; canvas._candleSlot = candleSlot; canvas._candleStartX = candleStartX;
             canvas._minV = minV; canvas._maxV = maxV; canvas._range = range;
             canvas._firstOpen = firstCandle.open;
             canvas._candleResolution = candleResolution;
@@ -9552,7 +9557,8 @@
                     var cMinV = canvas._minV;
                     var cMaxV = canvas._maxV;
                     var cRange = canvas._range || (cMaxV - cMinV) || 1;
-                    var idx = Math.floor((mx - pL) / slot);
+                    var startX = canvas._candleStartX !== undefined ? canvas._candleStartX : pL;
+                    var idx = Math.floor((mx - startX) / slot);
                     idx = Math.max(0, Math.min(cps.length - 1, idx));
                     if (idx === canvas._prevIdx && my === null) return;
                     canvas._prevIdx = idx;
