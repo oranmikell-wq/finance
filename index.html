@@ -3731,6 +3731,8 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
+        const APP_VERSION = '2026.03.14.1';
+
         let assets = [];
         let editingAssetId = null;
         let exchangeRate = 3.7; // USD to ILS exchange rate
@@ -4464,7 +4466,7 @@
                     if (parsed) {
                         nasdaqPrice = parsed.price;
                         if (parsed.prevClose > 0) nasdaqChange = (parsed.price - parsed.prevClose) / parsed.prevClose * 100;
-                        try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
+                        try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-price-ts', Date.now().toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
                         console.log('[NASDAQ] ✅ corsproxy:', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
                         updateRateDisplay(); return true;
                     }
@@ -4481,7 +4483,7 @@
                     if (parsed) {
                         nasdaqPrice = parsed.price;
                         if (parsed.prevClose > 0) nasdaqChange = (parsed.price - parsed.prevClose) / parsed.prevClose * 100;
-                        try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
+                        try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-price-ts', Date.now().toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
                         console.log('[NASDAQ] ✅ allorigins:', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
                         updateRateDisplay(); return true;
                     }
@@ -4504,7 +4506,7 @@
                         if (p > 0) {
                             nasdaqPrice = p;
                             if (p0 > 0) nasdaqChange = (p - p0) / p0 * 100;
-                            try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
+                            try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-price-ts', Date.now().toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
                             console.log('[NASDAQ] ✅ stooq:', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
                             updateRateDisplay(); return true;
                         }
@@ -4512,11 +4514,13 @@
                 }
             } catch(e) {}
 
-            // Restore from cache
+            // Restore from cache (only if fresh — < 30 minutes)
             try {
                 const cached = localStorage.getItem('nasdaq-price');
+                const cachedTs = localStorage.getItem('nasdaq-price-ts');
                 const cachedChg = localStorage.getItem('nasdaq-change');
-                if (cached) { nasdaqPrice = parseFloat(cached); nasdaqChange = cachedChg ? parseFloat(cachedChg) : 0; updateRateDisplay(); }
+                const isFresh = cachedTs && (Date.now() - parseInt(cachedTs)) < 1800000;
+                if (cached && isFresh) { nasdaqPrice = parseFloat(cached); nasdaqChange = cachedChg ? parseFloat(cachedChg) : 0; updateRateDisplay(); }
             } catch(e) {}
             return nasdaqPrice > 0;
         }
@@ -4527,6 +4531,7 @@
             lastSpyUpdate = new Date().toISOString();
             try {
                 localStorage.setItem('spy-price', spyPrice.toString());
+                localStorage.setItem('spy-price-ts', Date.now().toString());
                 localStorage.setItem('spy-price-date', lastSpyUpdate);
             } catch (e) {}
             console.log('[SPY] Applied price: $' + spyPrice.toFixed(2));
@@ -4824,7 +4829,7 @@
                 if (price > 0 && price < 10000) {
                     spyPrice = price;
                     lastSpyUpdate = new Date().toISOString();
-                    try { localStorage.setItem('spy-price', spyPrice.toString()); localStorage.setItem('spy-price-date', lastSpyUpdate); } catch(e){}
+                    try { localStorage.setItem('spy-price', spyPrice.toString()); localStorage.setItem('spy-price-ts', Date.now().toString()); localStorage.setItem('spy-price-date', lastSpyUpdate); } catch(e){}
                     updateSpyAssets();
                     updateUI();
                     const s = document.getElementById('spyStatus');
@@ -4921,7 +4926,7 @@
                 if (data?.c && data.c > 0) {
                     localStorage.setItem('finnhub-api-key', key);
                     spyPrice = data.c; lastSpyUpdate = new Date().toISOString();
-                    try { localStorage.setItem('spy-price', spyPrice.toString()); localStorage.setItem('spy-price-date', lastSpyUpdate); } catch(e){}
+                    try { localStorage.setItem('spy-price', spyPrice.toString()); localStorage.setItem('spy-price-ts', Date.now().toString()); localStorage.setItem('spy-price-date', lastSpyUpdate); } catch(e){}
                     sucEl.textContent = `✅ עובד מצוין! SPY: $${spyPrice.toFixed(2)}`; sucEl.style.display = 'block';
                     btn.textContent = '🎉 נשמר!';
                     updateSpyAssets(); updateUI();
@@ -5213,12 +5218,12 @@
                     if (data && data.bitcoin && data.bitcoin.usd > 0) {
                         btcRate = data.bitcoin.usd;
                         btcDailyChangePct = data.bitcoin.usd_24h_change || 0;
-                        try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
+                        try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-rate-ts', Date.now().toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
                     }
                     if (data && data.ethereum && data.ethereum.usd > 0) {
                         ethRate = data.ethereum.usd;
                         ethDailyChangePct = data.ethereum.usd_24h_change || 0;
-                        try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
+                        try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-rate-ts', Date.now().toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
                     }
                     console.log('[Crypto/CoinGecko] BTC:', btcRate.toLocaleString(), '| ETH:', ethRate.toLocaleString());
                     updateRateDisplay();
@@ -5237,7 +5242,7 @@
                     if (btcData.lastPrice > 0) {
                         btcRate = parseFloat(btcData.lastPrice);
                         btcDailyChangePct = parseFloat(btcData.priceChangePercent) || 0;
-                        try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
+                        try { localStorage.setItem('btc-rate', btcRate.toString()); localStorage.setItem('btc-rate-ts', Date.now().toString()); localStorage.setItem('btc-daily-change', btcDailyChangePct.toString()); } catch(e) {}
                     }
                 }
                 if (ethResp.ok) {
@@ -5245,7 +5250,7 @@
                     if (ethData.lastPrice > 0) {
                         ethRate = parseFloat(ethData.lastPrice);
                         ethDailyChangePct = parseFloat(ethData.priceChangePercent) || 0;
-                        try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
+                        try { localStorage.setItem('eth-rate', ethRate.toString()); localStorage.setItem('eth-rate-ts', Date.now().toString()); localStorage.setItem('eth-daily-change', ethDailyChangePct.toString()); } catch(e) {}
                     }
                 }
                 console.log('[Crypto/Binance] BTC:', btcRate.toLocaleString(), '| ETH:', ethRate.toLocaleString());
@@ -5468,6 +5473,7 @@
                 // Save to storage
                 try {
                     localStorage.setItem('exchange-rate', exchangeRate.toString());
+                    localStorage.setItem('exchange-rate-ts', Date.now().toString());
                     localStorage.setItem('btc-rate', btcRate.toString());
                     localStorage.setItem('eth-rate', ethRate.toString());
                     localStorage.setItem('exchange-rate-date', lastRateUpdate);
@@ -7290,6 +7296,23 @@
         };
 
         async function loadAssets() {
+            // Cache-bust: clear stale rate caches when app version changes
+            try {
+                if (localStorage.getItem('app-version') !== APP_VERSION) {
+                    var _rateCacheKeys = [
+                        'nasdaq-price', 'nasdaq-change',
+                        'btc-rate', 'btc-change',
+                        'eth-rate', 'eth-change',
+                        'spy-price', 'exchange-rate', 'exchange-rate-date',
+                        'ta125-price', 'ta125-change',
+                        'sp500-price', 'sp500-change'
+                    ];
+                    _rateCacheKeys.forEach(function(k) { try { localStorage.removeItem(k); } catch(e2) {} });
+                    localStorage.setItem('app-version', APP_VERSION);
+                    console.log('[App] Cache cleared for version', APP_VERSION);
+                }
+            } catch(e) {}
+
             // Use pre-loaded globals (read synchronously before first paint)
             try {
                 if (window._preloadedAssets) assets = window._preloadedAssets;
@@ -7301,38 +7324,56 @@
             } catch(e) {}
             
             try {
+                const _now = Date.now();
+                const _30min = 1800000;
+
                 const rateData = localStorage.getItem('exchange-rate');
-                if (rateData) {
+                const rateTsRaw = localStorage.getItem('exchange-rate-ts');
+                const rateIsFresh = rateTsRaw && (_now - parseInt(rateTsRaw)) < _30min;
+                if (rateData && rateIsFresh) {
                     exchangeRate = parseFloat(rateData);
                 }
-                
+
                 const btcData = localStorage.getItem('btc-rate');
-                if (btcData) {
+                const btcTsRaw = localStorage.getItem('btc-rate-ts');
+                const btcIsFresh = btcTsRaw && (_now - parseInt(btcTsRaw)) < _30min;
+                if (btcData && btcIsFresh) {
                     btcRate = parseFloat(btcData);
                 }
-                
+
                 const ethData = localStorage.getItem('eth-rate');
-                if (ethData) {
+                const ethTsRaw = localStorage.getItem('eth-rate-ts');
+                const ethIsFresh = ethTsRaw && (_now - parseInt(ethTsRaw)) < _30min;
+                if (ethData && ethIsFresh) {
                     ethRate = parseFloat(ethData);
                 }
-                
+
                 const spyData = localStorage.getItem('spy-price');
+                const spyTsRaw = localStorage.getItem('spy-price-ts');
                 const spyDateRaw = localStorage.getItem('spy-price-date');
-                if (spyData && spyDateRaw) {
-                    const ageHours = (Date.now() - new Date(spyDateRaw).getTime()) / 3600000;
-                    if (ageHours < 24) { // only use cache if < 24h old
+                if (spyData && spyTsRaw) {
+                    const spyAgeMs = _now - parseInt(spyTsRaw);
+                    const spyAgeHours = spyAgeMs / 3600000;
+                    if (spyAgeHours < 24) { // only use cache if < 24h old
                         spyPrice = parseFloat(spyData);
-                        console.log('[SPY] loaded from cache, age:', ageHours.toFixed(1) + 'h, price:', spyPrice);
+                        console.log('[SPY] loaded from cache, age:', spyAgeHours.toFixed(1) + 'h, price:', spyPrice);
                     } else {
-                        console.log('[SPY] cache too old (' + ageHours.toFixed(1) + 'h), will fetch fresh');
+                        console.log('[SPY] cache too old (' + spyAgeHours.toFixed(1) + 'h), will fetch fresh');
+                    }
+                } else if (spyData && spyDateRaw) {
+                    // Legacy: no -ts key yet, fall back to date-string check
+                    const ageHours = (_now - new Date(spyDateRaw).getTime()) / 3600000;
+                    if (ageHours < 24) {
+                        spyPrice = parseFloat(spyData);
+                        console.log('[SPY] loaded from cache (legacy), age:', ageHours.toFixed(1) + 'h, price:', spyPrice);
                     }
                 }
-                
+
                 // Load daily change data
                 var btcDC = localStorage.getItem('btc-daily-change');
-                if (btcDC) btcDailyChangePct = parseFloat(btcDC);
+                if (btcDC && btcIsFresh) btcDailyChangePct = parseFloat(btcDC);
                 var ethDC = localStorage.getItem('eth-daily-change');
-                if (ethDC) ethDailyChangePct = parseFloat(ethDC);
+                if (ethDC && ethIsFresh) ethDailyChangePct = parseFloat(ethDC);
                 var spyPC = localStorage.getItem('spy-prev-close');
                 if (spyPC) spyPrevClose = parseFloat(spyPC);
                 var spyDC = localStorage.getItem('spy-daily-change');
@@ -7340,9 +7381,11 @@
                 var usdPC = localStorage.getItem('usdils-prev-close');
                 if (usdPC) exchangeRatePrevClose = parseFloat(usdPC);
                 var ndqP = localStorage.getItem('nasdaq-price');
+                var ndqTs = localStorage.getItem('nasdaq-price-ts');
                 var ndqC = localStorage.getItem('nasdaq-change');
-                if (ndqP) { nasdaqPrice = parseFloat(ndqP); nasdaqChange = ndqC ? parseFloat(ndqC) : 0; }
-                
+                var ndqIsFresh = ndqTs && (_now - parseInt(ndqTs)) < _30min;
+                if (ndqP && ndqIsFresh) { nasdaqPrice = parseFloat(ndqP); nasdaqChange = ndqC ? parseFloat(ndqC) : 0; }
+
                 updateRateDisplay();
             } catch (e) {
                 exchangeRate = 3.7;
@@ -10537,7 +10580,7 @@
                             if (data.settings.ethRate) ethRate = data.settings.ethRate;
                             if (data.settings.spyPrice) {
                                 spyPrice = data.settings.spyPrice;
-                                try { localStorage.setItem('spy-price', spyPrice.toString()); } catch(e) {}
+                                try { localStorage.setItem('spy-price', spyPrice.toString()); localStorage.setItem('spy-price-ts', Date.now().toString()); } catch(e) {}
                             }
                             updateRateDisplay();
                         }
