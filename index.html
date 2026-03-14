@@ -121,7 +121,7 @@
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: var(--bg-primary, #0a0e27);
+            background: #0a0e27;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -130,7 +130,7 @@
         }
         #loginOverlay.hidden { display: none; }
         .login-card {
-            background: var(--bg-card, #141829);
+            background: #141829;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 24px;
             padding: 40px 32px 36px;
@@ -191,9 +191,9 @@
         }
         .passkey-btn:hover { background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25)); border-color: rgba(99,102,241,0.7); transform: translateY(-1px); }
         .passkey-btn:active { transform: translateY(0); opacity: 0.85; }
-        body.light-mode #loginOverlay { background: var(--bg-primary); }
-        body.light-mode .login-card { background: var(--bg-card); border-color: rgba(0,0,0,0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
-        body.light-mode .passkey-btn { color: #3730a3; border-color: rgba(99,102,241,0.5); }
+        /* Login overlay always dark regardless of app theme */
+        body.light-mode #loginOverlay { background: #0a0e27; }
+        body.light-mode .login-card { background: #141829; border-color: rgba(255,255,255,0.1); box-shadow: 0 24px 80px rgba(0,0,0,0.5); }
 
         .container {
             max-width: 1400px;
@@ -3890,7 +3890,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.9';
+        const APP_VERSION = '2026.03.14.10';
 
         let assets = [];
         let editingAssetId = null;
