@@ -1818,40 +1818,40 @@
                     <input type="text" class="search-input" id="assetSearch" placeholder="חיפוש..." oninput="filterAssets(this.value)" style="padding:4px 10px;font-size:0.82rem;height:28px;text-align:right;direction:rtl;">
                 </div>
             </div>
-            <div class="last-update" style="display:flex;align-items:center;gap:8px;padding:4px 10px;direction:ltr;overflow:hidden;">
+            <div class="last-update" style="display:flex;align-items:center;gap:8px;padding:2px 8px;direction:ltr;overflow:hidden;">
                 <div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;flex:1;cursor:pointer;-webkit-overflow-scrolling:touch;scrollbar-width:none;" onclick="updateExchangeRate()" title="לחץ לעדכון שערים">
                     <!-- USD/ILS chip -->
-                    <div id="chipUSD" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.75rem;white-space:nowrap;">
+                    <div id="chipUSD" style="display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">$/₪</span>
                         <span style="font-weight:700;color:var(--text-primary);">₪<span id="exchangeRateDisplay">3.70</span></span>
                         <span id="ilsDailyChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- BTC chip -->
-                    <div id="chipBTC" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.75rem;white-space:nowrap;">
+                    <div id="chipBTC" style="display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">₿</span>
                         <span style="font-weight:700;color:var(--text-primary);">$<span id="btcRateDisplay">100,000</span></span>
                         <span id="btcDailyChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- ETH chip -->
-                    <div id="chipETH" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.75rem;white-space:nowrap;">
+                    <div id="chipETH" style="display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">Ξ</span>
                         <span style="font-weight:700;color:var(--text-primary);">$<span id="ethRateDisplay">3,500</span></span>
                         <span id="ethDailyChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- S&P500 chip -->
-                    <div id="chipSPY" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.75rem;white-space:nowrap;">
+                    <div id="chipSPY" style="display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">S&P</span>
                         <span style="font-weight:700;color:var(--text-primary);" id="spyIndexDisplay">—</span>
                         <span id="spyIndexChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- NASDAQ chip -->
-                    <div id="chipNASDAQ" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.75rem;white-space:nowrap;">
+                    <div id="chipNASDAQ" style="display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">NDX</span>
                         <span style="font-weight:700;color:var(--text-primary);" id="nasdaqDisplay">—</span>
                         <span id="nasdaqChange" style="font-size:0.72rem;"></span>
                     </div>
                     <!-- TA125 chip -->
-                    <div id="chipTA" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.75rem;white-space:nowrap;">
+                    <div id="chipTA" style="display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.72rem;white-space:nowrap;">
                         <span style="font-size:0.7rem;color:var(--text-secondary);">TA125</span>
                         <span style="font-weight:700;color:var(--text-primary);" id="ta125Display">—</span>
                         <span id="ta125Change" style="font-size:0.72rem;"></span>
