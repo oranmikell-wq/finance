@@ -4433,13 +4433,13 @@
             return spyPrice > 0;
         }
 
-        // Fetch NASDAQ Composite (^IXIC) price
+        // Fetch NASDAQ-100 (^NDX) price
         async function fetchNasdaqPrice() {
-            const STOOQ = 'ixic.us';
+            const STOOQ = 'ndx.us';
 
-            // Source 1: Yahoo via corsproxy — range=5d ensures previousClose is always present
+            // Source 1: Yahoo via corsproxy — range=5d to get historical closes for change calc
             try {
-                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/^IXIC?interval=1d&range=5d');
+                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/^NDX?interval=1d&range=5d');
                 const res = await _fetchTimeout(url, 7000);
                 if (res.ok) {
                     const data = await res.json();
@@ -4448,13 +4448,16 @@
                     const price = meta ? (meta.regularMarketPrice || 0) : 0;
                     if (price > 0) {
                         nasdaqPrice = price;
-                        // Try previousClose from meta, fallback to second-to-last close in series
-                        if (meta.previousClose > 0) {
-                            nasdaqChange = (price - meta.previousClose) / meta.previousClose * 100;
-                        } else if (result.indicators && result.indicators.quote && result.indicators.quote[0]) {
-                            const closes = result.indicators.quote[0].close.filter(Boolean);
-                            if (closes.length >= 2) nasdaqChange = (price - closes[closes.length - 2]) / closes[closes.length - 2] * 100;
-                        }
+                        // previousClose: chartPreviousClose → previousClose → last close in series
+                        const prevClose = (meta.chartPreviousClose > 0 ? meta.chartPreviousClose : 0)
+                            || (meta.previousClose > 0 ? meta.previousClose : 0)
+                            || (function() {
+                                try {
+                                    const closes = result.indicators.quote[0].close.filter(Boolean);
+                                    return closes.length >= 2 ? closes[closes.length - 2] : 0;
+                                } catch(e) { return 0; }
+                            })();
+                        if (prevClose > 0) nasdaqChange = (price - prevClose) / prevClose * 100;
                         try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
                         console.log('[NASDAQ] ✅ corsproxy:', price.toFixed(0), nasdaqChange.toFixed(2) + '%');
                         updateRateDisplay(); return true;
