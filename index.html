@@ -2192,7 +2192,6 @@
                     <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title" id="passkeySettingsTitle">כניסה עם <span class="biometric-label">אימות ביומטרי</span></div>
-                        <div class="settings-row-desc" id="passkeySettingsDesc">לא מופעל</div>
                     </div>
                     <!-- Toggle switch — only interactive element -->
                     <div onclick="togglePasskeySetting()" style="position:relative;width:44px;height:26px;flex-shrink:0;cursor:pointer;">
@@ -12071,11 +12070,9 @@
 
         // Update the Face ID toggle in settings
         function _updatePasskeySettingsUI() {
-            var desc  = document.getElementById('passkeySettingsDesc');
             var track = document.getElementById('passkeyToggleTrack');
             var thumb = document.getElementById('passkeyToggleThumb');
             var on = _hasPasskey();
-            if (desc)  { desc.textContent = on ? 'מופעל' : 'לא מופעל'; desc.style.color = on ? 'var(--accent-green)' : ''; }
             if (track) track.style.background = on ? 'var(--accent-green, #10b981)' : 'rgba(255,255,255,0.15)';
             if (thumb) thumb.style.left = on ? '21px' : '3px';
         }
