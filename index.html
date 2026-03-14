@@ -3890,7 +3890,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.12';
+        const APP_VERSION = '2026.03.14.13';
 
         let assets = [];
         let editingAssetId = null;
@@ -12210,8 +12210,7 @@
         function signOutGoogle() {
             if (!confirm('להתנתק?')) return;
             localStorage.removeItem(AUTH_SESSION_KEY);
-            localStorage.removeItem(PASSKEY_KEY);
-            localStorage.removeItem(PASSKEY_USER_KEY);
+            // Face ID stays registered — next visit will use it directly
             if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
                 google.accounts.id.disableAutoSelect();
             }
