@@ -1954,10 +1954,6 @@
                     <div id="watchbarCustomList"></div>
                 </div>
 
-                <!-- Preset categories -->
-                <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">הוסף מרשימה</div>
-                <div id="watchbarPresets" style="margin-bottom:16px;"></div>
-
                 <!-- Custom symbol input -->
                 <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">סמל מותאם אישית</div>
                 <div style="display:flex;gap:8px;align-items:center;">
@@ -7738,37 +7734,6 @@
             { id: 'eth',    chipId: 'chipETH',    label: 'Ξ Ethereum' },
         ];
 
-        var _WB_PRESETS = [
-            { cat: 'מדדים',   items: [
-                { s: '^DJI',    l: 'Dow Jones' },
-                { s: '^GDAXI',  l: 'DAX' },
-                { s: '^N225',   l: 'Nikkei' },
-                { s: '^FTSE',   l: 'FTSE 100' },
-            ]},
-            { cat: 'סחורות',  items: [
-                { s: 'GC=F',    l: 'זהב' },
-                { s: 'CL=F',    l: 'נפט' },
-                { s: 'SI=F',    l: 'כסף' },
-            ]},
-            { cat: 'מט"ח',    items: [
-                { s: 'EURUSD=X', l: 'EUR/USD' },
-                { s: 'EURILS=X', l: 'EUR/₪' },
-                { s: 'GBPILS=X', l: 'GBP/₪' },
-            ]},
-            { cat: 'קריפטו',  items: [
-                { s: 'SOL-USD',  l: 'SOL' },
-                { s: 'XRP-USD',  l: 'XRP' },
-                { s: 'BNB-USD',  l: 'BNB' },
-            ]},
-            { cat: 'מניות',   items: [
-                { s: 'AAPL',     l: 'AAPL' },
-                { s: 'NVDA',     l: 'NVDA' },
-                { s: 'TSLA',     l: 'TSLA' },
-                { s: 'MSFT',     l: 'MSFT' },
-                { s: 'AMZN',     l: 'AMZN' },
-                { s: 'META',     l: 'META' },
-            ]},
-        ];
 
         function _wbGetCfg() {
             if (_watchbarCfg) return _watchbarCfg;
@@ -7973,22 +7938,6 @@
                 }
             }
 
-            // Presets
-            var pEl = document.getElementById('watchbarPresets');
-            if (pEl) {
-                pEl.innerHTML = _WB_PRESETS.map(function(cat) {
-                    var tagsHtml = cat.items.map(function(item) {
-                        var added = cfg.custom.find(function(c) { return c.s === item.s; });
-                        var cls = 'watchbar-preset-tag' + (added ? ' added' : '');
-                        var icon = added ? '✓ ' : '+ ';
-                        return '<span class="' + cls + '" onclick="wbAddPreset(\'' + item.s + '\',\'' + item.l + '\')">' + icon + item.l + '</span>';
-                    }).join('');
-                    return '<div style="margin-bottom:10px;">' +
-                        '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;font-weight:600;">' + cat.cat + '</div>' +
-                        '<div>' + tagsHtml + '</div>' +
-                    '</div>';
-                }).join('');
-            }
         }
 
         function openWatchbarModal() {
