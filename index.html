@@ -1893,8 +1893,8 @@
 })();
 </script>
 
-    <!-- ── Login Overlay ── -->
-    <div id="loginOverlay" class="hidden">
+    <!-- ── Login Overlay ── starts visible; hidden only after auth confirmed -->
+    <div id="loginOverlay">
         <div class="login-card">
             <img src="./icon-light.png" alt="Financier" class="login-logo" onerror="this.style.display='none'">
             <div class="login-title">Financier</div>
@@ -3891,7 +3891,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.8';
+        const APP_VERSION = '2026.03.14.9';
 
         let assets = [];
         let editingAssetId = null;
