@@ -4448,15 +4448,17 @@
                     const price = meta ? (meta.regularMarketPrice || 0) : 0;
                     if (price > 0) {
                         nasdaqPrice = price;
-                        // previousClose: chartPreviousClose → previousClose → last close in series
-                        const prevClose = (meta.chartPreviousClose > 0 ? meta.chartPreviousClose : 0)
-                            || (meta.previousClose > 0 ? meta.previousClose : 0)
-                            || (function() {
-                                try {
-                                    const closes = result.indicators.quote[0].close.filter(Boolean);
-                                    return closes.length >= 2 ? closes[closes.length - 2] : 0;
-                                } catch(e) { return 0; }
-                            })();
+                        // Find true previous-day close: skip trailing duplicates of current price
+                        // (Yahoo repeats last close on weekends), take first value that differs
+                        const prevClose = (function() {
+                            try {
+                                const closes = result.indicators.quote[0].close.filter(function(v) { return v != null; });
+                                for (var i = closes.length - 1; i >= 0; i--) {
+                                    if (Math.abs(closes[i] - price) / price > 0.0001) return closes[i];
+                                }
+                            } catch(e) {}
+                            return 0;
+                        })();
                         if (prevClose > 0) nasdaqChange = (price - prevClose) / prevClose * 100;
                         try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
                         console.log('[NASDAQ] ✅ corsproxy:', price.toFixed(0), nasdaqChange.toFixed(2) + '%');
