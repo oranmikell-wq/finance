@@ -4435,41 +4435,62 @@
 
         // Fetch NASDAQ-100 (^NDX) price
         async function fetchNasdaqPrice() {
-            const STOOQ = 'ndx.us';
 
-            // Source 1: Yahoo via corsproxy — range=5d to get historical closes for change calc
+            function _parseNdxYahoo(data) {
+                const result = data && data.chart && data.chart.result && data.chart.result[0];
+                const meta = result && result.meta;
+                const price = meta ? (meta.regularMarketPrice || 0) : 0;
+                if (price <= 0) return null;
+                const prevClose = (function() {
+                    try {
+                        const closes = result.indicators.quote[0].close.filter(function(v) { return v != null; });
+                        for (var i = closes.length - 1; i >= 0; i--) {
+                            if (Math.abs(closes[i] - price) / price > 0.0001) return closes[i];
+                        }
+                    } catch(e) {}
+                    return 0;
+                })();
+                return { price: price, prevClose: prevClose };
+            }
+
+            const NDX_YAHOO = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENDX?interval=1d&range=5d';
+
+            // Source 1: Yahoo via corsproxy
             try {
-                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/^NDX?interval=1d&range=5d');
+                const url = 'https://corsproxy.io/?' + encodeURIComponent(NDX_YAHOO);
                 const res = await _fetchTimeout(url, 7000);
                 if (res.ok) {
-                    const data = await res.json();
-                    const result = data && data.chart && data.chart.result && data.chart.result[0];
-                    const meta = result && result.meta;
-                    const price = meta ? (meta.regularMarketPrice || 0) : 0;
-                    if (price > 0) {
-                        nasdaqPrice = price;
-                        // Find true previous-day close: skip trailing duplicates of current price
-                        // (Yahoo repeats last close on weekends), take first value that differs
-                        const prevClose = (function() {
-                            try {
-                                const closes = result.indicators.quote[0].close.filter(function(v) { return v != null; });
-                                for (var i = closes.length - 1; i >= 0; i--) {
-                                    if (Math.abs(closes[i] - price) / price > 0.0001) return closes[i];
-                                }
-                            } catch(e) {}
-                            return 0;
-                        })();
-                        if (prevClose > 0) nasdaqChange = (price - prevClose) / prevClose * 100;
+                    const parsed = _parseNdxYahoo(await res.json());
+                    if (parsed) {
+                        nasdaqPrice = parsed.price;
+                        if (parsed.prevClose > 0) nasdaqChange = (parsed.price - parsed.prevClose) / parsed.prevClose * 100;
                         try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
-                        console.log('[NASDAQ] ✅ corsproxy:', price.toFixed(0), nasdaqChange.toFixed(2) + '%');
+                        console.log('[NASDAQ] ✅ corsproxy:', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
                         updateRateDisplay(); return true;
                     }
                 }
             } catch(e) {}
 
-            // Source 2: Stooq historical — 2 rows to calculate daily change
+            // Source 2: Yahoo via allorigins (fallback proxy — better on mobile)
             try {
-                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/d/l/?s=' + STOOQ + '&i=d');
+                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent(NDX_YAHOO);
+                const res = await _fetchTimeout(url, 8000);
+                if (res.ok) {
+                    const raw = await res.json();
+                    const parsed = _parseNdxYahoo(raw && raw.contents ? JSON.parse(raw.contents) : null);
+                    if (parsed) {
+                        nasdaqPrice = parsed.price;
+                        if (parsed.prevClose > 0) nasdaqChange = (parsed.price - parsed.prevClose) / parsed.prevClose * 100;
+                        try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
+                        console.log('[NASDAQ] ✅ allorigins:', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
+                        updateRateDisplay(); return true;
+                    }
+                }
+            } catch(e) {}
+
+            // Source 3: Stooq — ^ndx symbol
+            try {
+                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/d/l/?s=%5Endx&i=d');
                 const res = await _fetchTimeout(url, 8000);
                 if (res.ok) {
                     const raw = await res.json();
@@ -4478,13 +4499,13 @@
                     if (lines.length >= 2) {
                         const latest = lines[lines.length - 1].split(',');
                         const prev   = lines[lines.length - 2].split(',');
-                        const p  = parseFloat(latest[4]); // Close column
+                        const p  = parseFloat(latest[4]);
                         const p0 = parseFloat(prev[4]);
                         if (p > 0) {
                             nasdaqPrice = p;
                             if (p0 > 0) nasdaqChange = (p - p0) / p0 * 100;
                             try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
-                            console.log('[NASDAQ] ✅ stooq:', p.toFixed(0), nasdaqChange.toFixed(2) + '%');
+                            console.log('[NASDAQ] ✅ stooq:', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
                             updateRateDisplay(); return true;
                         }
                     }
