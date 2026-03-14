@@ -2190,15 +2190,19 @@
                     </div>
                 </div>
                 <!-- Face ID toggle row -->
-                <button id="passkeySettingsRow" onclick="togglePasskeySetting()" class="settings-row">
+                <div id="passkeySettingsRow" class="settings-row" style="margin-top:8px;cursor:pointer;" onclick="togglePasskeySetting()">
                     <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title" id="passkeySettingsTitle">כניסה עם Face ID</div>
                         <div class="settings-row-desc" id="passkeySettingsDesc">לא מופעל</div>
                     </div>
-                    <div class="settings-row-arrow" id="passkeySettingsArrow">›</div>
-                </button>
-                <button onclick="signOutGoogle()" class="settings-row" style="border-color:rgba(239,68,68,0.15);">
+                    <!-- Toggle switch -->
+                    <div id="passkeyToggle" style="position:relative;width:44px;height:26px;flex-shrink:0;">
+                        <div id="passkeyToggleTrack" style="position:absolute;inset:0;border-radius:13px;background:rgba(255,255,255,0.15);transition:background 0.25s ease;"></div>
+                        <div id="passkeyToggleThumb" style="position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left 0.25s ease;left:3px;"></div>
+                    </div>
+                </div>
+                <button onclick="signOutGoogle()" class="settings-row" style="border-color:rgba(239,68,68,0.15);margin-top:8px;">
                     <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title" style="color:var(--accent-red);">התנתקות</div>
@@ -3887,7 +3891,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.4';
+        const APP_VERSION = '2026.03.14.5';
 
         let assets = [];
         let editingAssetId = null;
@@ -12019,22 +12023,15 @@
             }
         }
 
-        // Update the Face ID row in settings
+        // Update the Face ID toggle in settings
         function _updatePasskeySettingsUI() {
-            var row   = document.getElementById('passkeySettingsRow');
-            var title = document.getElementById('passkeySettingsTitle');
             var desc  = document.getElementById('passkeySettingsDesc');
-            var arrow = document.getElementById('passkeySettingsArrow');
-            if (!row) return;
-            if (_hasPasskey()) {
-                if (title) title.textContent = 'כניסה עם Face ID';
-                if (desc)  { desc.textContent = '✅ מופעל — לחץ להסרה'; desc.style.color = 'var(--accent-green)'; }
-                if (arrow) arrow.textContent = '✕';
-            } else {
-                if (title) title.textContent = 'הפעל כניסה עם Face ID';
-                if (desc)  { desc.textContent = 'לא מופעל'; desc.style.color = ''; }
-                if (arrow) arrow.textContent = '›';
-            }
+            var track = document.getElementById('passkeyToggleTrack');
+            var thumb = document.getElementById('passkeyToggleThumb');
+            var on = _hasPasskey();
+            if (desc)  { desc.textContent = on ? 'מופעל' : 'לא מופעל'; desc.style.color = on ? 'var(--accent-green)' : ''; }
+            if (track) track.style.background = on ? 'var(--accent-green, #10b981)' : 'rgba(255,255,255,0.15)';
+            if (thumb) thumb.style.left = on ? '21px' : '3px';
         }
 
         // Show/hide Face ID button on login screen based on registration state
