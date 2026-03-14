@@ -3888,7 +3888,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.14';
+        const APP_VERSION = '2026.03.14.16';
 
         let assets = [];
         let editingAssetId = null;
@@ -4614,23 +4614,29 @@
 
             const NDX_YAHOO = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENDX?interval=1d&range=5d';
 
-            // Source 1: Yahoo via corsproxy
-            try {
-                const url = 'https://corsproxy.io/?' + encodeURIComponent(NDX_YAHOO);
-                const res = await _fetchTimeout(url, 7000);
-                if (res.ok) {
-                    const parsed = _parseNdxYahoo(await res.json());
-                    if (parsed) {
-                        nasdaqPrice = parsed.price;
-                        if (parsed.prevClose > 0) nasdaqChange = (parsed.price - parsed.prevClose) / parsed.prevClose * 100;
-                        try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-price-ts', Date.now().toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
-                        console.log('[NASDAQ] ✅ corsproxy:', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
-                        updateRateDisplay(); return true;
+            // Sources 1-3: Yahoo via multiple CORS proxies
+            const _ndxProxies = [
+                { url: 'https://corsproxy.io/?' + encodeURIComponent(NDX_YAHOO), wrap: false },
+                { url: 'https://cors.eu.org/' + NDX_YAHOO, wrap: false },
+                { url: 'https://api.cors.lol/?url=' + encodeURIComponent(NDX_YAHOO), wrap: false },
+            ];
+            for (var _pi = 0; _pi < _ndxProxies.length; _pi++) {
+                try {
+                    const res = await _fetchTimeout(_ndxProxies[_pi].url, 8000);
+                    if (res.ok) {
+                        const parsed = _parseNdxYahoo(await res.json());
+                        if (parsed) {
+                            nasdaqPrice = parsed.price;
+                            if (parsed.prevClose > 0) nasdaqChange = (parsed.price - parsed.prevClose) / parsed.prevClose * 100;
+                            try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-price-ts', Date.now().toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
+                            console.log('[NASDAQ] ✅ proxy' + _pi + ':', nasdaqPrice.toFixed(0), nasdaqChange.toFixed(2) + '%');
+                            updateRateDisplay(); return true;
+                        }
                     }
-                }
-            } catch(e) {}
+                } catch(e) {}
+            }
 
-            // Source 2: Yahoo via allorigins (fallback proxy — better on mobile)
+            // Source 4: Yahoo via allorigins (wraps response in .contents)
             try {
                 const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent(NDX_YAHOO);
                 const res = await _fetchTimeout(url, 8000);
@@ -5319,10 +5325,12 @@
 
             const proxySources = [
                 'https://corsproxy.io/?' + encodeURIComponent(SP_YAHOO),
+                'https://cors.eu.org/' + SP_YAHOO,
+                'https://api.cors.lol/?url=' + encodeURIComponent(SP_YAHOO),
                 'https://api.allorigins.win/get?url=' + encodeURIComponent(SP_YAHOO),
                 'https://corsproxy.io/?' + encodeURIComponent(SP_YAHOO2),
-                'https://api.allorigins.win/get?url=' + encodeURIComponent(SP_YAHOO2),
-                'https://thingproxy.freeboard.io/fetch/' + SP_YAHOO,
+                'https://cors.eu.org/' + SP_YAHOO2,
+                'https://api.cors.lol/?url=' + encodeURIComponent(SP_YAHOO2),
             ];
 
             for (var i = 0; i < proxySources.length; i++) {
@@ -5503,10 +5511,10 @@
                     } catch(e) { console.warn('[Rate] Yahoo Finance failed:', e.message); }
                 }
 
-                // Source 0a: Yahoo Finance via allorigins.win (real-time, second proxy)
+                // Source 0a: Yahoo Finance via cors.eu.org (real-time, second proxy)
                 if (!gotUSD) {
                     try {
-                        const yUrl2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USDILS%3DX');
+                        const yUrl2 = 'https://cors.eu.org/https://query1.finance.yahoo.com/v8/finance/chart/USDILS%3DX';
                         const yCtrl2 = new AbortController();
                         const yTimeout2 = setTimeout(() => yCtrl2.abort(), 6000);
                         const yResp2 = await fetch(yUrl2, { signal: yCtrl2.signal });
@@ -5525,10 +5533,10 @@
                                     localStorage.setItem('usdils-prev-close', exchangeRatePrevClose.toString());
                                     localStorage.setItem('usdils-prev-date', todayStr2);
                                 }
-                                console.log('[Rate] allorigins Yahoo USD/ILS:', exchangeRate, '| prevClose:', exchangeRatePrevClose);
+                                console.log('[Rate] cors.eu.org Yahoo USD/ILS:', exchangeRate, '| prevClose:', exchangeRatePrevClose);
                             }
                         }
-                    } catch(e) { console.warn('[Rate] allorigins Yahoo failed:', e.message); }
+                    } catch(e) { console.warn('[Rate] cors.eu.org Yahoo failed:', e.message); }
                 }
 
                 // Source 0b: Bank of Israel (official daily rate, XML)
