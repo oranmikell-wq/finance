@@ -1904,7 +1904,7 @@
             <div id="passkeyLoginSection" style="display:none;margin-bottom:16px;">
                 <button id="passkeyLoginBtn" onclick="loginWithPasskey()" class="passkey-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg>
-                    כניסה עם Face ID
+                    כניסה עם <span class="biometric-label">אימות ביומטרי</span>
                 </button>
                 <div id="passkeyLoginError" style="font-size:0.75rem;color:var(--accent-red);margin-top:6px;display:none;"></div>
             </div>
@@ -1928,10 +1928,10 @@
         <div class="login-card" style="max-width:320px;">
             <div style="font-size:2.5rem;margin-bottom:12px;">🔐</div>
             <div class="login-title" style="font-size:1.2rem;margin-bottom:8px;">הפעל כניסה מהירה</div>
-            <div class="login-subtitle" style="margin-bottom:24px;">בפעם הבאה תוכל להיכנס עם<br><strong>Face ID</strong> במקום Google</div>
+            <div class="login-subtitle" style="margin-bottom:24px;">בפעם הבאה תוכל להיכנס עם<br><strong class="biometric-label">אימות ביומטרי</strong> במקום Google</div>
             <button onclick="setupPasskey()" class="passkey-btn" style="margin-bottom:12px;width:100%;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg>
-                הפעל Face ID
+                הפעל <span class="biometric-label">אימות ביומטרי</span>
             </button>
             <button onclick="document.getElementById('passkeySetupModal').style.display='none'" style="background:none;border:none;color:var(--text-secondary);font-size:0.82rem;cursor:pointer;font-family:inherit;width:100%;padding:6px;">לא עכשיו</button>
         </div>
@@ -2193,7 +2193,7 @@
                 <div id="passkeySettingsRow" class="settings-row" style="margin-top:8px;cursor:pointer;" onclick="togglePasskeySetting()">
                     <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg></div>
                     <div class="settings-row-info">
-                        <div class="settings-row-title" id="passkeySettingsTitle">כניסה עם Face ID</div>
+                        <div class="settings-row-title" id="passkeySettingsTitle">כניסה עם <span class="biometric-label">אימות ביומטרי</span></div>
                         <div class="settings-row-desc" id="passkeySettingsDesc">לא מופעל</div>
                     </div>
                     <!-- Toggle switch -->
@@ -3891,7 +3891,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.5';
+        const APP_VERSION = '2026.03.14.6';
 
         let assets = [];
         let editingAssetId = null;
@@ -11923,6 +11923,20 @@
         var PASSKEY_RP_ID = window.location.hostname || 'oranmikell-wq.github.io';
         var PASSKEY_RP_NAME = 'Financier';
 
+        // Return the right biometric label for the current platform
+        function _biometricLabel() {
+            var ua = navigator.userAgent;
+            var isIOS     = /iPad|iPhone|iPod/.test(ua);
+            var isMac     = /Macintosh|MacIntel/.test(ua) && !isIOS;
+            var isWindows = /Windows/.test(ua);
+            var isAndroid = /Android/.test(ua);
+            if (isIOS)     return 'Face ID';
+            if (isMac)     return 'Touch ID';
+            if (isWindows) return 'Windows Hello';
+            if (isAndroid) return 'אימות ביומטרי';
+            return 'אימות ביומטרי';
+        }
+
         function _webAuthnSupported() {
             return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
         }
@@ -11949,7 +11963,7 @@
         // Register a new passkey (called from setup modal)
         async function setupPasskey() {
             if (!_webAuthnSupported()) {
-                alert('הדפדפן שלך אינו תומך ב-Face ID / Passkeys');
+                alert('הדפדפן שלך אינו תומך ב-' + _biometricLabel() + ' / Passkeys');
                 return;
             }
             var session = _getAuthSession();
@@ -11968,10 +11982,10 @@
                 localStorage.setItem(PASSKEY_KEY, _bufToB64(cred.rawId));
                 document.getElementById('passkeySetupModal').style.display = 'none';
                 _updatePasskeySettingsUI();
-                alert('✅ Face ID הופעל בהצלחה!');
+                alert('✅ ' + _biometricLabel() + ' הופעל בהצלחה!');
             } catch(e) {
                 console.log('[Passkey] Register error:', e.message);
-                if (e.name !== 'NotAllowedError') alert('שגיאה בהפעלת Face ID: ' + e.message);
+                if (e.name !== 'NotAllowedError') alert('שגיאה בהפעלת ' + _biometricLabel() + ': ' + e.message);
             }
         }
 
@@ -12002,7 +12016,7 @@
                 console.log('[Passkey] Auth error:', e.message);
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg> כניסה עם Face ID';
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg> כניסה עם ' + _biometricLabel();
                 }
                 if (errEl && e.name !== 'NotAllowedError') {
                     errEl.textContent = 'האימות נכשל. נסה שנית.';
@@ -12014,7 +12028,7 @@
         // Toggle passkey from settings: if active → remove, else → setup
         async function togglePasskeySetting() {
             if (_hasPasskey()) {
-                if (confirm('להסיר כניסה עם Face ID?')) {
+                if (confirm('להסיר כניסה עם ' + _biometricLabel() + '?')) {
                     localStorage.removeItem(PASSKEY_KEY);
                     _updatePasskeySettingsUI();
                 }
@@ -12043,6 +12057,11 @@
             section.style.display = hasPk ? 'block' : 'none';
             if (divider) divider.style.display = hasPk ? 'flex' : 'none';
         }
+        // Stamp all .biometric-label elements with the platform-correct term
+        (function _stampBiometricLabels() {
+            var label = _biometricLabel();
+            document.querySelectorAll('.biometric-label').forEach(function(el) { el.textContent = label; });
+        })();
         // ── END WebAuthn ───────────────────────────────────────────────────────
 
         // ── Google Authentication ──────────────────────────────────────────────
