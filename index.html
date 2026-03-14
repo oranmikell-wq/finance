@@ -12210,6 +12210,8 @@
         function signOutGoogle() {
             if (!confirm('להתנתק?')) return;
             localStorage.removeItem(AUTH_SESSION_KEY);
+            localStorage.removeItem(PASSKEY_KEY);
+            localStorage.removeItem(PASSKEY_USER_KEY);
             if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
                 google.accounts.id.disableAutoSelect();
             }
