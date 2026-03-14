@@ -7809,7 +7809,7 @@
         }
 
         async function _wbFetchOne(symbol) {
-            var base = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?range=2d&interval=1d';
+            var base = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?range=5d&interval=1d';
             var urls = [
                 'https://cors.eu.org/' + base,
                 'https://corsproxy.io/?' + encodeURIComponent(base),
@@ -7822,14 +7822,25 @@
                     clearTimeout(t);
                     if (resp.ok) {
                         var data = await resp.json();
-                        var meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+                        var result = data && data.chart && data.chart.result && data.chart.result[0];
+                        var meta = result && result.meta;
                         if (meta) {
-                            var price = meta.regularMarketPrice || meta.previousClose;
-                            var prevClose = meta.previousClose || meta.chartPreviousClose;
-                            if (price > 0) {
-                                _wcPrices[symbol] = { price: price, prevClose: prevClose, ts: Date.now() };
-                                return true;
+                            var price = meta.regularMarketPrice;
+                            if (!price || price <= 0) continue;
+                            // prevClose: last close that differs from current price (handles weekend/duplicate candle)
+                            var closes = (result.indicators && result.indicators.quote &&
+                                          result.indicators.quote[0] && result.indicators.quote[0].close) || [];
+                            var validCloses = closes.filter(function(c) { return c != null && c > 0; });
+                            var prevClose = null;
+                            for (var j = validCloses.length - 1; j >= 0; j--) {
+                                if (Math.abs(validCloses[j] - price) / price > 0.0001) {
+                                    prevClose = validCloses[j];
+                                    break;
+                                }
                             }
+                            if (!prevClose) prevClose = meta.chartPreviousClose || meta.previousClose || price;
+                            _wcPrices[symbol] = { price: price, prevClose: prevClose, ts: Date.now() };
+                            return true;
                         }
                     }
                 } catch(e) {}
