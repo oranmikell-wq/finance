@@ -1946,7 +1946,7 @@
                 </div>
             </div>
             <!-- Body -->
-            <div style="padding:12px 16px 24px;">
+            <div id="watchbarModalBody" style="padding:12px 16px 24px;">
                 <!-- Built-in chips section -->
                 <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ברירת מחדל</div>
                 <div id="watchbarBuiltins" style="margin-bottom:16px;"></div>
@@ -1968,7 +1968,7 @@
                         <button onclick="_watchbarSubmitCustom()" id="watchbarSubmitBtn"
                             style="background:var(--accent-green);border:none;border-radius:10px;padding:8px 16px;color:#fff;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">הוסף</button>
                     </div>
-                    <div id="watchbarSearchDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.35);max-height:180px;overflow-y:auto;"></div>
+                    <div id="watchbarSearchDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.35);max-height:180px;overflow-y:auto;padding-bottom:4px;"></div>
                 </div>
                 <div id="watchbarAddError" style="display:none;color:var(--accent-red);font-size:0.78rem;margin-top:6px;"></div>
             </div>
@@ -7935,7 +7935,7 @@
             var v = val.trim();
             _wbSearchQuery = v;
             var dd = document.getElementById('watchbarSearchDropdown');
-            if (!v) { if (dd) dd.style.display = 'none'; return; }
+            if (!v) { if (dd) dd.style.display = 'none'; _wbSetDropdownPadding(false); return; }
 
             // Hebrew dictionary — instant match
             var heMatch = _WB_HE_DICT[v];
@@ -7987,10 +7987,15 @@
             if (_wbSearchQuery === q && dd) dd.style.display = 'none';
         }
 
+        function _wbSetDropdownPadding(on) {
+            var body = document.getElementById('watchbarModalBody');
+            if (body) body.style.paddingBottom = on ? '220px' : '24px';
+        }
+
         function _wbShowDropdown(items) {
             var dd = document.getElementById('watchbarSearchDropdown');
             if (!dd) return;
-            if (!items || !items.length) { dd.style.display = 'none'; return; }
+            if (!items || !items.length) { dd.style.display = 'none'; _wbSetDropdownPadding(false); return; }
             var cfg = _wbGetCfg();
             dd.innerHTML = items.map(function(item) {
                 var already = cfg.custom.find(function(c) { return c.s === item.s; });
@@ -8002,12 +8007,14 @@
                 '</div>';
             }).join('');
             dd.style.display = 'block';
+            _wbSetDropdownPadding(true);
         }
 
         async function _wbSelectSearch(symbol, label) {
             var inp = document.getElementById('watchbarSymbolInput');
             var dd  = document.getElementById('watchbarSearchDropdown');
             if (dd) dd.style.display = 'none';
+            _wbSetDropdownPadding(false);
             var cfg = _wbGetCfg();
             if (cfg.custom.find(function(c) { return c.s === symbol; })) {
                 if (inp) inp.value = '';
@@ -8035,6 +8042,7 @@
             if (!raw) return;
             var dd = document.getElementById('watchbarSearchDropdown');
             if (dd) dd.style.display = 'none';
+            _wbSetDropdownPadding(false);
 
             // Check Hebrew dictionary
             var heEntry = _WB_HE_DICT[raw];
@@ -8117,6 +8125,13 @@
         function closeWatchbarModal() {
             var modal = document.getElementById('watchbarModal');
             if (modal) modal.style.display = 'none';
+            var inp = document.getElementById('watchbarSymbolInput');
+            if (inp) inp.value = '';
+            var dd = document.getElementById('watchbarSearchDropdown');
+            if (dd) { dd.style.display = 'none'; dd.innerHTML = ''; }
+            _wbSetDropdownPadding(false);
+            var err = document.getElementById('watchbarAddError');
+            if (err) err.style.display = 'none';
         }
 
         function updateLastUpdate() {
