@@ -235,11 +235,11 @@
         .last-update {
             font-size: 0.82rem;
             color: var(--text-secondary);
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(135deg, #1a1f3a 0%, #252b4a 100%);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             margin: 0;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            box-shadow: var(--shadow);
         }
         .last-update div::-webkit-scrollbar { display: none; }
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
@@ -1665,9 +1665,9 @@
 
         /* Exchange rates bar container */
         body.light-mode .last-update {
-            background: rgba(0,0,0,0.03) !important;
+            background: linear-gradient(135deg, #e8ecf5 0%, #dde3f0 100%) !important;
             border-color: rgba(0,0,0,0.1) !important;
-            box-shadow: none !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
         }
 
         /* Rate / update chips (inline-styled) */
