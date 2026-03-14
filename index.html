@@ -138,6 +138,10 @@
         .watchbar-custom-row { display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06); }
         .watchbar-custom-row:last-child { border-bottom:none; }
         body.light-mode #watchbarSymbolInput { background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.15); }
+        .wb-search-item { padding:9px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;direction:rtl;border-bottom:1px solid rgba(255,255,255,0.06); }
+        .wb-search-item:last-child { border-bottom:none; }
+        .wb-search-item:active { background:rgba(255,255,255,0.06); }
+        body.light-mode .wb-search-item { border-color:rgba(0,0,0,0.07); }
         .login-card {
             background: #141829;
             border: 1px solid rgba(255,255,255,0.1);
@@ -1953,14 +1957,18 @@
                     <div id="watchbarCustomList"></div>
                 </div>
 
-                <!-- Custom symbol input -->
-                <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">סמל מותאם אישית</div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                    <input id="watchbarSymbolInput" type="text" placeholder="לדוג׳: AAPL, ^DJI, GC=F" autocapitalize="characters" autocorrect="off" spellcheck="false"
-                        style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);border-radius:10px;padding:8px 12px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;direction:ltr;text-align:left;"
-                        onkeydown="if(event.key==='Enter')_watchbarSubmitCustom()">
-                    <button onclick="_watchbarSubmitCustom()" id="watchbarSubmitBtn"
-                        style="background:var(--accent-green);border:none;border-radius:10px;padding:8px 16px;color:#fff;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">הוסף</button>
+                <!-- Search input -->
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">חיפוש</div>
+                <div style="position:relative;">
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input id="watchbarSymbolInput" type="text" placeholder="נפט, גוגל, AAPL, GC=F..." autocorrect="off" spellcheck="false"
+                            style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);border-radius:10px;padding:8px 12px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;direction:rtl;text-align:right;"
+                            oninput="_wbSearchInput(this.value)"
+                            onkeydown="if(event.key==='Enter')_watchbarSubmitCustom();if(event.key==='Escape'){var d=document.getElementById('watchbarSearchDropdown');if(d)d.style.display='none';}">
+                        <button onclick="_watchbarSubmitCustom()" id="watchbarSubmitBtn"
+                            style="background:var(--accent-green);border:none;border-radius:10px;padding:8px 16px;color:#fff;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">הוסף</button>
+                    </div>
+                    <div id="watchbarSearchDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.35);max-height:180px;overflow-y:auto;"></div>
                 </div>
                 <div id="watchbarAddError" style="display:none;color:var(--accent-red);font-size:0.78rem;margin-top:6px;"></div>
             </div>
@@ -7872,11 +7880,154 @@
             _wbRenderModal();
         }
 
+        var _WB_HE_DICT = {
+            'נפט':        { s: 'CL=F',     l: 'נפט גולמי' },
+            'זהב':        { s: 'GC=F',     l: 'זהב' },
+            'כסף':        { s: 'SI=F',     l: 'כסף' },
+            'גז':         { s: 'NG=F',     l: 'גז טבעי' },
+            'נחושת':      { s: 'HG=F',     l: 'נחושת' },
+            'גוגל':       { s: 'GOOG',     l: 'Google (Alphabet)' },
+            'אלפבית':     { s: 'GOOG',     l: 'Alphabet / Google' },
+            'אפל':        { s: 'AAPL',     l: 'Apple' },
+            'טסלה':       { s: 'TSLA',     l: 'Tesla' },
+            'מיקרוסופט':  { s: 'MSFT',     l: 'Microsoft' },
+            'אמזון':      { s: 'AMZN',     l: 'Amazon' },
+            'מטא':        { s: 'META',     l: 'Meta (Facebook)' },
+            'פייסבוק':    { s: 'META',     l: 'Meta / Facebook' },
+            'נבידיה':     { s: 'NVDA',     l: 'NVIDIA' },
+            'אינטל':      { s: 'INTC',     l: 'Intel' },
+            'נטפליקס':    { s: 'NFLX',     l: 'Netflix' },
+            'דיסני':      { s: 'DIS',      l: 'Disney' },
+            'ספוטיפיי':   { s: 'SPOT',     l: 'Spotify' },
+            'אובר':       { s: 'UBER',     l: 'Uber' },
+            'פייפל':      { s: 'PYPL',     l: 'PayPal' },
+            'ויזה':       { s: 'V',        l: 'Visa' },
+            'מסטרקארד':   { s: 'MA',       l: 'Mastercard' },
+            'סמסונג':     { s: '005930.KS',l: 'Samsung' },
+            'ביטקוין':    { s: 'BTC-USD',  l: 'Bitcoin' },
+            'אתריום':     { s: 'ETH-USD',  l: 'Ethereum' },
+            'סולנה':      { s: 'SOL-USD',  l: 'Solana' },
+            'ריפל':       { s: 'XRP-USD',  l: 'XRP (Ripple)' },
+            'דאו':        { s: '^DJI',     l: 'Dow Jones' },
+            'דאקס':       { s: '^GDAXI',   l: 'DAX' },
+            'ניקיי':      { s: '^N225',    l: 'Nikkei 225' },
+            'פוטסי':      { s: '^FTSE',    l: 'FTSE 100' },
+            'יורו':       { s: 'EURILS=X', l: 'יורו / שקל' },
+            'לירה':       { s: 'GBPILS=X', l: 'לירה שטרלינג / שקל' },
+            'דולר':       { s: 'USDILS=X', l: 'דולר / שקל' },
+        };
+
+        var _wbSearchTimer = null;
+        var _wbSearchQuery = '';
+
+        function _wbSearchInput(val) {
+            var v = val.trim();
+            _wbSearchQuery = v;
+            var dd = document.getElementById('watchbarSearchDropdown');
+            if (!v) { if (dd) dd.style.display = 'none'; return; }
+
+            // Hebrew dictionary — instant match
+            var heMatch = _WB_HE_DICT[v];
+            if (heMatch) { _wbShowDropdown([heMatch]); return; }
+
+            // Partial Hebrew match
+            var hePartial = Object.keys(_WB_HE_DICT).filter(function(k) {
+                return k.indexOf(v) === 0;
+            }).slice(0, 4).map(function(k) { return _WB_HE_DICT[k]; });
+            if (hePartial.length) { _wbShowDropdown(hePartial); return; }
+
+            // Debounced Yahoo Finance search
+            if (dd) {
+                dd.innerHTML = '<div style="padding:9px 12px;color:var(--text-secondary);font-size:0.8rem;direction:rtl;">מחפש...</div>';
+                dd.style.display = 'block';
+            }
+            clearTimeout(_wbSearchTimer);
+            _wbSearchTimer = setTimeout(function() { _wbYahooSearch(v); }, 350);
+        }
+
+        async function _wbYahooSearch(q) {
+            if (_wbSearchQuery !== q) return;
+            var dd = document.getElementById('watchbarSearchDropdown');
+            try {
+                var url = 'https://query1.finance.yahoo.com/v1/finance/search?q=' + encodeURIComponent(q) + '&quotesCount=6&newsCount=0&enableFuzzyQuery=false';
+                var proxies = [
+                    'https://cors.eu.org/' + url,
+                    'https://corsproxy.io/?' + encodeURIComponent(url),
+                ];
+                for (var i = 0; i < proxies.length; i++) {
+                    try {
+                        var ctrl = new AbortController();
+                        var t = setTimeout(function() { ctrl.abort(); }, 5000);
+                        var resp = await fetch(proxies[i], { signal: ctrl.signal });
+                        clearTimeout(t);
+                        if (resp.ok) {
+                            var data = await resp.json();
+                            var allowed = ['EQUITY','ETF','FUTURE','CRYPTOCURRENCY','INDEX','CURRENCY'];
+                            var quotes = (data.quotes || [])
+                                .filter(function(q) { return allowed.indexOf(q.quoteType) >= 0; })
+                                .slice(0, 5)
+                                .map(function(q) { return { s: q.symbol, l: q.shortname || q.longname || q.symbol }; });
+                            if (_wbSearchQuery === q) _wbShowDropdown(quotes);
+                            return;
+                        }
+                    } catch(e) {}
+                }
+            } catch(e) {}
+            if (_wbSearchQuery === q && dd) dd.style.display = 'none';
+        }
+
+        function _wbShowDropdown(items) {
+            var dd = document.getElementById('watchbarSearchDropdown');
+            if (!dd) return;
+            if (!items || !items.length) { dd.style.display = 'none'; return; }
+            var cfg = _wbGetCfg();
+            dd.innerHTML = items.map(function(item) {
+                var already = cfg.custom.find(function(c) { return c.s === item.s; });
+                return '<div class="wb-search-item" onclick="_wbSelectSearch(\'' + item.s.replace(/'/g,"\\'") + '\',\'' + (item.l||item.s).replace(/'/g,"\\'") + '\')">' +
+                    '<span style="font-size:0.82rem;color:var(--text-primary);">' + (item.l || item.s) + (already ? ' ✓' : '') + '</span>' +
+                    '<span style="font-size:0.72rem;color:var(--text-secondary);font-family:monospace;direction:ltr;">' + item.s + '</span>' +
+                '</div>';
+            }).join('');
+            dd.style.display = 'block';
+        }
+
+        async function _wbSelectSearch(symbol, label) {
+            var inp = document.getElementById('watchbarSymbolInput');
+            var dd  = document.getElementById('watchbarSearchDropdown');
+            if (dd) dd.style.display = 'none';
+            var cfg = _wbGetCfg();
+            if (cfg.custom.find(function(c) { return c.s === symbol; })) {
+                if (inp) inp.value = '';
+                return;
+            }
+            var btn = document.getElementById('watchbarSubmitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '...'; }
+            var ok = await _wbFetchOne(symbol);
+            if (btn) { btn.disabled = false; btn.textContent = 'הוסף'; }
+            if (ok) {
+                cfg.custom.push({ s: symbol, l: label });
+                _wbSave();
+                _wbRenderChips();
+                _wbRenderModal();
+                if (inp) inp.value = '';
+                var errEl = document.getElementById('watchbarAddError');
+                if (errEl) errEl.style.display = 'none';
+            }
+        }
+
         async function _watchbarSubmitCustom() {
             var inp = document.getElementById('watchbarSymbolInput');
             if (!inp) return;
-            var sym = inp.value.trim().toUpperCase();
-            if (!sym) return;
+            var raw = inp.value.trim();
+            if (!raw) return;
+            var dd = document.getElementById('watchbarSearchDropdown');
+            if (dd) dd.style.display = 'none';
+
+            // Check Hebrew dictionary
+            var heEntry = _WB_HE_DICT[raw];
+            if (heEntry) { await _wbSelectSearch(heEntry.s, heEntry.l); return; }
+
+            var sym = raw.toUpperCase();
             var cfg = _wbGetCfg();
             if (cfg.custom.find(function(c) { return c.s === sym; })) {
                 inp.value = '';
