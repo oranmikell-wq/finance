@@ -2189,14 +2189,14 @@
                     </div>
                 </div>
                 <!-- Face ID toggle row -->
-                <div id="passkeySettingsRow" class="settings-row" style="margin-top:8px;cursor:pointer;" onclick="togglePasskeySetting()">
+                <div id="passkeySettingsRow" class="settings-row" style="margin-top:8px;">
                     <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg></div>
                     <div class="settings-row-info">
                         <div class="settings-row-title" id="passkeySettingsTitle">כניסה עם <span class="biometric-label">אימות ביומטרי</span></div>
                         <div class="settings-row-desc" id="passkeySettingsDesc">לא מופעל</div>
                     </div>
-                    <!-- Toggle switch -->
-                    <div id="passkeyToggle" style="position:relative;width:44px;height:26px;flex-shrink:0;">
+                    <!-- Toggle switch — only interactive element -->
+                    <div onclick="togglePasskeySetting()" style="position:relative;width:44px;height:26px;flex-shrink:0;cursor:pointer;">
                         <div id="passkeyToggleTrack" style="position:absolute;inset:0;border-radius:13px;background:rgba(255,255,255,0.15);transition:background 0.25s ease;"></div>
                         <div id="passkeyToggleThumb" style="position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left 0.25s ease;left:3px;"></div>
                     </div>
