@@ -121,7 +121,7 @@
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: #ffffff;
+            background: var(--bg-primary, #0a0e27);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -130,14 +130,14 @@
         }
         #loginOverlay.hidden { display: none; }
         .login-card {
-            background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.08);
+            background: var(--bg-card, #141829);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 24px;
             padding: 40px 32px 36px;
             width: 100%;
             max-width: 360px;
             text-align: center;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
         }
         .login-logo {
             width: 72px;
@@ -149,13 +149,13 @@
         .login-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #1e293b;
+            color: var(--text-primary, #f1f5f9);
             margin-bottom: 6px;
             direction: rtl;
         }
         .login-subtitle {
             font-size: 0.85rem;
-            color: #64748b;
+            color: var(--text-secondary, #94a3b8);
             margin-bottom: 32px;
             direction: rtl;
         }
@@ -166,7 +166,8 @@
         }
         .login-note {
             font-size: 0.72rem;
-            color: #94a3b8;
+            color: var(--text-secondary, #94a3b8);
+            opacity: 0.6;
             direction: rtl;
             line-height: 1.5;
         }
@@ -180,7 +181,7 @@
             background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15));
             border: 1px solid rgba(99,102,241,0.4);
             border-radius: 50px;
-            color: #3730a3;
+            color: var(--text-primary, #f1f5f9);
             font-size: 0.95rem;
             font-weight: 600;
             font-family: inherit;
@@ -188,8 +189,11 @@
             transition: all 0.2s ease;
             direction: rtl;
         }
-        .passkey-btn:hover { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12)); border-color: rgba(99,102,241,0.6); transform: translateY(-1px); }
+        .passkey-btn:hover { background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25)); border-color: rgba(99,102,241,0.7); transform: translateY(-1px); }
         .passkey-btn:active { transform: translateY(0); opacity: 0.85; }
+        body.light-mode #loginOverlay { background: var(--bg-primary); }
+        body.light-mode .login-card { background: var(--bg-card); border-color: rgba(0,0,0,0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+        body.light-mode .passkey-btn { color: #3730a3; border-color: rgba(99,102,241,0.5); }
 
         .container {
             max-width: 1400px;
@@ -3887,7 +3891,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.7';
+        const APP_VERSION = '2026.03.14.8';
 
         let assets = [];
         let editingAssetId = null;
