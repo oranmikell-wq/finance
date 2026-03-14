@@ -3890,7 +3890,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.11';
+        const APP_VERSION = '2026.03.14.12';
 
         let assets = [];
         let editingAssetId = null;
@@ -11918,9 +11918,10 @@
         }
 
         // ── WebAuthn / Passkey (Face ID / Touch ID) ───────────────────────────
-        var PASSKEY_KEY = 'passkey-cred-id';
-        var PASSKEY_RP_ID = window.location.hostname || 'oranmikell-wq.github.io';
-        var PASSKEY_RP_NAME = 'Financier';
+        var PASSKEY_KEY      = 'passkey-cred-id';
+        var PASSKEY_USER_KEY = 'passkey-user';       // stores linked Google account info
+        var PASSKEY_RP_ID    = window.location.hostname || 'oranmikell-wq.github.io';
+        var PASSKEY_RP_NAME  = 'Financier';
 
         // Return the right biometric label for the current platform
         function _biometricLabel() {
@@ -11979,6 +11980,13 @@
                     timeout: 60000
                 }});
                 localStorage.setItem(PASSKEY_KEY, _bufToB64(cred.rawId));
+                // Persist the linked Google account info alongside the passkey
+                var linkedSession = _getAuthSession();
+                if (linkedSession) {
+                    localStorage.setItem(PASSKEY_USER_KEY, JSON.stringify({
+                        name: linkedSession.name, email: linkedSession.email, picture: linkedSession.picture || ''
+                    }));
+                }
                 document.getElementById('passkeySetupModal').style.display = 'none';
                 _updatePasskeySettingsUI();
                 alert('✅ ' + _biometricLabel() + ' הופעל בהצלחה!');
@@ -12003,12 +12011,14 @@
                     rpId: PASSKEY_RP_ID,
                     timeout: 60000
                 }});
-                // Auth success — restore or create session
+                // Auth success — restore Google account info (from session or linked passkey user)
                 var existing = _getAuthSession();
+                var passkeyUser = {};
+                try { passkeyUser = JSON.parse(localStorage.getItem(PASSKEY_USER_KEY) || '{}'); } catch(e2) {}
                 _saveAuthSession(
-                    existing ? existing.name    : 'משתמש',
-                    existing ? existing.email   : '',
-                    existing ? (existing.picture||'') : ''
+                    (existing && existing.name)    ? existing.name    : (passkeyUser.name    || 'משתמש'),
+                    (existing && existing.email)   ? existing.email   : (passkeyUser.email   || ''),
+                    (existing && existing.picture) ? existing.picture : (passkeyUser.picture || '')
                 );
                 _showApp();
             } catch(e) {
@@ -12029,6 +12039,7 @@
             if (_hasPasskey()) {
                 if (confirm('להסיר כניסה עם ' + _biometricLabel() + '?')) {
                     localStorage.removeItem(PASSKEY_KEY);
+                    localStorage.removeItem(PASSKEY_USER_KEY);
                     _updatePasskeySettingsUI();
                 }
             } else {
