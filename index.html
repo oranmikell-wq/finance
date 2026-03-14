@@ -1852,7 +1852,7 @@
                     </div>
                     <!-- TA125 chip -->
                     <div id="chipTA" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.78rem;white-space:nowrap;">
-                        <span style="font-size:0.7rem;color:var(--text-secondary);">ת"א 125</span>
+                        <span style="font-size:0.7rem;color:var(--text-secondary);">TA125</span>
                         <span style="font-weight:700;color:var(--text-primary);" id="ta125Display">—</span>
                         <span id="ta125Change" style="font-size:0.72rem;"></span>
                     </div>
@@ -4435,42 +4435,51 @@
 
         // Fetch NASDAQ Composite (^IXIC) price
         async function fetchNasdaqPrice() {
-            const SYMBOL = '%5EIXIC'; // ^IXIC URL-encoded
-            const STOOQ  = 'ixic.us';
+            const STOOQ = 'ixic.us';
 
-            // Source 1: Yahoo via corsproxy
+            // Source 1: Yahoo via corsproxy — range=5d ensures previousClose is always present
             try {
-                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/^IXIC?interval=1d&range=1d');
+                const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/^IXIC?interval=1d&range=5d');
                 const res = await _fetchTimeout(url, 7000);
                 if (res.ok) {
                     const data = await res.json();
-                    const meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
-                    const price = meta ? (meta.regularMarketPrice || meta.previousClose) : 0;
+                    const result = data && data.chart && data.chart.result && data.chart.result[0];
+                    const meta = result && result.meta;
+                    const price = meta ? (meta.regularMarketPrice || 0) : 0;
                     if (price > 0) {
                         nasdaqPrice = price;
-                        if (meta.previousClose > 0) nasdaqChange = (price - meta.previousClose) / meta.previousClose * 100;
+                        // Try previousClose from meta, fallback to second-to-last close in series
+                        if (meta.previousClose > 0) {
+                            nasdaqChange = (price - meta.previousClose) / meta.previousClose * 100;
+                        } else if (result.indicators && result.indicators.quote && result.indicators.quote[0]) {
+                            const closes = result.indicators.quote[0].close.filter(Boolean);
+                            if (closes.length >= 2) nasdaqChange = (price - closes[closes.length - 2]) / closes[closes.length - 2] * 100;
+                        }
                         try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
-                        console.log('[NASDAQ] ✅ corsproxy:', price.toFixed(0));
+                        console.log('[NASDAQ] ✅ corsproxy:', price.toFixed(0), nasdaqChange.toFixed(2) + '%');
                         updateRateDisplay(); return true;
                     }
                 }
             } catch(e) {}
 
-            // Source 2: Stooq via allorigins
+            // Source 2: Stooq historical — 2 rows to calculate daily change
             try {
-                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/l/?s=' + STOOQ + '&f=sd2t2ohlcv&h&e=csv');
+                const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stooq.com/q/d/l/?s=' + STOOQ + '&i=d');
                 const res = await _fetchTimeout(url, 8000);
                 if (res.ok) {
                     const raw = await res.json();
                     const csv = raw && raw.contents ? raw.contents : '';
-                    const lines = csv.trim().split('\n');
+                    const lines = csv.trim().split('\n').filter(function(l) { return l && !/^Date/i.test(l); });
                     if (lines.length >= 2) {
-                        const cols = lines[1].split(',');
-                        const p = parseFloat(cols[6]);
+                        const latest = lines[lines.length - 1].split(',');
+                        const prev   = lines[lines.length - 2].split(',');
+                        const p  = parseFloat(latest[4]); // Close column
+                        const p0 = parseFloat(prev[4]);
                         if (p > 0) {
                             nasdaqPrice = p;
-                            try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); } catch(e) {}
-                            console.log('[NASDAQ] ✅ stooq:', p.toFixed(0));
+                            if (p0 > 0) nasdaqChange = (p - p0) / p0 * 100;
+                            try { localStorage.setItem('nasdaq-price', nasdaqPrice.toString()); localStorage.setItem('nasdaq-change', nasdaqChange.toString()); } catch(e) {}
+                            console.log('[NASDAQ] ✅ stooq:', p.toFixed(0), nasdaqChange.toFixed(2) + '%');
                             updateRateDisplay(); return true;
                         }
                     }
@@ -5516,7 +5525,7 @@
             var nasdaqChgEl = document.getElementById('nasdaqChange');
             if (nasdaqEl && nasdaqPrice > 0) {
                 nasdaqEl.textContent = nasdaqPrice.toLocaleString('en-US', {maximumFractionDigits: 0});
-                if (nasdaqChgEl && nasdaqChange !== 0) {
+                if (nasdaqChgEl) {
                     nasdaqChgEl.textContent = (nasdaqChange >= 0 ? '+' : '') + nasdaqChange.toFixed(2) + '%';
                     nasdaqChgEl.style.color = nasdaqChange >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 }
