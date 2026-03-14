@@ -3824,7 +3824,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.2';
+        const APP_VERSION = '2026.03.14.3';
 
         let assets = [];
         let editingAssetId = null;
@@ -11946,8 +11946,8 @@
                 }
                 google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
-                    callback: handleGoogleCredential,
-                    ux_mode: 'popup'
+                    callback: handleGoogleCredential
+                    // No ux_mode — GIS auto-selects (popup on desktop, FedCM/system on mobile)
                 });
                 var btnDiv = document.getElementById('googleSignInDiv');
                 if (btnDiv) {
@@ -11961,8 +11961,9 @@
                         width: 260
                     });
                 }
-                // Also show One Tap prompt
-                google.accounts.id.prompt();
+                // One Tap prompt (desktop only — mobile browsers may block async popups)
+                var _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (!_isIOS) google.accounts.id.prompt();
             }
             _renderBtn();
         }
