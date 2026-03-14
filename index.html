@@ -38,6 +38,9 @@
     <!-- iPhone 8 / 7 / SE 2nd & 3rd gen (375×667) -->
     <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="./splash/splash-750x1334.png">
 
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -112,6 +115,64 @@
             pointer-events: none;
             z-index: 0;
         }
+
+        /* ── Google Sign-In overlay ── */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg-primary, #0a0e27);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        #loginOverlay.hidden { display: none; }
+        .login-card {
+            background: var(--bg-card, #141829);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px 32px 36px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+        }
+        .login-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            margin: 0 auto 20px;
+            display: block;
+        }
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary, #f1f5f9);
+            margin-bottom: 6px;
+            direction: rtl;
+        }
+        .login-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary, #94a3b8);
+            margin-bottom: 32px;
+            direction: rtl;
+        }
+        #googleSignInDiv {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .login-note {
+            font-size: 0.72rem;
+            color: var(--text-secondary, #94a3b8);
+            opacity: 0.6;
+            direction: rtl;
+            line-height: 1.5;
+        }
+        body.light-mode #loginOverlay { background: var(--bg-primary); }
+        body.light-mode .login-card { background: var(--bg-card); border-color: rgba(0,0,0,0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
 
         .container {
             max-width: 1400px;
@@ -1810,6 +1871,18 @@
     } catch(e) {}
 })();
 </script>
+
+    <!-- ── Google Sign-In Overlay ── -->
+    <div id="loginOverlay" class="hidden">
+        <div class="login-card">
+            <img src="./icon-light.png" alt="Financier" class="login-logo" onerror="this.style.display='none'">
+            <div class="login-title">Financier</div>
+            <div class="login-subtitle">הסוכן הפיננסי האישי שלך</div>
+            <div id="googleSignInDiv"></div>
+            <div class="login-note">הכניסה מאובטחת דרך חשבון Google שלך.<br>לא נשמר מידע בשרת.</div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
             <div class="header-top" style="display:flex;direction:rtl;align-items:center;justify-content:space-between;gap:12px;">
@@ -2049,6 +2122,27 @@
                 </button>
             </div>
             </div><!-- end chart-card -->
+
+            <!-- Account / Sign-Out Section -->
+            <div class="chart-card" id="accountSection" style="display:none;">
+                <div id="accountInfoRow" class="settings-row" style="pointer-events:none;cursor:default;">
+                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);overflow:hidden;padding:0;">
+                        <img id="accountAvatar" src="" alt="" style="width:32px;height:32px;border-radius:50%;display:none;">
+                        <svg id="accountAvatarFallback" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    </div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title" id="accountName" style="font-size:0.85rem;">—</div>
+                        <div class="settings-row-desc" id="accountEmail" style="font-size:0.72rem;"></div>
+                    </div>
+                </div>
+                <button onclick="signOutGoogle()" class="settings-row" style="border-color:rgba(239,68,68,0.15);">
+                    <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg></div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title" style="color:var(--accent-red);">התנתקות</div>
+                    </div>
+                    <div class="settings-row-arrow">›</div>
+                </button>
+            </div>
 
             <!-- About Section -->
             <div class="chart-card">
@@ -3730,7 +3824,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.1';
+        const APP_VERSION = '2026.03.14.2';
 
         let assets = [];
         let editingAssetId = null;
@@ -11757,12 +11851,144 @@
             });
         }
 
-        // Initialize
-        loadAssets();
-        loadProfile();
-        loadRetirementInputs();
-        initCardToggles();
-        setTimeout(fetchEconomicIndices, 2000);
+        // ── Google Authentication ──────────────────────────────────────────────
+        var GOOGLE_CLIENT_ID = '701742612574-i3gbooqlq0s2pk1d15bgv5btf4e8iso9.apps.googleusercontent.com';
+        var AUTH_SESSION_KEY = 'gauth-session';
+        var AUTH_SESSION_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+        // Decode a JWT payload (base64url) — no library needed, we only need the claims
+        function _decodeJWT(token) {
+            try {
+                var parts = token.split('.');
+                if (parts.length !== 3) return null;
+                var payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                var json = decodeURIComponent(atob(payload).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(json);
+            } catch(e) { return null; }
+        }
+
+        // Check localStorage for a valid (non-expired) session
+        function _getAuthSession() {
+            try {
+                var raw = localStorage.getItem(AUTH_SESSION_KEY);
+                if (!raw) return null;
+                var s = JSON.parse(raw);
+                if (!s || !s.ts || !s.email) return null;
+                if (Date.now() - s.ts > AUTH_SESSION_TTL) {
+                    localStorage.removeItem(AUTH_SESSION_KEY);
+                    return null;
+                }
+                return s;
+            } catch(e) { return null; }
+        }
+
+        // Store session after successful sign-in
+        function _saveAuthSession(name, email, picture) {
+            try {
+                localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ name: name, email: email, picture: picture, ts: Date.now() }));
+            } catch(e) {}
+        }
+
+        // Update settings account UI
+        function _updateAccountUI(session) {
+            var sec = document.getElementById('accountSection');
+            if (sec) sec.style.display = session ? '' : 'none';
+            if (!session) return;
+            var nameEl  = document.getElementById('accountName');
+            var emailEl = document.getElementById('accountEmail');
+            var avatar  = document.getElementById('accountAvatar');
+            var avatarFb = document.getElementById('accountAvatarFallback');
+            if (nameEl)  nameEl.textContent  = session.name  || '';
+            if (emailEl) emailEl.textContent = session.email || '';
+            if (avatar && session.picture) {
+                avatar.src = session.picture;
+                avatar.style.display = 'block';
+                if (avatarFb) avatarFb.style.display = 'none';
+            }
+        }
+
+        // Called by Google Identity Services after sign-in
+        function handleGoogleCredential(response) {
+            var claims = _decodeJWT(response.credential);
+            if (!claims || !claims.email) {
+                alert('שגיאה בכניסה עם Google. נסה שנית.');
+                return;
+            }
+            _saveAuthSession(claims.name || claims.email, claims.email, claims.picture || '');
+            _showApp();
+        }
+
+        // Show the app and hide the login overlay
+        function _showApp() {
+            var overlay = document.getElementById('loginOverlay');
+            if (overlay) overlay.classList.add('hidden');
+            var session = _getAuthSession();
+            _updateAccountUI(session);
+            // Initialize app
+            loadAssets();
+            loadProfile();
+            loadRetirementInputs();
+            initCardToggles();
+            setTimeout(fetchEconomicIndices, 2000);
+        }
+
+        // Show login overlay and render Google button
+        function _showLogin() {
+            var overlay = document.getElementById('loginOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            // Render button once GIS is loaded
+            function _renderBtn() {
+                if (typeof google === 'undefined' || !google.accounts) {
+                    setTimeout(_renderBtn, 150);
+                    return;
+                }
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleCredential,
+                    ux_mode: 'popup'
+                });
+                var btnDiv = document.getElementById('googleSignInDiv');
+                if (btnDiv) {
+                    google.accounts.id.renderButton(btnDiv, {
+                        theme: 'filled_black',
+                        size: 'large',
+                        text: 'signin_with',
+                        shape: 'pill',
+                        logo_alignment: 'left',
+                        locale: 'iw',
+                        width: 260
+                    });
+                }
+                // Also show One Tap prompt
+                google.accounts.id.prompt();
+            }
+            _renderBtn();
+        }
+
+        // Sign out
+        function signOutGoogle() {
+            if (!confirm('להתנתק?')) return;
+            localStorage.removeItem(AUTH_SESSION_KEY);
+            if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+                google.accounts.id.disableAutoSelect();
+            }
+            window.location.reload();
+        }
+
+        // Boot: check session → show app or login
+        (function _authBoot() {
+            var session = _getAuthSession();
+            if (session) {
+                // Already authenticated — show app immediately
+                _showApp();
+            } else {
+                // Show login overlay
+                _showLogin();
+            }
+        })();
+        // ── END Google Authentication ──────────────────────────────────────────
 
         // Register Service Worker for PWA — with auto-update
         if ('serviceWorker' in navigator) {
