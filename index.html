@@ -7892,40 +7892,40 @@
         }
 
         var _WB_HE_DICT = {
-            'נפט':        { s: 'CL=F',     l: 'נפט גולמי' },
-            'זהב':        { s: 'GC=F',     l: 'זהב' },
-            'כסף':        { s: 'SI=F',     l: 'כסף' },
-            'גז':         { s: 'NG=F',     l: 'גז טבעי' },
-            'נחושת':      { s: 'HG=F',     l: 'נחושת' },
-            'גוגל':       { s: 'GOOG',     l: 'Google (Alphabet)' },
-            'אלפבית':     { s: 'GOOG',     l: 'Alphabet / Google' },
-            'אפל':        { s: 'AAPL',     l: 'Apple' },
-            'טסלה':       { s: 'TSLA',     l: 'Tesla' },
-            'מיקרוסופט':  { s: 'MSFT',     l: 'Microsoft' },
-            'אמזון':      { s: 'AMZN',     l: 'Amazon' },
-            'מטא':        { s: 'META',     l: 'Meta (Facebook)' },
-            'פייסבוק':    { s: 'META',     l: 'Meta / Facebook' },
-            'נבידיה':     { s: 'NVDA',     l: 'NVIDIA' },
-            'אינטל':      { s: 'INTC',     l: 'Intel' },
-            'נטפליקס':    { s: 'NFLX',     l: 'Netflix' },
-            'דיסני':      { s: 'DIS',      l: 'Disney' },
-            'ספוטיפיי':   { s: 'SPOT',     l: 'Spotify' },
-            'אובר':       { s: 'UBER',     l: 'Uber' },
-            'פייפל':      { s: 'PYPL',     l: 'PayPal' },
-            'ויזה':       { s: 'V',        l: 'Visa' },
-            'מסטרקארד':   { s: 'MA',       l: 'Mastercard' },
-            'סמסונג':     { s: '005930.KS',l: 'Samsung' },
-            'ביטקוין':    { s: 'BTC-USD',  l: 'Bitcoin' },
-            'אתריום':     { s: 'ETH-USD',  l: 'Ethereum' },
-            'סולנה':      { s: 'SOL-USD',  l: 'Solana' },
-            'ריפל':       { s: 'XRP-USD',  l: 'XRP (Ripple)' },
-            'דאו':        { s: '^DJI',     l: 'Dow Jones' },
-            'דאקס':       { s: '^GDAXI',   l: 'DAX' },
-            'ניקיי':      { s: '^N225',    l: 'Nikkei 225' },
-            'פוטסי':      { s: '^FTSE',    l: 'FTSE 100' },
-            'יורו':       { s: 'EURILS=X', l: 'יורו / שקל' },
-            'לירה':       { s: 'GBPILS=X', l: 'לירה שטרלינג / שקל' },
-            'דולר':       { s: 'USDILS=X', l: 'דולר / שקל' },
+            // l = chip label (short), d = display name in dropdown
+            'נפט':       { s: 'CL=F',     l: 'נפט',       d: 'נפט גולמי (Crude Oil)' },
+            'זהב':       { s: 'GC=F',     l: 'זהב',       d: 'זהב (Gold Futures)' },
+            'כסף':       { s: 'SI=F',     l: 'כסף',       d: 'כסף (Silver Futures)' },
+            'גז':        { s: 'NG=F',     l: 'גז',        d: 'גז טבעי (Natural Gas)' },
+            'נחושת':     { s: 'HG=F',     l: 'נחושת',     d: 'נחושת (Copper)' },
+            'גוגל':      { s: 'GOOGL',    l: 'גוגל',      d: 'Google / Alphabet (GOOGL)' },
+            'אלפבית':    { s: 'GOOGL',    l: 'גוגל',      d: 'Alphabet / Google (GOOGL)' },
+            'אפל':       { s: 'AAPL',     l: 'אפל',       d: 'Apple Inc. (AAPL)' },
+            'טסלה':      { s: 'TSLA',     l: 'טסלה',      d: 'Tesla Inc. (TSLA)' },
+            'מיקרוסופט': { s: 'MSFT',     l: 'מיקרוסופט', d: 'Microsoft Corp. (MSFT)' },
+            'אמזון':     { s: 'AMZN',     l: 'אמזון',     d: 'Amazon.com (AMZN)' },
+            'מטא':       { s: 'META',     l: 'מטא',       d: 'Meta Platforms (META)' },
+            'פייסבוק':   { s: 'META',     l: 'מטא',       d: 'Meta / Facebook (META)' },
+            'נבידיה':    { s: 'NVDA',     l: 'נבידיה',    d: 'NVIDIA Corp. (NVDA)' },
+            'אינטל':     { s: 'INTC',     l: 'אינטל',     d: 'Intel Corp. (INTC)' },
+            'נטפליקס':   { s: 'NFLX',     l: 'נטפליקס',   d: 'Netflix Inc. (NFLX)' },
+            'דיסני':     { s: 'DIS',      l: 'דיסני',     d: 'Walt Disney (DIS)' },
+            'ספוטיפיי':  { s: 'SPOT',     l: 'ספוטיפיי',  d: 'Spotify (SPOT)' },
+            'אובר':      { s: 'UBER',     l: 'אובר',      d: 'Uber Technologies (UBER)' },
+            'פייפל':     { s: 'PYPL',     l: 'פייפל',     d: 'PayPal Holdings (PYPL)' },
+            'ויזה':      { s: 'V',        l: 'ויזה',      d: 'Visa Inc. (V)' },
+            'מסטרקארד':  { s: 'MA',       l: 'מסטרקארד',  d: 'Mastercard (MA)' },
+            'ביטקוין':   { s: 'BTC-USD',  l: 'ביטקוין',   d: 'Bitcoin (BTC-USD)' },
+            'אתריום':    { s: 'ETH-USD',  l: 'אתריום',    d: 'Ethereum (ETH-USD)' },
+            'סולנה':     { s: 'SOL-USD',  l: 'סולנה',     d: 'Solana (SOL-USD)' },
+            'ריפל':      { s: 'XRP-USD',  l: 'ריפל',      d: 'XRP / Ripple (XRP-USD)' },
+            'דאו':       { s: '^DJI',     l: 'Dow',       d: 'Dow Jones (^DJI)' },
+            'דאקס':      { s: '^GDAXI',   l: 'DAX',       d: 'DAX Germany (^GDAXI)' },
+            'ניקיי':     { s: '^N225',    l: 'Nikkei',    d: 'Nikkei 225 Japan (^N225)' },
+            'פוטסי':     { s: '^FTSE',    l: 'FTSE',      d: 'FTSE 100 UK (^FTSE)' },
+            'יורו':      { s: 'EURILS=X', l: 'יורו',      d: 'יורו / שקל (EUR/ILS)' },
+            'לירה':      { s: 'GBPILS=X', l: 'לירה',      d: 'לירה שטרלינג / שקל' },
+            'דולר':      { s: 'USDILS=X', l: 'דולר',      d: 'דולר / שקל (USD/ILS)' },
         };
 
         var _wbSearchTimer = null;
@@ -7977,7 +7977,7 @@
                             var quotes = (data.quotes || [])
                                 .filter(function(q) { return allowed.indexOf(q.quoteType) >= 0; })
                                 .slice(0, 5)
-                                .map(function(q) { return { s: q.symbol, l: q.shortname || q.longname || q.symbol }; });
+                                .map(function(q) { return { s: q.symbol, l: q.symbol, d: q.shortname || q.longname || q.symbol }; });
                             if (_wbSearchQuery === q) _wbShowDropdown(quotes);
                             return;
                         }
@@ -7994,8 +7994,10 @@
             var cfg = _wbGetCfg();
             dd.innerHTML = items.map(function(item) {
                 var already = cfg.custom.find(function(c) { return c.s === item.s; });
-                return '<div class="wb-search-item" onclick="_wbSelectSearch(\'' + item.s.replace(/'/g,"\\'") + '\',\'' + (item.l||item.s).replace(/'/g,"\\'") + '\')">' +
-                    '<span style="font-size:0.82rem;color:var(--text-primary);">' + (item.l || item.s) + (already ? ' ✓' : '') + '</span>' +
+                var displayName = item.d || item.l || item.s;
+                var chipLabel   = (item.l || item.s).replace(/'/g,"\\'");
+                return '<div class="wb-search-item" onclick="_wbSelectSearch(\'' + item.s.replace(/'/g,"\\'") + '\',\'' + chipLabel + '\')">' +
+                    '<span style="font-size:0.82rem;color:var(--text-primary);">' + displayName + (already ? ' ✓' : '') + '</span>' +
                     '<span style="font-size:0.72rem;color:var(--text-secondary);font-family:monospace;direction:ltr;">' + item.s + '</span>' +
                 '</div>';
             }).join('');
