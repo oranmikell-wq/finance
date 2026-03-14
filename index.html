@@ -129,6 +129,15 @@
             padding: 24px;
         }
         #loginOverlay.hidden { display: none; }
+        /* Watchbar modal */
+        #watchbarModal.open { display: flex !important; }
+        .watchbar-toggle-row { display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06); }
+        .watchbar-toggle-row:last-child { border-bottom:none; }
+        .watchbar-preset-tag { display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);font-size:0.75rem;cursor:pointer;color:var(--text-primary);transition:background 0.15s;margin:3px 3px 3px 0; }
+        .watchbar-preset-tag.added { background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#10b981; }
+        .watchbar-custom-row { display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06); }
+        .watchbar-custom-row:last-child { border-bottom:none; }
+        body.light-mode #watchbarSymbolInput { background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.15); }
         .login-card {
             background: #141829;
             border: 1px solid rgba(255,255,255,0.1);
@@ -1922,6 +1931,47 @@
         </div>
     </div>
 
+    <!-- ── Watchbar Management Modal ── -->
+    <div id="watchbarModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeWatchbarModal()">
+        <div style="background:var(--bg-card);border-radius:20px 20px 0 0;border-top:1px solid var(--border-color);width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:0 0 env(safe-area-inset-bottom,0px) 0;direction:rtl;">
+            <!-- Handle + Header -->
+            <div style="position:sticky;top:0;background:var(--bg-card);z-index:1;border-bottom:1px solid rgba(255,255,255,0.06);padding:12px 16px 10px;">
+                <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2);margin:0 auto 12px;"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div style="font-size:1rem;font-weight:700;color:var(--text-primary);">עריכת שורת שערים</div>
+                    <button onclick="closeWatchbarModal()" style="background:none;border:none;color:var(--text-secondary);font-size:1.4rem;cursor:pointer;line-height:1;padding:2px 6px;">×</button>
+                </div>
+            </div>
+            <!-- Body -->
+            <div style="padding:12px 16px 24px;">
+                <!-- Built-in chips section -->
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ברירת מחדל</div>
+                <div id="watchbarBuiltins" style="margin-bottom:16px;"></div>
+
+                <!-- Custom added chips section -->
+                <div id="watchbarCustomSection" style="display:none;margin-bottom:16px;">
+                    <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">פריטים שנוספו</div>
+                    <div id="watchbarCustomList"></div>
+                </div>
+
+                <!-- Preset categories -->
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">הוסף מרשימה</div>
+                <div id="watchbarPresets" style="margin-bottom:16px;"></div>
+
+                <!-- Custom symbol input -->
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">סמל מותאם אישית</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input id="watchbarSymbolInput" type="text" placeholder="לדוג׳: AAPL, ^DJI, GC=F" autocapitalize="characters" autocorrect="off" spellcheck="false"
+                        style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);border-radius:10px;padding:8px 12px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;direction:ltr;text-align:left;"
+                        onkeydown="if(event.key==='Enter')_watchbarSubmitCustom()">
+                    <button onclick="_watchbarSubmitCustom()" id="watchbarSubmitBtn"
+                        style="background:var(--accent-green);border:none;border-radius:10px;padding:8px 16px;color:#fff;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">הוסף</button>
+                </div>
+                <div id="watchbarAddError" style="display:none;color:var(--accent-red);font-size:0.78rem;margin-top:6px;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Passkey Setup Modal (shown after Google Sign-In) ── -->
     <div id="passkeySetupModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
         <div class="login-card" style="max-width:320px;">
@@ -1981,7 +2031,10 @@
                         <span style="font-weight:700;color:var(--text-primary);">$<span id="ethRateDisplay">3,500</span></span>
                         <span id="ethDailyChange" style="font-size:0.72rem;"></span>
                     </div>
+                    <!-- Custom watchbar chips (rendered by JS) -->
+                    <div id="customChipsContainer" style="display:contents;"></div>
                 </div>
+                <button onclick="openWatchbarModal()" id="watchbarAddBtn" title="עריכת שורת שערים" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:var(--text-primary);font-size:1.1rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;font-weight:300;transition:background 0.15s;">+</button>
             </div>
         </div>
 
@@ -7604,6 +7657,9 @@
             }
             
             migrateTradeAssets();
+            _wbGetCfg();
+            _wbApplyVisibility();
+            _wbRenderChips();
             updateUI();
 
             // Fetch all data in parallel after UI loads — single re-render at the end
@@ -7622,6 +7678,7 @@
                 }
 
                 tasks.push(fetchNasdaqPrice());
+                tasks.push(fetchCustomChips());
 
                 if (hasFundAssets) tasks.push(updateFundAssets());
                 if (hasGemelAssets) tasks.push(updateGemelAssets());
@@ -7664,6 +7721,287 @@
 
         // Keep old name for header click
         function updateExchangeRate() { updateAllRates(); }
+
+        // ══════════════════════════════════════════════
+        // WATCHBAR — custom chips management
+        // ══════════════════════════════════════════════
+        var WATCHBAR_KEY = 'watchbar-config';
+        var _watchbarCfg = null;
+        var _wcPrices = {}; // { symbol: { price, prevClose, ts } }
+
+        var _WB_BUILTINS = [
+            { id: 'usd',    chipId: 'chipUSD',    label: '$/₪ — דולר/שקל' },
+            { id: 'spy',    chipId: 'chipSPY',    label: 'S&P 500' },
+            { id: 'ta',     chipId: 'chipTA',     label: 'TA-125' },
+            { id: 'nasdaq', chipId: 'chipNASDAQ', label: 'NASDAQ 100' },
+            { id: 'btc',    chipId: 'chipBTC',    label: '₿ Bitcoin' },
+            { id: 'eth',    chipId: 'chipETH',    label: 'Ξ Ethereum' },
+        ];
+
+        var _WB_PRESETS = [
+            { cat: 'מדדים',   items: [
+                { s: '^DJI',    l: 'Dow Jones' },
+                { s: '^GDAXI',  l: 'DAX' },
+                { s: '^N225',   l: 'Nikkei' },
+                { s: '^FTSE',   l: 'FTSE 100' },
+            ]},
+            { cat: 'סחורות',  items: [
+                { s: 'GC=F',    l: 'זהב' },
+                { s: 'CL=F',    l: 'נפט' },
+                { s: 'SI=F',    l: 'כסף' },
+            ]},
+            { cat: 'מט"ח',    items: [
+                { s: 'EURUSD=X', l: 'EUR/USD' },
+                { s: 'EURILS=X', l: 'EUR/₪' },
+                { s: 'GBPILS=X', l: 'GBP/₪' },
+            ]},
+            { cat: 'קריפטו',  items: [
+                { s: 'SOL-USD',  l: 'SOL' },
+                { s: 'XRP-USD',  l: 'XRP' },
+                { s: 'BNB-USD',  l: 'BNB' },
+            ]},
+            { cat: 'מניות',   items: [
+                { s: 'AAPL',     l: 'AAPL' },
+                { s: 'NVDA',     l: 'NVDA' },
+                { s: 'TSLA',     l: 'TSLA' },
+                { s: 'MSFT',     l: 'MSFT' },
+                { s: 'AMZN',     l: 'AMZN' },
+                { s: 'META',     l: 'META' },
+            ]},
+        ];
+
+        function _wbGetCfg() {
+            if (_watchbarCfg) return _watchbarCfg;
+            try {
+                var s = localStorage.getItem(WATCHBAR_KEY);
+                if (s) _watchbarCfg = JSON.parse(s);
+            } catch(e) {}
+            if (!_watchbarCfg) _watchbarCfg = { hidden: [], custom: [] };
+            return _watchbarCfg;
+        }
+
+        function _wbSave() {
+            try { localStorage.setItem(WATCHBAR_KEY, JSON.stringify(_watchbarCfg)); } catch(e) {}
+        }
+
+        function _wbApplyVisibility() {
+            var cfg = _wbGetCfg();
+            _WB_BUILTINS.forEach(function(b) {
+                var el = document.getElementById(b.chipId);
+                if (el) el.style.display = cfg.hidden.indexOf(b.id) >= 0 ? 'none' : 'inline-flex';
+            });
+        }
+
+        function _wbFmtPrice(price, symbol) {
+            if (!price && price !== 0) return '—';
+            if (symbol && symbol.endsWith('=X')) return price.toFixed(4);
+            if (price >= 10000) return price.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            if (price >= 1000) return price.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            if (price >= 10) return price.toFixed(2);
+            if (price >= 1) return price.toFixed(2);
+            return price.toFixed(4);
+        }
+
+        function _wbPrefix(symbol) {
+            if (!symbol) return '';
+            if (symbol.endsWith('=X')) return '';
+            if (symbol.startsWith('^')) return '';
+            return '$';
+        }
+
+        function _wbRenderChips() {
+            var cfg = _wbGetCfg();
+            var container = document.getElementById('customChipsContainer');
+            if (!container) return;
+            var html = '';
+            cfg.custom.forEach(function(item) {
+                var d = _wcPrices[item.s] || {};
+                var priceTxt = _wbFmtPrice(d.price, item.s);
+                var pfx = d.price ? _wbPrefix(item.s) : '';
+                var changeHtml = '';
+                if (d.price && d.prevClose && d.prevClose > 0) {
+                    var pct = ((d.price - d.prevClose) / d.prevClose) * 100;
+                    var col = pct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    changeHtml = '<span style="font-size:0.72rem;color:' + col + ';">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+                }
+                html += '<div style="display:inline-flex;align-items:center;gap:3px;padding:2px 5px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:0.68rem;white-space:nowrap;">' +
+                    '<span style="font-size:0.7rem;color:var(--text-secondary);">' + item.l + '</span>' +
+                    '<span style="font-weight:700;color:var(--text-primary);">' + pfx + priceTxt + '</span>' +
+                    changeHtml + '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        async function _wbFetchOne(symbol) {
+            var base = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?range=2d&interval=1d';
+            var urls = [
+                'https://cors.eu.org/' + base,
+                'https://corsproxy.io/?' + encodeURIComponent(base),
+            ];
+            for (var i = 0; i < urls.length; i++) {
+                try {
+                    var ctrl = new AbortController();
+                    var t = setTimeout(function() { ctrl.abort(); }, 7000);
+                    var resp = await fetch(urls[i], { signal: ctrl.signal });
+                    clearTimeout(t);
+                    if (resp.ok) {
+                        var data = await resp.json();
+                        var meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+                        if (meta) {
+                            var price = meta.regularMarketPrice || meta.previousClose;
+                            var prevClose = meta.previousClose || meta.chartPreviousClose;
+                            if (price > 0) {
+                                _wcPrices[symbol] = { price: price, prevClose: prevClose, ts: Date.now() };
+                                return true;
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+            return false;
+        }
+
+        async function fetchCustomChips() {
+            var cfg = _wbGetCfg();
+            if (!cfg.custom.length) return;
+            for (var i = 0; i < cfg.custom.length; i++) {
+                await _wbFetchOne(cfg.custom[i].s);
+            }
+            _wbRenderChips();
+        }
+
+        function wbToggleBuiltin(id) {
+            var cfg = _wbGetCfg();
+            var idx = cfg.hidden.indexOf(id);
+            if (idx >= 0) cfg.hidden.splice(idx, 1);
+            else cfg.hidden.push(id);
+            _wbSave();
+            _wbApplyVisibility();
+            _wbRenderModal();
+        }
+
+        async function wbAddPreset(symbol, label) {
+            var cfg = _wbGetCfg();
+            if (cfg.custom.find(function(c) { return c.s === symbol; })) {
+                // already added — remove it (toggle)
+                wbRemoveCustom(symbol);
+                return;
+            }
+            cfg.custom.push({ s: symbol, l: label });
+            _wbSave();
+            _wbRenderChips();
+            _wbRenderModal();
+            var ok = await _wbFetchOne(symbol);
+            if (ok) _wbRenderChips();
+        }
+
+        function wbRemoveCustom(symbol) {
+            var cfg = _wbGetCfg();
+            cfg.custom = cfg.custom.filter(function(c) { return c.s !== symbol; });
+            delete _wcPrices[symbol];
+            _wbSave();
+            _wbRenderChips();
+            _wbRenderModal();
+        }
+
+        async function _watchbarSubmitCustom() {
+            var inp = document.getElementById('watchbarSymbolInput');
+            if (!inp) return;
+            var sym = inp.value.trim().toUpperCase();
+            if (!sym) return;
+            var cfg = _wbGetCfg();
+            if (cfg.custom.find(function(c) { return c.s === sym; })) {
+                inp.value = '';
+                return;
+            }
+            var btn = document.getElementById('watchbarSubmitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '...'; }
+            var ok = await _wbFetchOne(sym);
+            if (btn) { btn.disabled = false; btn.textContent = 'הוסף'; }
+            if (ok) {
+                cfg.custom.push({ s: sym, l: sym });
+                _wbSave();
+                _wbRenderChips();
+                _wbRenderModal();
+                inp.value = '';
+                var errEl = document.getElementById('watchbarAddError');
+                if (errEl) errEl.style.display = 'none';
+            } else {
+                var errEl = document.getElementById('watchbarAddError');
+                if (errEl) { errEl.textContent = 'הסמל לא נמצא. נסה: AAPL, ^DJI, GC=F'; errEl.style.display = 'block'; }
+            }
+        }
+
+        function _wbRenderModal() {
+            var cfg = _wbGetCfg();
+
+            // Built-in toggles
+            var bHtml = _WB_BUILTINS.map(function(b) {
+                var isOn = cfg.hidden.indexOf(b.id) < 0;
+                var trk = isOn ? '#10b981' : 'rgba(255,255,255,0.15)';
+                var thmLeft = isOn ? '20px' : '3px';
+                return '<div class="watchbar-toggle-row">' +
+                    '<span style="font-size:0.85rem;color:var(--text-primary);">' + b.label + '</span>' +
+                    '<div onclick="wbToggleBuiltin(\'' + b.id + '\')" style="position:relative;width:40px;height:22px;cursor:pointer;flex-shrink:0;">' +
+                        '<div style="position:absolute;inset:0;border-radius:11px;background:' + trk + ';transition:background 0.2s;"></div>' +
+                        '<div style="position:absolute;top:3px;left:' + thmLeft + ';width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:left 0.2s;"></div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            var bEl = document.getElementById('watchbarBuiltins');
+            if (bEl) bEl.innerHTML = bHtml;
+
+            // Custom chips list
+            var cSec = document.getElementById('watchbarCustomSection');
+            var cEl = document.getElementById('watchbarCustomList');
+            if (cEl && cSec) {
+                if (cfg.custom.length === 0) {
+                    cSec.style.display = 'none';
+                } else {
+                    cSec.style.display = 'block';
+                    cEl.innerHTML = cfg.custom.map(function(item) {
+                        var d = _wcPrices[item.s] || {};
+                        var pTxt = d.price ? (_wbPrefix(item.s) + _wbFmtPrice(d.price, item.s)) : '—';
+                        return '<div class="watchbar-custom-row">' +
+                            '<div style="display:flex;flex-direction:column;gap:1px;">' +
+                                '<span style="font-size:0.85rem;color:var(--text-primary);">' + item.l + '</span>' +
+                                '<span style="font-size:0.72rem;color:var(--text-secondary);">' + item.s + ' · ' + pTxt + '</span>' +
+                            '</div>' +
+                            '<button onclick="wbRemoveCustom(\'' + item.s + '\')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#ef4444;width:28px;height:28px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">×</button>' +
+                        '</div>';
+                    }).join('');
+                }
+            }
+
+            // Presets
+            var pEl = document.getElementById('watchbarPresets');
+            if (pEl) {
+                pEl.innerHTML = _WB_PRESETS.map(function(cat) {
+                    var tagsHtml = cat.items.map(function(item) {
+                        var added = cfg.custom.find(function(c) { return c.s === item.s; });
+                        var cls = 'watchbar-preset-tag' + (added ? ' added' : '');
+                        var icon = added ? '✓ ' : '+ ';
+                        return '<span class="' + cls + '" onclick="wbAddPreset(\'' + item.s + '\',\'' + item.l + '\')">' + icon + item.l + '</span>';
+                    }).join('');
+                    return '<div style="margin-bottom:10px;">' +
+                        '<div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:4px;font-weight:600;">' + cat.cat + '</div>' +
+                        '<div>' + tagsHtml + '</div>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+
+        function openWatchbarModal() {
+            var modal = document.getElementById('watchbarModal');
+            if (!modal) return;
+            _wbRenderModal();
+            modal.style.display = 'flex';
+        }
+
+        function closeWatchbarModal() {
+            var modal = document.getElementById('watchbarModal');
+            if (modal) modal.style.display = 'none';
+        }
 
         function updateLastUpdate() {
             var el = document.getElementById('lastUpdate');
