@@ -171,8 +171,29 @@
             direction: rtl;
             line-height: 1.5;
         }
+        .passkey-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 13px 20px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15));
+            border: 1px solid rgba(99,102,241,0.4);
+            border-radius: 50px;
+            color: var(--text-primary, #f1f5f9);
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            direction: rtl;
+        }
+        .passkey-btn:hover { background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25)); border-color: rgba(99,102,241,0.7); transform: translateY(-1px); }
+        .passkey-btn:active { transform: translateY(0); opacity: 0.85; }
         body.light-mode #loginOverlay { background: var(--bg-primary); }
         body.light-mode .login-card { background: var(--bg-card); border-color: rgba(0,0,0,0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+        body.light-mode .passkey-btn { border-color: rgba(99,102,241,0.5); }
 
         .container {
             max-width: 1400px;
@@ -1872,14 +1893,47 @@
 })();
 </script>
 
-    <!-- ── Google Sign-In Overlay ── -->
+    <!-- ── Login Overlay ── -->
     <div id="loginOverlay" class="hidden">
         <div class="login-card">
             <img src="./icon-light.png" alt="Financier" class="login-logo" onerror="this.style.display='none'">
             <div class="login-title">Financier</div>
             <div class="login-subtitle">הסוכן הפיננסי האישי שלך</div>
-            <div id="googleSignInDiv"></div>
-            <div class="login-note">הכניסה מאובטחת דרך חשבון Google שלך.<br>לא נשמר מידע בשרת.</div>
+
+            <!-- Face ID button — shown only when passkey is registered -->
+            <div id="passkeyLoginSection" style="display:none;margin-bottom:16px;">
+                <button id="passkeyLoginBtn" onclick="loginWithPasskey()" class="passkey-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg>
+                    כניסה עם Face ID
+                </button>
+                <div id="passkeyLoginError" style="font-size:0.75rem;color:var(--accent-red);margin-top:6px;display:none;"></div>
+            </div>
+
+            <!-- Divider shown when both options available -->
+            <div id="loginDivider" style="display:none;align-items:center;gap:8px;margin-bottom:16px;">
+                <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+                <span style="font-size:0.7rem;color:var(--text-secondary);">או</span>
+                <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+            </div>
+
+            <!-- Google Sign-In button -->
+            <div id="googleSignInDiv" style="margin-bottom:16px;"></div>
+
+            <div class="login-note">הכניסה מאובטחת ומקומית בלבד.<br>לא נשמר מידע בשרת.</div>
+        </div>
+    </div>
+
+    <!-- ── Passkey Setup Modal (shown after Google Sign-In) ── -->
+    <div id="passkeySetupModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
+        <div class="login-card" style="max-width:320px;">
+            <div style="font-size:2.5rem;margin-bottom:12px;">🔐</div>
+            <div class="login-title" style="font-size:1.2rem;margin-bottom:8px;">הפעל כניסה מהירה</div>
+            <div class="login-subtitle" style="margin-bottom:24px;">בפעם הבאה תוכל להיכנס עם<br><strong>Face ID</strong> במקום Google</div>
+            <button onclick="setupPasskey()" class="passkey-btn" style="margin-bottom:12px;width:100%;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg>
+                הפעל Face ID
+            </button>
+            <button onclick="document.getElementById('passkeySetupModal').style.display='none'" style="background:none;border:none;color:var(--text-secondary);font-size:0.82rem;cursor:pointer;font-family:inherit;width:100%;padding:6px;">לא עכשיו</button>
         </div>
     </div>
 
@@ -2135,6 +2189,15 @@
                         <div class="settings-row-desc" id="accountEmail" style="font-size:0.72rem;"></div>
                     </div>
                 </div>
+                <!-- Face ID toggle row -->
+                <button id="passkeySettingsRow" onclick="togglePasskeySetting()" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg></div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title" id="passkeySettingsTitle">כניסה עם Face ID</div>
+                        <div class="settings-row-desc" id="passkeySettingsDesc">לא מופעל</div>
+                    </div>
+                    <div class="settings-row-arrow" id="passkeySettingsArrow">›</div>
+                </button>
                 <button onclick="signOutGoogle()" class="settings-row" style="border-color:rgba(239,68,68,0.15);">
                     <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg></div>
                     <div class="settings-row-info">
@@ -3824,7 +3887,7 @@
         // 📱 Rubber Banding נמנע ע"י overscroll-behavior-y: contain ב-CSS
         // ============================================================
 
-        const APP_VERSION = '2026.03.14.3';
+        const APP_VERSION = '2026.03.14.4';
 
         let assets = [];
         let editingAssetId = null;
@@ -11851,6 +11914,140 @@
             });
         }
 
+        // ── WebAuthn / Passkey (Face ID / Touch ID) ───────────────────────────
+        var PASSKEY_KEY = 'passkey-cred-id';
+        var PASSKEY_RP_ID = window.location.hostname || 'oranmikell-wq.github.io';
+        var PASSKEY_RP_NAME = 'Financier';
+
+        function _webAuthnSupported() {
+            return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
+        }
+        function _hasPasskey() {
+            return !!localStorage.getItem(PASSKEY_KEY);
+        }
+        function _b64ToBuffer(b64) {
+            var bin = atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
+            var buf = new Uint8Array(bin.length);
+            for (var i=0; i<bin.length; i++) buf[i] = bin.charCodeAt(i);
+            return buf.buffer;
+        }
+        function _bufToB64(buf) {
+            var bytes = new Uint8Array(buf), bin = '';
+            bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+            return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+        }
+        function _randomChallenge() {
+            var arr = new Uint8Array(32);
+            crypto.getRandomValues(arr);
+            return arr;
+        }
+
+        // Register a new passkey (called from setup modal)
+        async function setupPasskey() {
+            if (!_webAuthnSupported()) {
+                alert('הדפדפן שלך אינו תומך ב-Face ID / Passkeys');
+                return;
+            }
+            var session = _getAuthSession();
+            var userEmail = (session && session.email) ? session.email : 'user@financier';
+            var userName  = (session && session.name)  ? session.name  : 'משתמש';
+            var userId    = new TextEncoder().encode(userEmail);
+            try {
+                var cred = await navigator.credentials.create({ publicKey: {
+                    challenge: _randomChallenge(),
+                    rp: { name: PASSKEY_RP_NAME, id: PASSKEY_RP_ID },
+                    user: { id: userId, name: userEmail, displayName: userName },
+                    pubKeyCredParams: [{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
+                    authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required', residentKey:'preferred' },
+                    timeout: 60000
+                }});
+                localStorage.setItem(PASSKEY_KEY, _bufToB64(cred.rawId));
+                document.getElementById('passkeySetupModal').style.display = 'none';
+                _updatePasskeySettingsUI();
+                alert('✅ Face ID הופעל בהצלחה!');
+            } catch(e) {
+                console.log('[Passkey] Register error:', e.message);
+                if (e.name !== 'NotAllowedError') alert('שגיאה בהפעלת Face ID: ' + e.message);
+            }
+        }
+
+        // Authenticate with existing passkey
+        async function loginWithPasskey() {
+            if (!_hasPasskey()) return;
+            var btn = document.getElementById('passkeyLoginBtn');
+            var errEl = document.getElementById('passkeyLoginError');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ ממתין לאימות...'; }
+            if (errEl) errEl.style.display = 'none';
+            try {
+                var assertion = await navigator.credentials.get({ publicKey: {
+                    challenge: _randomChallenge(),
+                    allowCredentials: [{ type:'public-key', id: _b64ToBuffer(localStorage.getItem(PASSKEY_KEY)), transports:['internal'] }],
+                    userVerification: 'required',
+                    rpId: PASSKEY_RP_ID,
+                    timeout: 60000
+                }});
+                // Auth success — restore or create session
+                var existing = _getAuthSession();
+                _saveAuthSession(
+                    existing ? existing.name    : 'משתמש',
+                    existing ? existing.email   : '',
+                    existing ? (existing.picture||'') : ''
+                );
+                _showApp();
+            } catch(e) {
+                console.log('[Passkey] Auth error:', e.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg> כניסה עם Face ID';
+                }
+                if (errEl && e.name !== 'NotAllowedError') {
+                    errEl.textContent = 'האימות נכשל. נסה שנית.';
+                    errEl.style.display = 'block';
+                }
+            }
+        }
+
+        // Toggle passkey from settings: if active → remove, else → setup
+        async function togglePasskeySetting() {
+            if (_hasPasskey()) {
+                if (confirm('להסיר כניסה עם Face ID?')) {
+                    localStorage.removeItem(PASSKEY_KEY);
+                    _updatePasskeySettingsUI();
+                }
+            } else {
+                await setupPasskey();
+            }
+        }
+
+        // Update the Face ID row in settings
+        function _updatePasskeySettingsUI() {
+            var row   = document.getElementById('passkeySettingsRow');
+            var title = document.getElementById('passkeySettingsTitle');
+            var desc  = document.getElementById('passkeySettingsDesc');
+            var arrow = document.getElementById('passkeySettingsArrow');
+            if (!row) return;
+            if (_hasPasskey()) {
+                if (title) title.textContent = 'כניסה עם Face ID';
+                if (desc)  { desc.textContent = '✅ מופעל — לחץ להסרה'; desc.style.color = 'var(--accent-green)'; }
+                if (arrow) arrow.textContent = '✕';
+            } else {
+                if (title) title.textContent = 'הפעל כניסה עם Face ID';
+                if (desc)  { desc.textContent = 'לא מופעל'; desc.style.color = ''; }
+                if (arrow) arrow.textContent = '›';
+            }
+        }
+
+        // Show/hide Face ID button on login screen based on registration state
+        function _updateLoginPasskeyUI() {
+            var section = document.getElementById('passkeyLoginSection');
+            var divider = document.getElementById('loginDivider');
+            if (!section) return;
+            var hasPk = _hasPasskey() && _webAuthnSupported();
+            section.style.display = hasPk ? 'block' : 'none';
+            if (divider) divider.style.display = hasPk ? 'flex' : 'none';
+        }
+        // ── END WebAuthn ───────────────────────────────────────────────────────
+
         // ── Google Authentication ──────────────────────────────────────────────
         var GOOGLE_CLIENT_ID = '701742612574-i3gbooqlq0s2pk1d15bgv5btf4e8iso9.apps.googleusercontent.com';
         var AUTH_SESSION_KEY = 'gauth-session';
@@ -11917,7 +12114,20 @@
                 return;
             }
             _saveAuthSession(claims.name || claims.email, claims.email, claims.picture || '');
-            _showApp();
+            // Offer Face ID setup if WebAuthn supported and not yet registered
+            if (_webAuthnSupported() && !_hasPasskey()) {
+                var modal = document.getElementById('passkeySetupModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    // Auto-proceed to app after setting up (or dismissing) passkey
+                    var origSetup = window.setupPasskey;
+                    // _showApp is called after modal closes either way
+                }
+                // Show app in background immediately, modal appears on top
+                _showApp();
+            } else {
+                _showApp();
+            }
         }
 
         // Show the app and hide the login overlay
@@ -11926,6 +12136,7 @@
             if (overlay) overlay.classList.add('hidden');
             var session = _getAuthSession();
             _updateAccountUI(session);
+            _updatePasskeySettingsUI();
             // Initialize app
             loadAssets();
             loadProfile();
@@ -11938,6 +12149,7 @@
         function _showLogin() {
             var overlay = document.getElementById('loginOverlay');
             if (overlay) overlay.classList.remove('hidden');
+            _updateLoginPasskeyUI();
             // Render button once GIS is loaded
             function _renderBtn() {
                 if (typeof google === 'undefined' || !google.accounts) {
