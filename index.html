@@ -7893,9 +7893,12 @@
 
         var _WB_HE_DICT = {
             // l = chip label (short), d = display name in dropdown
-            'נפט':       { s: 'CL=F',     l: 'נפט',       d: 'נפט גולמי (Crude Oil)' },
-            'זהב':       { s: 'GC=F',     l: 'זהב',       d: 'זהב (Gold Futures)' },
-            'כסף':       { s: 'SI=F',     l: 'כסף',       d: 'כסף (Silver Futures)' },
+            'נפט':       [{ s: 'CL=F',     l: 'נפט',  d: 'נפט גולמי — עתידי (CL=F)' },
+                          { s: 'BZ=F',     l: 'ברנט', d: 'נפט ברנט — עתידי (BZ=F)' }],
+            'זהב':       [{ s: 'XAUUSD=X', l: 'זהב',  d: 'זהב — ספוט (XAUUSD=X)' },
+                          { s: 'GC=F',     l: 'זהב',  d: 'זהב — עתידי (GC=F)' }],
+            'כסף':       [{ s: 'XAGUSD=X', l: 'כסף',  d: 'כסף — ספוט (XAGUSD=X)' },
+                          { s: 'SI=F',     l: 'כסף',  d: 'כסף — עתידי (SI=F)' }],
             'גז':        { s: 'NG=F',     l: 'גז',        d: 'גז טבעי (Natural Gas)' },
             'נחושת':     { s: 'HG=F',     l: 'נחושת',     d: 'נחושת (Copper)' },
             'גוגל':      { s: 'GOOGL',    l: 'גוגל',      d: 'Google / Alphabet (GOOGL)' },
@@ -7939,12 +7942,15 @@
 
             // Hebrew dictionary — instant match
             var heMatch = _WB_HE_DICT[v];
-            if (heMatch) { _wbShowDropdown([heMatch]); return; }
+            if (heMatch) { _wbShowDropdown(Array.isArray(heMatch) ? heMatch : [heMatch]); return; }
 
             // Partial Hebrew match
             var hePartial = Object.keys(_WB_HE_DICT).filter(function(k) {
                 return k.indexOf(v) === 0;
-            }).slice(0, 4).map(function(k) { return _WB_HE_DICT[k]; });
+            }).slice(0, 4).reduce(function(acc, k) {
+                var val = _WB_HE_DICT[k];
+                return acc.concat(Array.isArray(val) ? val : [val]);
+            }, []);
             if (hePartial.length) { _wbShowDropdown(hePartial); return; }
 
             // Debounced Yahoo Finance search
@@ -8046,7 +8052,11 @@
 
             // Check Hebrew dictionary
             var heEntry = _WB_HE_DICT[raw];
-            if (heEntry) { await _wbSelectSearch(heEntry.s, heEntry.l); return; }
+            if (heEntry) {
+                var first = Array.isArray(heEntry) ? heEntry[0] : heEntry;
+                if (Array.isArray(heEntry) && heEntry.length > 1) { _wbShowDropdown(heEntry); return; }
+                await _wbSelectSearch(first.s, first.l); return;
+            }
 
             var sym = raw.toUpperCase();
             var cfg = _wbGetCfg();
