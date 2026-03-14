@@ -12192,12 +12192,17 @@
 
         // Boot: check session → show app or login
         (function _authBoot() {
+            // Skip auth in local dev environments (localhost / file://)
+            var host = window.location.hostname;
+            var isLocal = !host || host === 'localhost' || host === '127.0.0.1';
+            if (isLocal) {
+                _showApp();
+                return;
+            }
             var session = _getAuthSession();
             if (session) {
-                // Already authenticated — show app immediately
                 _showApp();
             } else {
-                // Show login overlay
                 _showLogin();
             }
         })();
