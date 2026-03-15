@@ -4270,7 +4270,7 @@
                 if (h.avgBuyPrice > 0 && h.price > 0) {
                     var retPct = (h.price - h.avgBuyPrice) / h.avgBuyPrice * 100;
                     var retColor = retPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                    retStr = '<span style="color:' + retColor + ';font-size:0.7rem;font-weight:700;">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
+                    retStr = '<span style="color:' + retColor + ';font-size:0.7rem;font-weight:700;" dir="ltr">' + (retPct >= 0 ? '+' : '') + retPct.toFixed(2) + '%</span>';
                 }
                 var dailyColor = (h.dailyPct || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border-color);">'
@@ -4278,7 +4278,7 @@
                     + '<div style="flex:1;min-width:0;">'
                     +   '<div style="font-size:0.75rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (h.name || h.ticker) + '</div>'
                     +   '<div style="font-size:0.7rem;color:var(--text-secondary);">' + (h.units || 0).toLocaleString('he-IL', {maximumFractionDigits:3}) + ' יח\'&nbsp;·&nbsp;' + priceStr
-                    +     '&nbsp;<span style="color:' + dailyColor + ';">' + (h.dailyPct >= 0 ? '+' : '') + (h.dailyPct || 0).toFixed(2) + '%</span>'
+                    +     '&nbsp;<span style="color:' + dailyColor + ';" dir="ltr">' + (h.dailyPct >= 0 ? '+' : '') + (h.dailyPct || 0).toFixed(2) + '%</span>'
                     +     (retStr ? '&nbsp;·&nbsp;' + retStr : '') + '</div>'
                     + '</div>'
                     + '<div style="text-align:left;flex-shrink:0;">'
