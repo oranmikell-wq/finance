@@ -457,8 +457,7 @@
         .asset-row-detail-value span,
         .spy-daily-value {
             direction: ltr;
-            unicode-bidi: embed;
-            display: inline-block;
+            unicode-bidi: isolate;
         }
 
         .asset-row-detail-value.positive {
@@ -11922,7 +11921,7 @@
                             <div class="asset-row-values">
                                 <div class="asset-row-return ${rCls}">${s(rPct)}${rPct.toFixed(1)}%</div>
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${vILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
-                                <div class="asset-row-sub">$${vUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}${spyDailyChangePct ? ` <span style="color:${spyDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${spyDailyChangePct>=0?'+':''}${spyDailyChangePct.toFixed(2)}%</span>` : ''}</div>
+                                <div class="asset-row-sub">$${vUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}${spyDailyChangePct ? ` <span dir="ltr" style="color:${spyDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${spyDailyChangePct>=0?'+':''}${spyDailyChangePct.toFixed(2)}%</span>` : ''}</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
