@@ -452,6 +452,15 @@
             background: rgba(239, 68, 68, 0.1);
         }
 
+        /* Force LTR for numeric values (±%) inside RTL layout */
+        .asset-row-provider span,
+        .asset-row-detail-value span,
+        .spy-daily-value {
+            direction: ltr;
+            unicode-bidi: embed;
+            display: inline-block;
+        }
+
         .asset-row-detail-value.positive {
             color: var(--accent-green);
         }
@@ -11798,7 +11807,7 @@
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${Math.round(totalVal).toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                ${totalRetPct !== null ? `<div class="asset-row-sub" data-ret-id="${asset.id}" style="color:${sc(totalRetPct)};">${ss(totalRetPct)}${totalRetPct.toFixed(2)}%</div>` : ''}
+                                ${totalRetPct !== null ? `<div class="asset-row-sub" data-ret-id="${asset.id}" style="color:${sc(totalRetPct)};direction:ltr;">${ss(totalRetPct)}${totalRetPct.toFixed(2)}%</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
