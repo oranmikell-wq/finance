@@ -11877,7 +11877,7 @@
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                <div class="asset-row-sub" style="color:${sc2(combinedDailyPct2)};">${ss2(combinedDailyILS2)}₪${Math.abs(Math.round(combinedDailyILS2)).toLocaleString('he-IL')} היום</div>
+                                <div class="asset-row-sub" style="color:${sc2(combinedDailyPct2)};direction:ltr;">${combinedDailyILS2 >= 0 ? '+' : '-'}₪${Math.abs(Math.round(combinedDailyILS2)).toLocaleString('he-IL')} היום</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -12006,7 +12006,7 @@
                             <div class="asset-row-values">
                                 ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
-                                ${fDaily !== 0 ? `<div class="asset-row-sub" style="color:${fc(fDaily)};">${fs(dailyILS)}₪${Math.abs(Math.round(dailyILS)).toLocaleString('he-IL')} היום</div>` : ''}
+                                ${fDaily !== 0 ? `<div class="asset-row-sub" style="color:${fc(fDaily)};direction:ltr;">${dailyILS >= 0 ? '+' : '-'}₪${Math.abs(Math.round(dailyILS)).toLocaleString('he-IL')} היום</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
