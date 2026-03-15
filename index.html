@@ -11836,8 +11836,8 @@
                                         <tr style="border-top:2px solid var(--border-color);">
                                             <td colspan="2" style="padding:7px 4px;font-weight:700;color:var(--text-secondary);font-size:0.8rem;">סה"כ</td>
                                             <td id="hfoot-val-${asset.id}" style="padding:7px 4px;font-weight:700;font-size:0.9rem;color:var(--text-primary);text-align:left;">$${Math.round(totalVal / exchangeRate).toLocaleString('en-US')}</td>
-                                            <td id="hfoot-daily-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;color:${sc(combinedDailyPct)};font-weight:700;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
-                                            <td id="hfoot-ret-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(2) + '%' : '—'}</td>
+                                            <td id="hfoot-daily-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;color:${sc(combinedDailyPct)};font-weight:700;direction:ltr;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</td>
+                                            <td id="hfoot-ret-${asset.id}" style="padding:7px 4px;text-align:center;font-size:0.82rem;direction:ltr;${totalRetPct !== null ? 'color:' + sc(totalRetPct) + ';font-weight:700;' : 'color:var(--text-secondary);'}">${totalRetPct !== null ? ss(totalRetPct) + totalRetPct.toFixed(2) + '%' : '—'}</td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -11877,7 +11877,7 @@
                             </div>
                             <div class="asset-row-values">
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${sValue.toLocaleString('he-IL', {maximumFractionDigits:0})}</div>
-                                <div class="asset-row-sub" style="color:${sc2(combinedDailyPct2)};direction:ltr;">${combinedDailyILS2 >= 0 ? '+' : '-'}₪${Math.abs(Math.round(combinedDailyILS2)).toLocaleString('he-IL')} היום</div>
+                                <div class="asset-row-sub" style="color:${sc2(combinedDailyPct2)};direction:ltr;unicode-bidi:bidi-override;">${combinedDailyILS2 >= 0 ? '+' : '-'}₪${Math.abs(Math.round(combinedDailyILS2)).toLocaleString('he-IL')} היום</div>
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -12006,7 +12006,7 @@
                             <div class="asset-row-values">
                                 ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
-                                ${fDaily !== 0 ? `<div class="asset-row-sub" style="color:${fc(fDaily)};direction:ltr;">${dailyILS >= 0 ? '+' : '-'}₪${Math.abs(Math.round(dailyILS)).toLocaleString('he-IL')} היום</div>` : ''}
+                                ${fDaily !== 0 ? `<div class="asset-row-sub" style="color:${fc(fDaily)};direction:ltr;unicode-bidi:bidi-override;">${dailyILS >= 0 ? '+' : '-'}₪${Math.abs(Math.round(dailyILS)).toLocaleString('he-IL')} היום</div>` : ''}
                             </div>
                             <div class="asset-row-chevron">▼</div>
                         </div>
@@ -12263,11 +12263,11 @@
                     '<td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">' + h.ticker + '</td>' +
                     '<td style="padding:5px 4px;font-size:0.8rem;text-align:center;">' + priceStr + '</td>' +
                     '<td style="padding:5px 4px;font-size:0.8rem;font-weight:600;text-align:left;">' + valStr + '</td>' +
-                    '<td style="padding:5px 4px;font-size:0.8rem;color:' + (isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)) + ';text-align:center;font-weight:700;">' +
+                    '<td style="padding:5px 4px;font-size:0.8rem;color:' + (isCash ? 'var(--text-secondary)' : sc(h.dailyPct || 0)) + ';text-align:center;font-weight:700;direction:ltr;">' +
                         (isCash ? '—' : ss(h.dailyPct || 0) + (h.dailyPct || 0).toFixed(2) + '%' + (h.dailyPct ? '<br><span style="font-size:0.72rem;font-weight:400;">' + ss(dailyNativeAmt) + currSym + Math.abs(dailyNativeAmt).toFixed(2) + '</span>' : '')) +
                     '</td>' +
                     (retPct !== null
-                        ? '<td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:' + sc(retPct) + ';text-align:center;">' + ss(retPct) + retPct.toFixed(2) + '%<br><span style="font-size:0.72rem;font-weight:400;">' + ss(retNativeAmt) + currSym + Math.abs(retNativeAmt).toFixed(2) + '</span></td>'
+                        ? '<td style="padding:5px 4px;font-size:0.8rem;font-weight:700;color:' + sc(retPct) + ';text-align:center;direction:ltr;">' + ss(retPct) + retPct.toFixed(2) + '%<br><span style="font-size:0.72rem;font-weight:400;">' + ss(retNativeAmt) + currSym + Math.abs(retNativeAmt).toFixed(2) + '</span></td>'
                         : '<td style="padding:5px 4px;font-size:0.8rem;color:var(--text-secondary);text-align:center;">—</td>') +
                     '</tr>';
             }).join('');
