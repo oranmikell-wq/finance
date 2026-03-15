@@ -12035,7 +12035,8 @@
                             </div>
                             <!-- footer row -->
                             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:0.72rem;">
-                                ${asset.fee != null && asset.fee > 0 ? `<div><span style="color:var(--text-secondary);">דמי ניהול </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.fee.toFixed(3)}%</span></div>` : '<div></div>'}
+                                ${asset.fee != null && asset.fee > 0 ? `<div><span style="color:var(--text-secondary);">ד.נ. מצבירה </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.fee.toFixed(3)}%</span></div>` : '<div></div>'}
+                                ${asset.feeHafkada != null && asset.feeHafkada > 0 ? `<div><span style="color:var(--text-secondary);">ד.נ. מהפקדה </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.feeHafkada.toFixed(3)}%</span></div>` : ''}
                                 ${asset.monthly > 0 ? `<div><span style="color:var(--text-secondary);">הפקדה חודשית </span><span style="color:var(--text-primary);font-weight:600;">₪${(asset.monthly||0).toLocaleString('he-IL',{maximumFractionDigits:0})}</span></div>` : ''}
                                 ${(() => {
                                     const rd = asset.fundReportDate;
@@ -12118,7 +12119,8 @@
                                 </div>` : ''}
                             </div>` : ''}
                             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:0.72rem;">
-                                ${asset.fee != null && asset.fee > 0 ? `<div><span style="color:var(--text-secondary);">דמי ניהול </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.fee.toFixed(3)}%</span></div>` : '<div></div>'}
+                                ${asset.fee != null && asset.fee > 0 ? `<div><span style="color:var(--text-secondary);">ד.נ. מצבירה </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.fee.toFixed(3)}%</span></div>` : '<div></div>'}
+                                ${asset.feeHafkada != null && asset.feeHafkada > 0 ? `<div><span style="color:var(--text-secondary);">ד.נ. מהפקדה </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.feeHafkada.toFixed(3)}%</span></div>` : ''}
                                 ${asset.monthly > 0 ? `<div><span style="color:var(--text-secondary);">הפקדה חודשית </span><span style="color:var(--text-primary);font-weight:600;">₪${monthlyInILS.toLocaleString('he-IL',{maximumFractionDigits:0})}</span></div>` : ''}
                             </div>
                             ${asset.pensiaBaseValue > 0 ? `<div style="background:rgba(16,185,129,0.06);border-radius:8px;padding:8px 10px;margin-top:10px;font-size:0.72rem;">
@@ -13177,6 +13179,8 @@
                     'DMEI_NIHUL_NITZEVET','DMEI_NIHUL','FEE',
                 ]);
                 if (fee !== null && fee > 10) fee = null;
+                var feeHafkada = fldNum(['DMEI_NIHUL_HAFKADA','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA']);
+                if (feeHafkada !== null && feeHafkada > 10) feeHafkada = null;
 
                 // ── Period ──
                 var period = fld(['REPORT_PERIOD','TKUFA','HODESH','CHODESH','PERIOD']);
@@ -13193,6 +13197,7 @@
                     monthlyReturn:    fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']),
                     threeYearReturn:  threeYearReturn,
                     fee:              fee,
+                    feeHafkada:       feeHafkada,
                     period:           period || null,
                 };
             });
@@ -13366,6 +13371,7 @@
                             if (data[0].ytdReturn       != null) { x.gemelYtdReturn = data[0].ytdReturn; }
                             if (data[0].monthlyReturn   != null) { x.gemelMonthlyReturn  = data[0].monthlyReturn; }
                             if (data[0].fee             != null) { x.fee    = data[0].fee;            x.gemelFee            = data[0].fee; }
+                            if (data[0].feeHafkada      != null) { x.feeHafkada = data[0].feeHafkada; }
                             if (data[0].fundName)                { x.gemelFundName = data[0].fundName; }
                             if (data[0].company)                 { x.gemelCompany  = data[0].company; }
                             x.value = _savedValue; // restore — gemel value is manual-only
@@ -13395,6 +13401,7 @@
                             if (data.ytdReturn     != null) { x.pensiaYtdReturn = data.ytdReturn; }
                             if (data.monthlyReturn != null) { x.pensiaMonthlyReturn = data.monthlyReturn; }
                             if (data.fee           != null) { x.fee = data.fee; x.pensiaFee = data.fee; }
+                            if (data.feeHafkada    != null) { x.feeHafkada = data.feeHafkada; }
                             if (data.fundName)              { x.pensiaFundName = data.fundName; }
                             if (data.company)               { x.pensiaCompany  = data.company; }
 
@@ -13687,6 +13694,7 @@
                 yearlyReturnSource: trailing12Source,
                 threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
                 fee:             fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
+                feeHafkada:      fldNum(['DMEI_NIHUL_HAFKADA','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA']),
                 period:          periodDisplay || null,
                 periodRaw:       periodStr || null,
                 recordsAvailable: filtered.length,
