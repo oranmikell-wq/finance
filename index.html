@@ -539,8 +539,6 @@
         .asset-row-detail-value {
             font-size: 0.85rem;
             font-weight: 600;
-            direction: ltr;
-            unicode-bidi: isolate;
         }
 
         .asset-row.spy-row {
@@ -11749,7 +11747,7 @@
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">רווח/הפסד</span>
-                                    <span class="asset-row-detail-value" style="color:${sc(mPct)};font-weight:700;">${ss(mPct)}${mPct.toFixed(1)}%  ${mCurr === 'USD' ? '('+ss(mDiff)+'$'+Math.abs(mDiff).toLocaleString('he-IL',{maximumFractionDigits:0})+' / ' : '('}${ss(mDiffILS)}₪${Math.abs(Math.round(mDiffILS)).toLocaleString('he-IL')})</span>
+                                    <span class="asset-row-detail-value" style="color:${sc(mPct)};font-weight:700;"><span dir="ltr">${ss(mPct)}${mPct.toFixed(1)}%  ${mCurr === 'USD' ? '('+ss(mDiff)+'$'+Math.abs(mDiff).toLocaleString('he-IL',{maximumFractionDigits:0})+' / ' : '('}${ss(mDiffILS)}₪${Math.abs(Math.round(mDiffILS)).toLocaleString('he-IL')})</span></span>
                                 </div>` : ''}
                             </div>
                             ${editBtn}
@@ -11887,7 +11885,7 @@
                                 <div class="asset-row-detail"><span class="asset-row-detail-label">טיקר</span><span class="asset-row-detail-value" style="color:#ff006e;font-weight:700;">${sTicker}</span></div>
                                 <div class="asset-row-detail"><span class="asset-row-detail-label">מחיר</span><span class="asset-row-detail-value">${priceStr}</span></div>
                                 <div class="asset-row-detail"><span class="asset-row-detail-label">כמות</span><span class="asset-row-detail-value">${sUnits.toLocaleString('he-IL',{maximumFractionDigits:3})}</span></div>
-                                ${sAvgBuy > 0 ? `<div class="asset-row-detail"><span class="asset-row-detail-label">תשואה</span><span class="asset-row-detail-value" style="color:${sc2(sRetPct)};font-weight:700;">${ss2(sRetPct)}${sRetPct.toFixed(1)}%</span></div>` : ''}
+                                ${sAvgBuy > 0 ? `<div class="asset-row-detail"><span class="asset-row-detail-label">תשואה</span><span class="asset-row-detail-value" style="color:${sc2(sRetPct)};font-weight:700;"><span dir="ltr">${ss2(sRetPct)}${sRetPct.toFixed(1)}%</span></span></div>` : ''}
                             </div>
                             ${editBtn}
                         </div>
@@ -12026,15 +12024,15 @@
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">תשואה יומית</span>
-                                    <span class="asset-row-detail-value" style="color:${fc(fDaily)};">${fs(fDaily)}${fDaily.toFixed(3)}% (${fs(dailyILS)}₪${Math.abs(dailyILS).toFixed(0)})</span>
+                                    <span class="asset-row-detail-value" style="color:${fc(fDaily)};"><span dir="ltr">${fs(fDaily)}${fDaily.toFixed(3)}% (${fs(dailyILS)}₪${Math.abs(dailyILS).toFixed(0)})</span></span>
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">חודשי</span>
-                                    <span class="asset-row-detail-value" style="color:${fc(fMonthly)};">${fs(fMonthly)}${fMonthly.toFixed(2)}%</span>
+                                    <span class="asset-row-detail-value" style="color:${fc(fMonthly)};"><span dir="ltr">${fs(fMonthly)}${fMonthly.toFixed(2)}%</span></span>
                                 </div>
                                 <div class="asset-row-detail">
                                     <span class="asset-row-detail-label">שנתי</span>
-                                    <span class="asset-row-detail-value" style="color:${fc(fYearly)};">${fs(fYearly)}${fYearly.toFixed(2)}%</span>
+                                    <span class="asset-row-detail-value" style="color:${fc(fYearly)};"><span dir="ltr">${fs(fYearly)}${fYearly.toFixed(2)}%</span></span>
                                 </div>
                                 ${asset.monthly > 0 ? `<div class="asset-row-detail">
                                     <span class="asset-row-detail-label">הפקדה חודשית</span>
@@ -12042,7 +12040,7 @@
                                 </div>` : ''}
                                 ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
                                     <span class="asset-row-detail-label">דמי ניהול</span>
-                                    <span class="asset-row-detail-value" style="color:var(--accent-gold);">${asset.fee.toFixed(3)}%</span>
+                                    <span class="asset-row-detail-value" style="color:var(--accent-gold);"><span dir="ltr">${asset.fee.toFixed(3)}%</span></span>
                                 </div>` : ''}
                                 ${(() => {
                                     const rd = asset.fundReportDate;
@@ -12116,18 +12114,18 @@
                             </div>
                             <div class="asset-row-detail">
                                 <span class="asset-row-detail-label">תשואה שנתית</span>
-                                <span class="asset-row-detail-value ${retClass}">${retSign}${retPct}%</span>
+                                <span class="asset-row-detail-value ${retClass}"><span dir="ltr">${retSign}${retPct}%</span></span>
                             </div>
                             ${(asset.type === 'gemel' || asset.type === 'fund') && asset.gemelMonthlyReturn != null ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">תשואה חודשית</span>
-                                <span class="asset-row-detail-value" style="color:${asset.gemelMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${asset.gemelMonthlyReturn >= 0 ? '+' : ''}${asset.gemelMonthlyReturn.toFixed(2)}%</span>
+                                <span class="asset-row-detail-value" style="color:${asset.gemelMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.gemelMonthlyReturn >= 0 ? '+' : ''}${asset.gemelMonthlyReturn.toFixed(2)}%</span></span>
                             </div>` : asset.type === 'pension' && asset.pensiaMonthlyReturn != null ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">תשואה חודשית</span>
-                                <span class="asset-row-detail-value" style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span>
+                                <span class="asset-row-detail-value" style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span></span>
                             </div>` : ''}
                             ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">דמי ניהול</span>
-                                <span class="asset-row-detail-value" style="color:var(--accent-gold);">${asset.fee.toFixed(3)}%</span>
+                                <span class="asset-row-detail-value" style="color:var(--accent-gold);"><span dir="ltr">${asset.fee.toFixed(3)}%</span></span>
                             </div>` : ''}
                             ${asset.pensiaBaseValue > 0 ? `<div class="asset-row-detail" style="grid-column:1/-1;background:rgba(16,185,129,0.06);border-radius:8px;padding:6px 10px;">
                                 <span class="asset-row-detail-label">📊 מחושב מבסיס</span>
@@ -12155,7 +12153,7 @@
                             </div>
                             <div class="asset-row-detail">
                                 <span class="asset-row-detail-label">רווח/הפסד</span>
-                                <span class="asset-row-detail-value" style="color:${profitLossILS >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${profitLossILS >= 0 ? '+' : ''}₪${Math.abs(Math.round(profitLossILS)).toLocaleString('he-IL')} (${profitLossPct >= 0 ? '+' : ''}${profitLossPct.toFixed(1)}%)</span>
+                                <span class="asset-row-detail-value" style="color:${profitLossILS >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};"><span dir="ltr">${profitLossILS >= 0 ? '+' : ''}₪${Math.abs(Math.round(profitLossILS)).toLocaleString('he-IL')} (${profitLossPct >= 0 ? '+' : ''}${profitLossPct.toFixed(1)}%)</span></span>
                             </div>` : ''}
                             ${asset.monthly > 0 ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">הפקדה חודשית</span>
