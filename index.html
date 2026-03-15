@@ -12009,55 +12009,41 @@
                             <div class="asset-row-chevron">▼</div>
                         </div>
                         <div class="asset-row-expand">
-                            <div class="asset-row-details">
-                                <div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">מס' קרן</span>
-                                    <span class="asset-row-detail-value">${asset.fundNumber}</span>
+                            <!-- meta row -->
+                            <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:10px;padding:0 2px;">
+                                מס' קרן ${asset.fundNumber} · ${fUnits.toLocaleString('he-IL', {maximumFractionDigits:3})} יחידות · <span dir="ltr">₪${fNav.toFixed(4)}</span> לשער
+                            </div>
+                            <!-- returns grid -->
+                            <div style="display:grid;grid-template-columns:repeat(${asset.fundYtdPct ? 4 : 3},1fr);gap:6px;margin-bottom:10px;">
+                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">יומי</div>
+                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(fDaily)};direction:ltr;">${fs(fDaily)}${fDaily.toFixed(2)}%</div>
+                                    <div style="font-size:0.65rem;color:${fc(fDaily)};direction:ltr;margin-top:1px;">${fs(dailyILS)}₪${Math.abs(dailyILS).toFixed(0)}</div>
                                 </div>
-                                <div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">שער יחידה</span>
-                                    <span class="asset-row-detail-value">₪${fNav.toFixed(4)}</span>
+                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">חודשי</div>
+                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(fMonthly)};direction:ltr;">${fs(fMonthly)}${fMonthly.toFixed(2)}%</div>
                                 </div>
-                                <div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">יחידות</span>
-                                    <span class="asset-row-detail-value">${fUnits.toLocaleString('he-IL', {maximumFractionDigits: 3})}</span>
+                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">שנתי</div>
+                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(fYearly)};direction:ltr;">${fs(fYearly)}${fYearly.toFixed(2)}%</div>
                                 </div>
-                                <div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">תשואה יומית</span>
-                                    <span class="asset-row-detail-value" style="color:${fc(fDaily)};"><span dir="ltr">${fs(fDaily)}${fDaily.toFixed(3)}% (${fs(dailyILS)}₪${Math.abs(dailyILS).toFixed(0)})</span></span>
-                                </div>
-                                <div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">חודשי</span>
-                                    <span class="asset-row-detail-value" style="color:${fc(fMonthly)};"><span dir="ltr">${fs(fMonthly)}${fMonthly.toFixed(2)}%</span></span>
-                                </div>
-                                <div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">שנתי</span>
-                                    <span class="asset-row-detail-value" style="color:${fc(fYearly)};"><span dir="ltr">${fs(fYearly)}${fYearly.toFixed(2)}%</span></span>
-                                </div>
-                                ${asset.fundYtdPct ? `<div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">מתחילת השנה</span>
-                                    <span class="asset-row-detail-value" style="color:${fc(asset.fundYtdPct)};"><span dir="ltr">${fs(asset.fundYtdPct)}${asset.fundYtdPct.toFixed(2)}%</span></span>
+                                ${asset.fundYtdPct ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">מתחילת השנה</div>
+                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(asset.fundYtdPct)};direction:ltr;">${fs(asset.fundYtdPct)}${asset.fundYtdPct.toFixed(2)}%</div>
                                 </div>` : ''}
-                                ${asset.monthly > 0 ? `<div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">הפקדה חודשית</span>
-                                    <span class="asset-row-detail-value">₪${(asset.monthly || 0).toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
-                                </div>` : ''}
-                                ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
-                                    <span class="asset-row-detail-label">דמי ניהול</span>
-                                    <span class="asset-row-detail-value" style="color:var(--accent-gold);"><span dir="ltr">${asset.fee.toFixed(3)}%</span></span>
-                                </div>` : ''}
+                            </div>
+                            <!-- footer row -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:0.72rem;">
+                                ${asset.fee != null && asset.fee > 0 ? `<div><span style="color:var(--text-secondary);">דמי ניהול </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.fee.toFixed(3)}%</span></div>` : '<div></div>'}
+                                ${asset.monthly > 0 ? `<div><span style="color:var(--text-secondary);">הפקדה חודשית </span><span style="color:var(--text-primary);font-weight:600;">₪${(asset.monthly||0).toLocaleString('he-IL',{maximumFractionDigits:0})}</span></div>` : ''}
                                 ${(() => {
                                     const rd = asset.fundReportDate;
                                     const lf = asset.fundLastFetch;
-                                    const dateStr = rd
-                                        ? rd.split('-').reverse().join('/')
-                                        : lf ? new Date(lf).toLocaleDateString('he-IL') : null;
+                                    const dateStr = rd ? rd.split('-').reverse().join('/') : lf ? new Date(lf).toLocaleDateString('he-IL') : null;
                                     if (!dateStr) return '';
                                     const isCache = !rd && lf && (new Date() - new Date(lf)) > 3600000 * 2;
-                                    return `<div class="asset-row-detail" style="grid-column:1/-1;">
-                                        <span class="asset-row-detail-label">📅 נתון נכון ל</span>
-                                        <span class="asset-row-detail-value" style="color:${isCache ? 'var(--accent-orange, #f97316)' : 'var(--text-secondary)'};">${dateStr}${isCache ? ' ⚠️ (מטמון)' : ''}</span>
-                                    </div>`;
+                                    return `<div style="color:${isCache ? 'var(--accent-orange,#f97316)' : 'var(--text-secondary)'};">📅 ${dateStr}${isCache ? ' ⚠️' : ''}</div>`;
                                 })()}
                             </div>
                             ${editBtn}
@@ -12107,49 +12093,40 @@
                         <div class="asset-row-chevron">▼</div>
                     </div>
                     <div class="asset-row-expand">
-                        <div class="asset-row-details">
-                            ${(asset.pensiaKupahNum || asset.gemelKupahNum) ? `<div class="asset-row-detail">
-                                <span class="asset-row-detail-label">מס' קרן</span>
-                                <span class="asset-row-detail-value">${asset.pensiaKupahNum || asset.gemelKupahNum}</span>
+                        ${(asset.type === 'pension' || asset.type === 'gemel' || asset.type === 'fund') ? (() => {
+                            const monthlyRet = asset.type === 'pension' ? asset.pensiaMonthlyReturn : asset.gemelMonthlyReturn;
+                            const ytdRet     = asset.type === 'pension' ? asset.pensiaYtdReturn    : asset.gemelYtdReturn;
+                            const kupahNum   = asset.pensiaKupahNum || asset.gemelKupahNum || null;
+                            const rc = function(v) { return v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'; };
+                            const rs = function(v) { return v >= 0 ? '+' : ''; };
+                            const hasReturns = (monthlyRet != null) || (asset.return != null) || (ytdRet != null);
+                            const cols = [monthlyRet != null, asset.return != null, ytdRet != null].filter(Boolean).length;
+                            return `
+                            ${kupahNum ? `<div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:10px;">מס' קרן ${kupahNum}</div>` : ''}
+                            ${hasReturns ? `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;margin-bottom:10px;">
+                                ${monthlyRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">חודשי</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(monthlyRet)};direction:ltr;">${rs(monthlyRet)}${monthlyRet.toFixed(2)}%</div>
+                                </div>` : ''}
+                                ${asset.return != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">שנתי</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(asset.return)};direction:ltr;">${rs(asset.return)}${asset.return.toFixed(2)}%</div>
+                                </div>` : ''}
+                                ${ytdRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">מתחילת השנה</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(ytdRet)};direction:ltr;">${rs(ytdRet)}${ytdRet.toFixed(2)}%</div>
+                                </div>` : ''}
                             </div>` : ''}
-                            <div class="asset-row-detail">
-                                <span class="asset-row-detail-label">תשואה שנתית</span>
-                                <span class="asset-row-detail-value ${retClass}"><span dir="ltr">${retSign}${retPct}%</span></span>
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:0.72rem;">
+                                ${asset.fee != null && asset.fee > 0 ? `<div><span style="color:var(--text-secondary);">דמי ניהול </span><span style="color:var(--accent-gold);font-weight:600;" dir="ltr">${asset.fee.toFixed(3)}%</span></div>` : '<div></div>'}
+                                ${asset.monthly > 0 ? `<div><span style="color:var(--text-secondary);">הפקדה חודשית </span><span style="color:var(--text-primary);font-weight:600;">₪${monthlyInILS.toLocaleString('he-IL',{maximumFractionDigits:0})}</span></div>` : ''}
                             </div>
-                            ${(asset.type === 'gemel' || asset.type === 'fund') && asset.gemelYtdReturn != null ? `<div class="asset-row-detail">
-                                <span class="asset-row-detail-label">מתחילת השנה</span>
-                                <span class="asset-row-detail-value" style="color:${asset.gemelYtdReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.gemelYtdReturn >= 0 ? '+' : ''}${asset.gemelYtdReturn.toFixed(2)}%</span></span>
-                            </div>` : asset.type === 'pension' && asset.pensiaYtdReturn != null ? `<div class="asset-row-detail">
-                                <span class="asset-row-detail-label">מתחילת השנה</span>
-                                <span class="asset-row-detail-value" style="color:${asset.pensiaYtdReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.pensiaYtdReturn >= 0 ? '+' : ''}${asset.pensiaYtdReturn.toFixed(2)}%</span></span>
-                            </div>` : ''}
-                            ${(asset.type === 'gemel' || asset.type === 'fund') && asset.gemelMonthlyReturn != null ? `<div class="asset-row-detail">
-                                <span class="asset-row-detail-label">תשואה חודשית</span>
-                                <span class="asset-row-detail-value" style="color:${asset.gemelMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.gemelMonthlyReturn >= 0 ? '+' : ''}${asset.gemelMonthlyReturn.toFixed(2)}%</span></span>
-                            </div>` : asset.type === 'pension' && asset.pensiaMonthlyReturn != null ? `<div class="asset-row-detail">
-                                <span class="asset-row-detail-label">תשואה חודשית</span>
-                                <span class="asset-row-detail-value" style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span></span>
-                            </div>` : ''}
-                            ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
-                                <span class="asset-row-detail-label">דמי ניהול</span>
-                                <span class="asset-row-detail-value" style="color:var(--accent-gold);"><span dir="ltr">${asset.fee.toFixed(3)}%</span></span>
-                            </div>` : ''}
-                            ${asset.pensiaBaseValue > 0 ? `<div class="asset-row-detail" style="grid-column:1/-1;background:rgba(16,185,129,0.06);border-radius:8px;padding:6px 10px;">
-                                <span class="asset-row-detail-label">📊 מחושב מבסיס</span>
-                                <span class="asset-row-detail-value" style="color:var(--text-primary);">
-                                    ₪${asset.pensiaBaseValue.toLocaleString('he-IL', {maximumFractionDigits:0})} (01/01/${asset.pensiaBaseYear || new Date().getFullYear()})
-                                    ${asset.pensiaComputedMonths ? `· ${asset.pensiaComputedMonths} חודשים` : ''}
-                                    ${asset.pensiaComputedPeriod ? `· עד ${asset.pensiaComputedPeriod.slice(4)}/${asset.pensiaComputedPeriod.slice(0,4)}` : ''}
-                                </span>
-                            </div>` : ''}
-                            ${!asset.pensiaBaseValue && asset.type === 'pension' && asset.pensiaLastAppliedPeriod ? (() => {
-                                var p = String(asset.pensiaLastAppliedPeriod);
-                                var pDisp = p.length === 6 ? p.slice(4) + '/' + p.slice(0,4) : p;
-                                return `<div class="asset-row-detail" style="grid-column:1/-1;">
-                                    <span class="asset-row-detail-label">📅 צבירה עודכנה אוטומטית</span>
-                                    <span class="asset-row-detail-value" style="color:var(--text-secondary);font-size:0.75rem;">לפי תשואת ${pDisp}</span>
-                                </div>`;
-                            })() : ''}
+                            ${asset.pensiaBaseValue > 0 ? `<div style="background:rgba(16,185,129,0.06);border-radius:8px;padding:8px 10px;margin-top:10px;font-size:0.72rem;">
+                                <span style="color:var(--text-secondary);">📊 מחושב מבסיס </span>
+                                <span style="color:var(--text-primary);">₪${asset.pensiaBaseValue.toLocaleString('he-IL',{maximumFractionDigits:0})} (01/01/${asset.pensiaBaseYear||new Date().getFullYear()})${asset.pensiaComputedMonths?` · ${asset.pensiaComputedMonths} חודשים`:''}${asset.pensiaComputedPeriod?` · עד ${asset.pensiaComputedPeriod.slice(4)}/${asset.pensiaComputedPeriod.slice(0,4)}`:''}</span>
+                            </div>` : ''}`;
+                        })() : `
+                        <div class="asset-row-details">
                             ${showUSD ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">שווי בדולר</span>
                                 <span class="asset-row-detail-value">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</span>
@@ -12170,7 +12147,11 @@
                                 <span class="asset-row-detail-label">הפקדה שנתית</span>
                                 <span class="asset-row-detail-value">₪${(monthlyInILS * 12).toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
                             </div>` : ''}
-                        </div>
+                            ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">דמי ניהול</span>
+                                <span class="asset-row-detail-value" style="color:var(--accent-gold);"><span dir="ltr">${asset.fee.toFixed(3)}%</span></span>
+                            </div>` : ''}
+                        </div>`}
                         ${editBtn}
                     </div>
                 </div>`;
