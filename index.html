@@ -5067,6 +5067,7 @@
                         a.fundDailyPct = data.dailyPct;
                         a.fundMonthlyPct = data.monthlyPct;
                         a.fundYearlyPct = data.yearlyPct;
+                        if (data.ytdPct) a.fundYtdPct = data.ytdPct;
                         a.fundName = data.name;
                         a.fundReportDate = data.reportDate || null;
                         a.fundLastFetch = data.date || new Date().toISOString();
@@ -12033,6 +12034,10 @@
                                     <span class="asset-row-detail-label">שנתי</span>
                                     <span class="asset-row-detail-value" style="color:${fc(fYearly)};"><span dir="ltr">${fs(fYearly)}${fYearly.toFixed(2)}%</span></span>
                                 </div>
+                                ${asset.fundYtdPct ? `<div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">מתחילת השנה</span>
+                                    <span class="asset-row-detail-value" style="color:${fc(asset.fundYtdPct)};"><span dir="ltr">${fs(asset.fundYtdPct)}${asset.fundYtdPct.toFixed(2)}%</span></span>
+                                </div>` : ''}
                                 ${asset.monthly > 0 ? `<div class="asset-row-detail">
                                     <span class="asset-row-detail-label">הפקדה חודשית</span>
                                     <span class="asset-row-detail-value">₪${(asset.monthly || 0).toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
@@ -12115,6 +12120,13 @@
                                 <span class="asset-row-detail-label">תשואה שנתית</span>
                                 <span class="asset-row-detail-value ${retClass}"><span dir="ltr">${retSign}${retPct}%</span></span>
                             </div>
+                            ${(asset.type === 'gemel' || asset.type === 'fund') && asset.gemelYtdReturn != null ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">מתחילת השנה</span>
+                                <span class="asset-row-detail-value" style="color:${asset.gemelYtdReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.gemelYtdReturn >= 0 ? '+' : ''}${asset.gemelYtdReturn.toFixed(2)}%</span></span>
+                            </div>` : asset.type === 'pension' && asset.pensiaYtdReturn != null ? `<div class="asset-row-detail">
+                                <span class="asset-row-detail-label">מתחילת השנה</span>
+                                <span class="asset-row-detail-value" style="color:${asset.pensiaYtdReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.pensiaYtdReturn >= 0 ? '+' : ''}${asset.pensiaYtdReturn.toFixed(2)}%</span></span>
+                            </div>` : ''}
                             ${(asset.type === 'gemel' || asset.type === 'fund') && asset.gemelMonthlyReturn != null ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">תשואה חודשית</span>
                                 <span class="asset-row-detail-value" style="color:${asset.gemelMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">` + `<span dir="ltr">${asset.gemelMonthlyReturn >= 0 ? '+' : ''}${asset.gemelMonthlyReturn.toFixed(2)}%</span></span>
@@ -13169,9 +13181,10 @@
                 var yearlyReturn = fldNum([
                     'AVG_ANNUAL_YIELD_TRAILING_3YRS',   // best: annualized 3yr avg
                     'AVG_ANNUAL_YIELD_TRAILING_5YRS',   // fallback: annualized 5yr avg
-                    'YEAR_TO_DATE_YIELD',               // YTD if nothing else
                     'TSUA_SHNATI','TSUA_12_HODESH','TSUA12','TSUA_SHNATI_BRUTO',
                 ]);
+                // ── YTD return ──
+                var ytdReturn = fldNum(['YEAR_TO_DATE_YIELD','TSUA_SHNAT_CALENDAR','TSUA_NOHEDET']);
 
                 // ── 3-year return ──
                 var threeYearReturn = fldNum([
@@ -13197,6 +13210,7 @@
                     trackName:        trackName || null,
                     company:          company   || '—',
                     yearlyReturn:     yearlyReturn,
+                    ytdReturn:        ytdReturn,
                     monthlyReturn:    fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']),
                     threeYearReturn:  threeYearReturn,
                     fee:              fee,
@@ -13370,6 +13384,7 @@
                         assets.filter(function(x) { return x.gemelKupahNum === a.gemelKupahNum; }).forEach(function(x) {
                             var _savedValue = x.value; // NEVER touch value — user sets it manually
                             if (data[0].yearlyReturn    != null) { x.return = data[0].yearlyReturn;  x.gemelYearlyReturn   = data[0].yearlyReturn; }
+                            if (data[0].ytdReturn       != null) { x.gemelYtdReturn = data[0].ytdReturn; }
                             if (data[0].monthlyReturn   != null) { x.gemelMonthlyReturn  = data[0].monthlyReturn; }
                             if (data[0].fee             != null) { x.fee    = data[0].fee;            x.gemelFee            = data[0].fee; }
                             if (data[0].fundName)                { x.gemelFundName = data[0].fundName; }
@@ -13398,6 +13413,7 @@
                         _savePensiaCache(a.pensiaKupahNum, data);
                         assets.filter(function(x) { return x.pensiaKupahNum === a.pensiaKupahNum; }).forEach(function(x) {
                             if (data.yearlyReturn  != null) { x.return = data.yearlyReturn; x.pensiaYearlyReturn = data.yearlyReturn; }
+                            if (data.ytdReturn     != null) { x.pensiaYtdReturn = data.ytdReturn; }
                             if (data.monthlyReturn != null) { x.pensiaMonthlyReturn = data.monthlyReturn; }
                             if (data.fee           != null) { x.fee = data.fee; x.pensiaFee = data.fee; }
                             if (data.fundName)              { x.pensiaFundName = data.fundName; }
@@ -13675,11 +13691,20 @@
             }).filter(function(x) { return x.yield !== null; })
             .sort(function(a, b) { return a.period.localeCompare(b.period); }); // Jan first
 
+            // ── YTD: compound all current-year months ──
+            var ytdReturn = null;
+            if (currentYearMonthly.length > 0) {
+                var ytdCompound = 1;
+                currentYearMonthly.forEach(function(m) { ytdCompound *= (1 + m.yield / 100); });
+                ytdReturn = Math.round((ytdCompound - 1) * 10000) / 100;
+            }
+
             return {
                 fundName:        fld(['FUND_NAME','SHEM_KUPA','SHEM_KUPAH']) || '—',
                 company:         fld(['MANAGING_CORPORATION','CONTROLLING_CORPORATION','SHEM_CHV']) || '—',
                 monthlyReturn:   monthlyReturn,
                 yearlyReturn:    trailing12,
+                ytdReturn:       ytdReturn,
                 yearlyReturnSource: trailing12Source,
                 threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
                 fee:             fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
