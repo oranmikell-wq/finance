@@ -12018,7 +12018,7 @@
                                 <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">יומי</div>
                                     <div style="font-size:0.95rem;font-weight:700;color:${fc(fDaily)};direction:ltr;">${fs(fDaily)}${fDaily.toFixed(2)}%</div>
-                                    <div style="font-size:0.65rem;color:${fc(fDaily)};direction:ltr;margin-top:1px;">${fs(dailyILS)}₪${Math.abs(dailyILS).toFixed(0)}</div>
+                                    <div style="font-size:0.65rem;color:${fc(fDaily)};direction:ltr;margin-top:1px;">${dailyILS >= 0 ? '+' : '-'}₪${Math.abs(Math.round(dailyILS))}</div>
                                 </div>
                                 <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">חודשי</div>
