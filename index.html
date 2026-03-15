@@ -450,6 +450,14 @@
             background: rgba(239, 68, 68, 0.1);
         }
 
+        .asset-row-detail-value.positive {
+            color: var(--accent-green);
+        }
+
+        .asset-row-detail-value.negative {
+            color: var(--accent-red);
+        }
+
         .asset-row-expand {
             overflow: hidden;
             max-height: 0;
@@ -12019,6 +12027,10 @@
                                     <span class="asset-row-detail-label">הפקדה חודשית</span>
                                     <span class="asset-row-detail-value">₪${(asset.monthly || 0).toLocaleString('he-IL', {maximumFractionDigits: 0})}</span>
                                 </div>` : ''}
+                                ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
+                                    <span class="asset-row-detail-label">דמי ניהול</span>
+                                    <span class="asset-row-detail-value" style="color:var(--accent-gold);">${asset.fee.toFixed(3)}%</span>
+                                </div>` : ''}
                                 ${(() => {
                                     const rd = asset.fundReportDate;
                                     const lf = asset.fundLastFetch;
@@ -12102,7 +12114,7 @@
                             </div>` : ''}
                             ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">דמי ניהול</span>
-                                <span class="asset-row-detail-value">${asset.fee.toFixed(3)}%</span>
+                                <span class="asset-row-detail-value" style="color:var(--accent-gold);">${asset.fee.toFixed(3)}%</span>
                             </div>` : ''}
                             ${asset.pensiaBaseValue > 0 ? `<div class="asset-row-detail" style="grid-column:1/-1;background:rgba(16,185,129,0.06);border-radius:8px;padding:6px 10px;">
                                 <span class="asset-row-detail-label">📊 מחושב מבסיס</span>
