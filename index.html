@@ -3020,7 +3020,7 @@
                     <div class="budget-section-label">💰 חיסכון</div>
                     <div class="budget-row" id="autoDepositsRow" style="display:none;">
                         <span class="budget-row-label"><span class="row-emoji" style="background:rgba(59,130,246,0.12);">📊</span><span>הפקדות לנכסים</span></span>
-                        <span style="font-size:0.82rem;font-weight:700;color:var(--accent-blue);" id="autoDepositsDisplay">₪0</span>
+                        <span style="font-size:0.75rem;font-weight:700;color:var(--accent-blue);" id="autoDepositsDisplay">₪0</span>
                     </div>
                     <div class="budget-row">
                         <span class="budget-row-label"><span class="row-emoji" style="background:rgba(244,196,48,0.12);">💰</span><span>חיסכון נוסף</span></span>
@@ -3691,7 +3691,7 @@
                                             style="flex-shrink:0;padding:8px 13px;background:linear-gradient(135deg,#ff006e,#ff8c00);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">🔍 חפש</button>
                                     </div>
                                     <div id="portfolioAddResult" style="display:none;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:8px;">
-                                        <div style="font-size:0.82rem;font-weight:700;color:#ff006e;" id="portfolioAddName">—</div>
+                                        <div style="font-size:0.75rem;font-weight:700;color:#ff006e;" id="portfolioAddName">—</div>
                                         <div style="font-size:0.72rem;color:var(--text-secondary);" id="portfolioAddPrice">—</div>
                                     </div>
                                     <div style="display:flex;gap:8px;margin-bottom:9px;">
@@ -12015,22 +12015,22 @@
                             </div>
                             <!-- returns grid -->
                             <div style="display:grid;grid-template-columns:repeat(${asset.fundYtdPct ? 4 : 3},1fr);gap:6px;margin-bottom:10px;">
-                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:5px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">יומי</div>
-                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(fDaily)};direction:ltr;">${fs(fDaily)}${fDaily.toFixed(2)}%</div>
+                                    <div style="font-size:0.75rem;font-weight:700;color:${fc(fDaily)};direction:ltr;">${fs(fDaily)}${fDaily.toFixed(2)}%</div>
                                     <div style="font-size:0.65rem;color:${fc(fDaily)};direction:ltr;margin-top:1px;">${fs(dailyILS)}₪${Math.abs(dailyILS).toFixed(0)}</div>
                                 </div>
-                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:5px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">חודשי</div>
-                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(fMonthly)};direction:ltr;">${fs(fMonthly)}${fMonthly.toFixed(2)}%</div>
+                                    <div style="font-size:0.75rem;font-weight:700;color:${fc(fMonthly)};direction:ltr;">${fs(fMonthly)}${fMonthly.toFixed(2)}%</div>
                                 </div>
-                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:5px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">שנתי</div>
-                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(fYearly)};direction:ltr;">${fs(fYearly)}${fYearly.toFixed(2)}%</div>
+                                    <div style="font-size:0.75rem;font-weight:700;color:${fc(fYearly)};direction:ltr;">${fs(fYearly)}${fYearly.toFixed(2)}%</div>
                                 </div>
-                                ${asset.fundYtdPct ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                ${asset.fundYtdPct ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:5px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">מתחילת השנה</div>
-                                    <div style="font-size:0.82rem;font-weight:700;color:${fc(asset.fundYtdPct)};direction:ltr;">${fs(asset.fundYtdPct)}${asset.fundYtdPct.toFixed(2)}%</div>
+                                    <div style="font-size:0.75rem;font-weight:700;color:${fc(asset.fundYtdPct)};direction:ltr;">${fs(asset.fundYtdPct)}${asset.fundYtdPct.toFixed(2)}%</div>
                                 </div>` : ''}
                             </div>
                             <!-- footer row -->
@@ -12104,17 +12104,17 @@
                             return `
                             ${kupahNum ? `<div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:10px;">מס' קרן ${kupahNum}</div>` : ''}
                             ${hasReturns ? `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;margin-bottom:10px;">
-                                ${monthlyRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                ${monthlyRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:5px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">חודשי</div>
-                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(monthlyRet)};direction:ltr;">${rs(monthlyRet)}${monthlyRet.toFixed(2)}%</div>
+                                    <div style="font-size:0.75rem;font-weight:700;color:${rc(monthlyRet)};direction:ltr;">${rs(monthlyRet)}${monthlyRet.toFixed(2)}%</div>
                                 </div>` : ''}
-                                ${asset.return != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                ${asset.return != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:5px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">שנתי</div>
-                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(asset.return)};direction:ltr;">${rs(asset.return)}${asset.return.toFixed(2)}%</div>
+                                    <div style="font-size:0.75rem;font-weight:700;color:${rc(asset.return)};direction:ltr;">${rs(asset.return)}${asset.return.toFixed(2)}%</div>
                                 </div>` : ''}
-                                ${ytdRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 4px;text-align:center;">
+                                ${ytdRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:5px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">מתחילת השנה</div>
-                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(ytdRet)};direction:ltr;">${rs(ytdRet)}${ytdRet.toFixed(2)}%</div>
+                                    <div style="font-size:0.75rem;font-weight:700;color:${rc(ytdRet)};direction:ltr;">${rs(ytdRet)}${ytdRet.toFixed(2)}%</div>
                                 </div>` : ''}
                             </div>` : ''}
                             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:0.72rem;">
