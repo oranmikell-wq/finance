@@ -12103,10 +12103,10 @@
                     </div>
                     <div class="asset-row-expand">
                         <div class="asset-row-details">
-                            <div class="asset-row-detail">
+                            ${(asset.pensiaKupahNum || asset.gemelKupahNum) ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">מס' קרן</span>
-                                <span class="asset-row-detail-value">${typeName}</span>
-                            </div>
+                                <span class="asset-row-detail-value">${asset.pensiaKupahNum || asset.gemelKupahNum}</span>
+                            </div>` : ''}
                             <div class="asset-row-detail">
                                 <span class="asset-row-detail-label">מטבע</span>
                                 <span class="asset-row-detail-value">${currencyName}</span>
