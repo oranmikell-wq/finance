@@ -7716,6 +7716,7 @@
                 if (hasFundAssets) tasks.push(updateFundAssets());
                 if (hasGemelAssets) tasks.push(updateGemelAssets());
                 if (hasPensiaAssets) tasks.push(updatePensiaAssets());
+                applyPensiaMonthlyDeposits();
             var hasTradeStockAssets = assets.some(function(a) { return a.type === 'trade' && (a.stockTicker || (a.stockMode === 'portfolio' && a.holdings && a.holdings.length > 0)); });
             if (hasTradeStockAssets) tasks.push(updateTradeAssets());
 
@@ -7749,6 +7750,7 @@
             if (hasSpyAssets) await fetchSpyPrice();
 
             await updateFundAssets();
+            applyPensiaMonthlyDeposits();
             updateUI();
         }
 
@@ -13381,6 +13383,26 @@
                     }
                 } catch(e) { console.warn('[Gemel] Auto-update failed for ' + a.gemelKupahNum, e); }
             }
+        }
+
+        // ── Auto-apply monthly pension deposit on/after the 10th of each month ──
+        function applyPensiaMonthlyDeposits() {
+            var today = new Date();
+            if (today.getDate() < 10) return; // before 10th — skip
+            var currentPeriod = today.getFullYear().toString() + String(today.getMonth() + 1).padStart(2, '0'); // e.g. "202603"
+            var changed = false;
+            assets.forEach(function(a) {
+                if (a.type !== 'pension') return;
+                if (!(a.monthly > 0)) return;
+                if (a.pensiaLastDepositPeriod === currentPeriod) return; // already applied this month
+                var depositILS = toILS(a.monthly, a.monthlyCurrency || 'ILS');
+                a.value = Math.round((a.value || 0) + depositILS);
+                a.pensiaLastDepositPeriod = currentPeriod;
+                changed = true;
+                console.log('[Pensia] 💰 Auto-deposit ₪' + Math.round(depositILS) + ' for period ' + currentPeriod + ' → asset: ' + a.name);
+            });
+            if (changed) saveAssets();
+            return changed;
         }
 
         async function updatePensiaAssets() {
