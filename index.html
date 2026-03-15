@@ -12128,7 +12128,7 @@
                             </div>` : ''}
                             ${asset.pensiaBaseValue > 0 ? `<div class="asset-row-detail" style="grid-column:1/-1;background:rgba(16,185,129,0.06);border-radius:8px;padding:6px 10px;">
                                 <span class="asset-row-detail-label">📊 מחושב מבסיס</span>
-                                <span class="asset-row-detail-value" style="color:var(--accent-green);">
+                                <span class="asset-row-detail-value" style="color:var(--text-primary);">
                                     ₪${asset.pensiaBaseValue.toLocaleString('he-IL', {maximumFractionDigits:0})} (01/01/${asset.pensiaBaseYear || new Date().getFullYear()})
                                     ${asset.pensiaComputedMonths ? `· ${asset.pensiaComputedMonths} חודשים` : ''}
                                     ${asset.pensiaComputedPeriod ? `· עד ${asset.pensiaComputedPeriod.slice(4)}/${asset.pensiaComputedPeriod.slice(0,4)}` : ''}
