@@ -13455,7 +13455,8 @@
                             }
                         });
                         await saveAssets();
-                        console.log('[Pensia] ✅ Updated kupah', a.pensiaKupahNum, '→', data.fundName, 'monthly:', data.monthlyReturn, 'period:', data.periodRaw);
+                        console.log('[Pensia] ✅ Updated kupah', a.pensiaKupahNum, '→', data.fundName, 'fee:', data.fee, 'feeHafkada:', data.feeHafkada);
+                        console.log('[Pensia] API keys:', data._allKeys);
                     }
                 } catch(e) { console.warn('[Pensia] Auto-update failed for ' + a.pensiaKupahNum, e); }
             }
@@ -13721,6 +13722,7 @@
                 periodRaw:       periodStr || null,
                 recordsAvailable: filtered.length,
                 currentYearMonthly: currentYearMonthly, // [{period:'202601', yield:1.5}, ...]
+                _allKeys: filtered.length > 0 ? Object.keys(filtered[0]).join(',') : '',
             };
         }
 
