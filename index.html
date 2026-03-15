@@ -12091,7 +12091,7 @@
                                 <span class="asset-row-detail-label">תשואה חודשית</span>
                                 <span class="asset-row-detail-value" style="color:${asset.pensiaMonthlyReturn >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${asset.pensiaMonthlyReturn >= 0 ? '+' : ''}${asset.pensiaMonthlyReturn.toFixed(2)}%</span>
                             </div>` : ''}
-                            ${asset.fee != null && (asset.type === 'gemel' || asset.type === 'fund' || asset.type === 'pension') ? `<div class="asset-row-detail">
+                            ${asset.fee != null && asset.fee > 0 ? `<div class="asset-row-detail">
                                 <span class="asset-row-detail-label">דמי ניהול</span>
                                 <span class="asset-row-detail-value">${asset.fee.toFixed(3)}%</span>
                             </div>` : ''}
