@@ -13161,7 +13161,9 @@
                     'TSUA_SHNATI','TSUA_12_HODESH','TSUA12','TSUA_SHNATI_BRUTO',
                 ]);
                 // ── YTD return ──
-                var ytdReturn = fldNum(['YEAR_TO_DATE_YIELD','TSUA_SHNAT_CALENDAR','TSUA_NOHEDET']);
+                var ytdReturn = fldNum(['YEAR_TO_DATE_YIELD','TSUA_SHNAT_CALENDAR','TSUA_NOHEDET',
+                    'TSUA_MITCHILAS_SHANA','TSUA_SHANA_NOHEDET','YTD_YIELD','TSUA_YTD',
+                    'YIELD_YTD','TSUA_SHNATIT_NOHEDET','CALENDAR_YEAR_YIELD']);
 
                 // ── 3-year return ──
                 var threeYearReturn = fldNum([
@@ -13369,7 +13371,7 @@
                             x.value = _savedValue; // restore — gemel value is manual-only
                         });
                         await saveAssets();
-                        console.log('[Gemel] ✅ Updated kupah', a.gemelKupahNum, '→', data[0].fundName, 'monthly:', data[0].monthlyReturn);
+                        console.log('[Gemel] ✅ Updated kupah', a.gemelKupahNum, '→', data[0].fundName, 'monthly:', data[0].monthlyReturn, 'ytd:', data[0].ytdReturn, 'raw keys:', Object.keys(data[0].raw || {}).join(','));
                     }
                 } catch(e) { console.warn('[Gemel] Auto-update failed for ' + a.gemelKupahNum, e); }
             }
