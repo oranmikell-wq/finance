@@ -434,6 +434,7 @@
             font-size: 0.8rem;
             font-weight: 600;
             padding: 3px 10px;
+            margin-bottom: 3px;
             border-radius: 20px;
             white-space: nowrap;
             flex-shrink: 0;
@@ -11646,8 +11647,8 @@
                                 <div class="asset-row-name">${asset.name}</div>
                                 <div class="asset-row-provider">${asset.provider}</div>
                             </div>
-                            ${rentalYield !== null ? `<div class="asset-row-return positive">${rentalYield.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
+                                ${rentalYield !== null ? `<div class="asset-row-return positive">${rentalYield.toFixed(1)}%</div>` : ''}
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${eq.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 <div class="asset-row-sub">הון עצמי</div>
                             </div>
@@ -11909,8 +11910,8 @@
                                 <div class="asset-row-name">${asset.name} <span style="font-size:0.7em;color:var(--accent-gold);">S&P 500</span></div>
                                 <div class="asset-row-provider">${asset.provider}</div>
                             </div>
-                            <div class="asset-row-return ${rCls}">${s(rPct)}${rPct.toFixed(1)}%</div>
                             <div class="asset-row-values">
+                                <div class="asset-row-return ${rCls}">${s(rPct)}${rPct.toFixed(1)}%</div>
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${vILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 <div class="asset-row-sub">$${vUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}${spyDailyChangePct ? ` <span style="color:${spyDailyChangePct>=0?'var(--accent-green)':'var(--accent-red)'};">${spyDailyChangePct>=0?'+':''}${spyDailyChangePct.toFixed(2)}%</span>` : ''}</div>
                             </div>
@@ -11992,8 +11993,8 @@
                                 <div class="asset-row-name">${asset.name}</div>
                                 <div class="asset-row-provider">${[asset.provider, 'קרן נאמנות'].filter(Boolean).join(' • ')}${fDaily !== 0 ? ` • <span style="color:${fc(fDaily)};font-weight:600;">${fs(fDaily)}${fDaily.toFixed(2)}%</span> יומי` : ''}</div>
                             </div>
-                            ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                             <div class="asset-row-values">
+                                ${fYearly !== 0 ? `<div class="asset-row-return ${fYearly >= 0 ? 'positive' : 'negative'}">${fs(fYearly)}${fYearly.toFixed(1)}%</div>` : ''}
                                 <div class="asset-row-amount" data-amount-id="${asset.id}">₪${fValue.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                                 ${fDaily !== 0 ? `<div class="asset-row-sub" style="color:${fc(fDaily)};">${fs(dailyILS)}₪${Math.abs(Math.round(dailyILS)).toLocaleString('he-IL')} היום</div>` : ''}
                             </div>
@@ -12075,14 +12076,14 @@
                                     : ''
                             }</div>
                         </div>
-                        ${currency === 'USD' && exchangeRatePrevClose > 0
-                            ? (() => { const dp = (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100; return `<div class="asset-row-return ${dp >= 0 ? 'positive' : 'negative'}">${dp >= 0 ? '+' : ''}${dp.toFixed(2)}%</div>`; })()
-                            : currency === 'BTC' && btcDailyChangePct
-                            ? `<div class="asset-row-return ${btcDailyChangePct >= 0 ? 'positive' : 'negative'}">${btcDailyChangePct >= 0 ? '+' : ''}${btcDailyChangePct.toFixed(2)}%</div>`
-                            : currency === 'ETH' && ethDailyChangePct
-                            ? `<div class="asset-row-return ${ethDailyChangePct >= 0 ? 'positive' : 'negative'}">${ethDailyChangePct >= 0 ? '+' : ''}${ethDailyChangePct.toFixed(2)}%</div>`
-                            : retPct !== 0 ? `<div class="asset-row-return ${retClass}">${retSign}${retPct}%</div>` : ''}
                         <div class="asset-row-values">
+                            ${currency === 'USD' && exchangeRatePrevClose > 0
+                                ? (() => { const dp = (exchangeRate - exchangeRatePrevClose) / exchangeRatePrevClose * 100; return `<div class="asset-row-return ${dp >= 0 ? 'positive' : 'negative'}">${dp >= 0 ? '+' : ''}${dp.toFixed(2)}%</div>`; })()
+                                : currency === 'BTC' && btcDailyChangePct
+                                ? `<div class="asset-row-return ${btcDailyChangePct >= 0 ? 'positive' : 'negative'}">${btcDailyChangePct >= 0 ? '+' : ''}${btcDailyChangePct.toFixed(2)}%</div>`
+                                : currency === 'ETH' && ethDailyChangePct
+                                ? `<div class="asset-row-return ${ethDailyChangePct >= 0 ? 'positive' : 'negative'}">${ethDailyChangePct >= 0 ? '+' : ''}${ethDailyChangePct.toFixed(2)}%</div>`
+                                : retPct !== 0 ? `<div class="asset-row-return ${retClass}">${retSign}${retPct}%</div>` : ''}
                             <div class="asset-row-amount" data-amount-id="${asset.id}">₪${valueInILS.toLocaleString('he-IL', {maximumFractionDigits: 0})}</div>
                             ${showUSD ? `<div class="asset-row-sub">$${valueInUSD.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>` : ''}
                             ${currency !== 'ILS' && !showUSD ? `<div class="asset-row-sub">${formatAmount(asset.value, currency)}${
