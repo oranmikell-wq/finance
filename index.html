@@ -12017,19 +12017,19 @@
                             <div style="display:grid;grid-template-columns:repeat(${asset.fundYtdPct ? 4 : 3},1fr);gap:6px;margin-bottom:10px;">
                                 <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">יומי</div>
-                                    <div style="font-size:0.95rem;font-weight:700;color:${fc(fDaily)};direction:ltr;">${fs(fDaily)}${fDaily.toFixed(2)}%</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${fc(fDaily)};direction:ltr;">${fs(fDaily)}${fDaily.toFixed(2)}%</div>
                                 </div>
                                 <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">חודשי</div>
-                                    <div style="font-size:0.95rem;font-weight:700;color:${fc(fMonthly)};direction:ltr;">${fs(fMonthly)}${fMonthly.toFixed(2)}%</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${fc(fMonthly)};direction:ltr;">${fs(fMonthly)}${fMonthly.toFixed(2)}%</div>
                                 </div>
                                 <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">שנתי</div>
-                                    <div style="font-size:0.95rem;font-weight:700;color:${fc(fYearly)};direction:ltr;">${fs(fYearly)}${fYearly.toFixed(2)}%</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${fc(fYearly)};direction:ltr;">${fs(fYearly)}${fYearly.toFixed(2)}%</div>
                                 </div>
                                 ${asset.fundYtdPct ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">מתחילת השנה</div>
-                                    <div style="font-size:0.95rem;font-weight:700;color:${fc(asset.fundYtdPct)};direction:ltr;">${fs(asset.fundYtdPct)}${asset.fundYtdPct.toFixed(2)}%</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${fc(asset.fundYtdPct)};direction:ltr;">${fs(asset.fundYtdPct)}${asset.fundYtdPct.toFixed(2)}%</div>
                                 </div>` : ''}
                             </div>
                             <!-- footer row -->
@@ -12105,15 +12105,15 @@
                             ${hasReturns ? `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;margin-bottom:10px;">
                                 ${monthlyRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">חודשי</div>
-                                    <div style="font-size:0.95rem;font-weight:700;color:${rc(monthlyRet)};direction:ltr;">${rs(monthlyRet)}${monthlyRet.toFixed(2)}%</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(monthlyRet)};direction:ltr;">${rs(monthlyRet)}${monthlyRet.toFixed(2)}%</div>
                                 </div>` : ''}
                                 ${asset.return != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">שנתי</div>
-                                    <div style="font-size:0.95rem;font-weight:700;color:${rc(asset.return)};direction:ltr;">${rs(asset.return)}${asset.return.toFixed(2)}%</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(asset.return)};direction:ltr;">${rs(asset.return)}${asset.return.toFixed(2)}%</div>
                                 </div>` : ''}
                                 ${ytdRet != null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
                                     <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">מתחילת השנה</div>
-                                    <div style="font-size:0.95rem;font-weight:700;color:${rc(ytdRet)};direction:ltr;">${rs(ytdRet)}${ytdRet.toFixed(2)}%</div>
+                                    <div style="font-size:0.85rem;font-weight:700;color:${rc(ytdRet)};direction:ltr;">${rs(ytdRet)}${ytdRet.toFixed(2)}%</div>
                                 </div>` : ''}
                             </div>` : ''}
                             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:0.72rem;">
