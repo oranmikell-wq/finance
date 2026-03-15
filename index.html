@@ -7026,8 +7026,7 @@
             feeData.forEach(function(f) {
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">';
                 html += '<div>';
-                html += '<div style="font-size:0.8rem;">' + f.name + ' <span style="color:var(--accent-gold);font-weight:600;">(' + f.fee + '%)</span></div>';
-                if (f.provider) html += '<div style="font-size:0.68rem;color:var(--text-secondary);">' + f.provider + '</div>';
+                html += '<div style="font-size:0.8rem;">' + f.name + (f.provider ? ' <span style="color:var(--text-secondary);font-weight:400;">• ' + f.provider + '</span>' : '') + ' <span style="color:var(--accent-gold);font-weight:600;">(' + f.fee + '%)</span></div>';
                 html += '</div>';
                 html += '<span style="color:var(--accent-red);font-size:0.8rem;white-space:nowrap;">₪' + f.annual.toLocaleString('he-IL', {maximumFractionDigits: 0}) + '/שנה</span></div>';
             });
