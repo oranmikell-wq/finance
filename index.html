@@ -11812,21 +11812,8 @@
                             <div class="asset-row-chevron">▼</div>
                         </div>
                         <div class="asset-row-expand">
-                            <!-- returns block -->
-                            <div style="display:grid;grid-template-columns:repeat(${totalRetPct !== null ? 2 : 1},1fr);gap:6px;margin-bottom:10px;">
-                                <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
-                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">יומי</div>
-                                    <div style="font-size:0.85rem;font-weight:700;color:${sc(combinedDailyPct)};direction:ltr;">${ss(combinedDailyPct)}${combinedDailyPct.toFixed(2)}%</div>
-                                    <div style="font-size:0.65rem;color:${sc(combinedDailyPct)};direction:ltr;margin-top:2px;">${combinedDailyPct >= 0 ? '+' : '-'}₪${Math.abs(Math.round(totalVal * combinedDailyPct / 100)).toLocaleString('he-IL')}</div>
-                                </div>
-                                ${totalRetPct !== null ? `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 4px;text-align:center;">
-                                    <div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:3px;">תשואה</div>
-                                    <div style="font-size:0.85rem;font-weight:700;color:${sc(totalRetPct)};direction:ltr;">${ss(totalRetPct)}${totalRetPct.toFixed(2)}%</div>
-                                    <div style="font-size:0.65rem;color:${sc(totalRetPct)};direction:ltr;margin-top:2px;">${totalRetILS >= 0 ? '+' : '-'}₪${Math.abs(totalRetILS).toLocaleString('he-IL')}</div>
-                                </div>` : ''}
-                            </div>
                             ${holdings.length > 0 ? `
-                            <div style="overflow-x:auto;margin-bottom:10px;">
+                            <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 8px;margin-bottom:10px;overflow-x:auto;">
                                 <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
                                     <colgroup>
                                         <col style="width:14%">
