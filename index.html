@@ -9073,14 +9073,14 @@
                 changeElement.className = 'total-change positive';
                 changeElement.innerHTML = `
                     <span>▲</span>
-                    <span dir="ltr">+₪${dailyChange.toLocaleString('he-IL', {maximumFractionDigits: 0})} (${changePercent.toFixed(1)}%)</span>
+                    <span dir="ltr">+₪${dailyChange.toLocaleString('he-IL', {maximumFractionDigits: 0})} (${changePercent.toFixed(2)}%)</span>
                     <span>היום</span>
                 `;
             } else {
                 changeElement.className = 'total-change negative';
                 changeElement.innerHTML = `
                     <span>▼</span>
-                    <span dir="ltr">-₪${Math.abs(dailyChange).toLocaleString('he-IL', {maximumFractionDigits: 0})} (${Math.abs(changePercent).toFixed(1)}%)</span>
+                    <span dir="ltr">-₪${Math.abs(dailyChange).toLocaleString('he-IL', {maximumFractionDigits: 0})} (${Math.abs(changePercent).toFixed(2)}%)</span>
                     <span>היום</span>
                 `;
             }
