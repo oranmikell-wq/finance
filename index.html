@@ -7716,13 +7716,14 @@
                 if (hasFundAssets) tasks.push(updateFundAssets());
                 if (hasGemelAssets) tasks.push(updateGemelAssets());
                 if (hasPensiaAssets) tasks.push(updatePensiaAssets());
-                applyPensiaMonthlyDeposits();
             var hasTradeStockAssets = assets.some(function(a) { return a.type === 'trade' && (a.stockTicker || (a.stockMode === 'portfolio' && a.holdings && a.holdings.length > 0)); });
             if (hasTradeStockAssets) tasks.push(updateTradeAssets());
 
                 // Snapshot assets before fetches to detect real changes
                 const _beforeFetch = JSON.stringify(assets);
                 await Promise.all(tasks);
+                // Apply monthly deposits AFTER API updates so they don't get overwritten
+                applyPensiaMonthlyDeposits();
                 // Only re-render if data actually changed
                 if (JSON.stringify(assets) !== _beforeFetch) {
                     updateUI();
@@ -7750,6 +7751,7 @@
             if (hasSpyAssets) await fetchSpyPrice();
 
             await updateFundAssets();
+            await updatePensiaAssets();
             applyPensiaMonthlyDeposits();
             updateUI();
         }
@@ -13386,6 +13388,8 @@
         }
 
         // ── Auto-apply monthly pension deposit on/after the 10th of each month ──
+        // Deposits are stored in pensiaAccumulatedDeposits (separate from pensiaBaseValue)
+        // so updatePensiaAssets can always add them back without risk of overwriting.
         function applyPensiaMonthlyDeposits() {
             var today = new Date();
             if (today.getDate() < 10) return; // before 10th — skip
@@ -13394,12 +13398,21 @@
             assets.forEach(function(a) {
                 if (a.type !== 'pension') return;
                 if (!(a.monthly > 0)) return;
+                // Migration: old broken run set pensiaLastDepositPeriod but stored deposit
+                // directly in value (which was then overwritten by API). Detect this by
+                // checking if pensiaAccumulatedDeposits is missing — means we never ran
+                // the accumulator model, so clear the period guard to re-apply correctly.
+                if (a.pensiaLastDepositPeriod === currentPeriod && a.pensiaAccumulatedDeposits == null) {
+                    delete a.pensiaLastDepositPeriod;
+                    console.log('[Pensia] 🔄 Migration: clearing stuck deposit period for', a.name);
+                }
                 if (a.pensiaLastDepositPeriod === currentPeriod) return; // already applied this month
                 var depositILS = toILS(a.monthly, a.monthlyCurrency || 'ILS');
-                a.value = Math.round((a.value || 0) + depositILS);
+                // Store in accumulator — NOT in value directly (API compound will add it back)
+                a.pensiaAccumulatedDeposits = Math.round((a.pensiaAccumulatedDeposits || 0) + depositILS);
                 a.pensiaLastDepositPeriod = currentPeriod;
                 changed = true;
-                console.log('[Pensia] 💰 Auto-deposit ₪' + Math.round(depositILS) + ' for period ' + currentPeriod + ' → asset: ' + a.name);
+                console.log('[Pensia] 💰 Auto-deposit ₪' + Math.round(depositILS) + ' for period ' + currentPeriod + ' → ' + a.name + ' (total accumulated: ₪' + a.pensiaAccumulatedDeposits.toLocaleString('he-IL') + ')');
             });
             if (changed) saveAssets();
             return changed;
@@ -13434,11 +13447,17 @@
                                 var computed = Math.round(x.pensiaBaseValue * compound);
                                 var lastPeriod = data.currentYearMonthly[data.currentYearMonthly.length - 1].period;
                                 var lastPeriodDisp = lastPeriod.length === 6 ? lastPeriod.slice(4) + '/' + lastPeriod.slice(0,4) : lastPeriod;
+                                // Add accumulated deposits (applied after base date) — never overwrite them
+                                if (x.pensiaAccumulatedDeposits > 0) {
+                                    computed += x.pensiaAccumulatedDeposits;
+                                }
                                 x.value = computed;
                                 x.pensiaComputedPeriod = lastPeriod;
                                 x.pensiaComputedMonths = data.currentYearMonthly.length;
                                 console.log('[Pensia] 📊 Computed from base ₪' + x.pensiaBaseValue.toLocaleString('he-IL')
-                                    + ' × ' + compound.toFixed(4) + ' (' + data.currentYearMonthly.length + ' months) = ₪' + computed.toLocaleString('he-IL'));
+                                    + ' × ' + compound.toFixed(4) + ' (' + data.currentYearMonthly.length + ' months)'
+                                    + (x.pensiaAccumulatedDeposits > 0 ? ' + ₪' + x.pensiaAccumulatedDeposits.toLocaleString('he-IL') + ' deposits' : '')
+                                    + ' = ₪' + computed.toLocaleString('he-IL'));
                             } else if (!x.pensiaBaseValue) {
                                 // Legacy: single-month auto-apply
                                 var newPeriod = data.periodRaw;
