@@ -1,5 +1,5 @@
 // Service Worker — Cache First for HTML (instant load), Network First for API
-var CACHE_VERSION = 'financier-v61';
+var CACHE_VERSION = 'financier-v62';
 
 var API_DOMAINS = [
     'finnhub.io',
@@ -55,11 +55,7 @@ self.addEventListener('activate', function(event) {
             );
         }).then(function() {
             return self.clients.claim();
-        }).then(function() {
-            // Tell all open tabs to reload so they get the new version immediately
-            return self.clients.matchAll({ type: 'window', includeUncontrolled: false });
-        }).then(function(clients) {
-            clients.forEach(function(c) { c.postMessage({ type: 'SW_UPDATED' }); });
+            // No forced reload — new version loads silently on next app open
         })
     );
 });
