@@ -92,7 +92,7 @@
             -webkit-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            overscroll-behavior-y: contain;
+            overscroll-behavior-y: none;
             overflow-x: clip;
         }
 
@@ -1884,9 +1884,49 @@
         .watchlist-item { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; margin-bottom:6px; }
         /* Alert item */
         .alert-item { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; margin-bottom:6px; font-size:0.8rem; }
+
+        /* ── Pull to Refresh ── */
+        #ptr-indicator {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(-64px);
+            width: 44px; height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            z-index: 9999;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .ptr-arrow {
+            font-size: 20px;
+            color: var(--text-secondary);
+            display: block;
+            transition: transform 0.15s ease;
+        }
+        .ptr-spinner {
+            display: none;
+            width: 20px; height: 20px;
+            border: 2.5px solid rgba(255,255,255,0.15);
+            border-top-color: #4dabf7;
+            border-radius: 50%;
+            animation: ptr-spin 0.65s linear infinite;
+        }
+        @keyframes ptr-spin { to { transform: rotate(360deg); } }
+        #ptr-indicator.ptr-loading .ptr-arrow { display: none; }
+        #ptr-indicator.ptr-loading .ptr-spinner { display: block; }
     </style>
 </head>
 <body data-tab="Dashboard">
+
+<!-- Pull to Refresh indicator -->
+<div id="ptr-indicator" aria-hidden="true">
+    <div class="ptr-arrow">↓</div>
+    <div class="ptr-spinner"></div>
+</div>
 
 <script>
 // Pre-load localStorage data synchronously before first paint — eliminates blank flash
@@ -7429,6 +7469,65 @@
         }
         document.addEventListener('touchend',    _clearPressed, { passive: true });
         document.addEventListener('touchcancel', _clearPressed, { passive: true });
+
+        // ── Pull to Refresh ──
+        (function() {
+            var ptrEl = document.getElementById('ptr-indicator');
+            if (!ptrEl) return;
+            var arrow = ptrEl.querySelector('.ptr-arrow');
+            var startY = 0, pulling = false, triggered = false;
+            var THRESHOLD = 75; // px to pull before triggering
+            var safeTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat') || '0') || 0;
+
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length !== 1) return;
+                if (window.scrollY > 0) return;
+                startY = e.touches[0].clientY;
+                pulling = true;
+                triggered = false;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!pulling) return;
+                var dy = e.touches[0].clientY - startY;
+                if (dy <= 0) { ptrEl.style.transform = ''; return; }
+                var progress = Math.min(dy / THRESHOLD, 1);
+                var yPos = -64 + progress * (64 + 20 + safeTop);
+                ptrEl.style.transform = 'translateX(-50%) translateY(' + Math.round(yPos) + 'px)';
+                if (arrow) arrow.style.transform = 'rotate(' + Math.round(progress * 180) + 'deg)';
+                triggered = dy >= THRESHOLD;
+            }, { passive: true });
+
+            document.addEventListener('touchend', function(e) {
+                if (!pulling) return;
+                pulling = false;
+                if (triggered) {
+                    ptrEl.classList.add('ptr-loading');
+                    ptrEl.style.transform = 'translateX(-50%) translateY(' + (20 + safeTop) + 'px)';
+                    // Refresh all data
+                    Promise.all([
+                        updateAllRates(),
+                        updateTradeAssets(),
+                        updateGemelAssets()
+                    ]).catch(function() {}).finally(function() {
+                        setTimeout(function() {
+                            ptrEl.classList.remove('ptr-loading');
+                            ptrEl.style.transform = '';
+                            if (arrow) arrow.style.transform = '';
+                        }, 600);
+                    });
+                } else {
+                    ptrEl.style.transform = '';
+                    if (arrow) arrow.style.transform = '';
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchcancel', function() {
+                pulling = false;
+                ptrEl.style.transform = '';
+                if (arrow) arrow.style.transform = '';
+            }, { passive: true });
+        })();
 
         // Check if rate needs update (every 2 hours, retry in 1 min on failure)
         async function checkAndUpdateRate() {
