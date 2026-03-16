@@ -1965,7 +1965,7 @@
 </script>
 
     <!-- ── Login Overlay ── starts visible; hidden only after auth confirmed -->
-    <div id="loginOverlay">
+    <div id="loginOverlay" class="hidden">
         <div class="login-card">
             <img src="./icon-light.png" alt="Financier" class="login-logo" onerror="this.style.display='none'">
             <div class="login-title">Financier</div>
@@ -12870,21 +12870,9 @@
             window.location.reload();
         }
 
-        // Boot: check session → show app or login
+        // Boot: always open app directly — login/passkey is optional (available in Settings)
         (function _authBoot() {
-            // Skip auth in local dev environments (localhost / file://)
-            var host = window.location.hostname;
-            var isLocal = !host || host === 'localhost' || host === '127.0.0.1';
-            if (isLocal) {
-                _showApp();
-                return;
-            }
-            var session = _getAuthSession();
-            if (session) {
-                _showApp();
-            } else {
-                _showLogin();
-            }
+            _showApp();
         })();
         // ── END Google Authentication ──────────────────────────────────────────
 
