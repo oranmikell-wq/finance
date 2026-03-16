@@ -7476,7 +7476,7 @@
             if (!ptrEl) return;
             var arrow = ptrEl.querySelector('.ptr-arrow');
             var startY = 0, pulling = false, triggered = false;
-            var THRESHOLD = 75; // px to pull before triggering
+            var THRESHOLD = 120; // px to pull before triggering — requires a strong deliberate pull
             var safeTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat') || '0') || 0;
 
             document.addEventListener('touchstart', function(e) {
