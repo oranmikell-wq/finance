@@ -12920,7 +12920,7 @@
                         // Keep only datastore-active resources, sorted newest first
                         var ids = pkg.result.resources
                             .filter(function(r) { return r.datastore_active; })
-                            .sort(function(a, b) { return (b.created || '').localeCompare(a.created || ''); })
+                            .sort(function(a, b) { return (b.last_modified || '').localeCompare(a.last_modified || ''); })
                             .map(function(r) { return r.id; })
                             .slice(0, 6); // up to 6 newest
                         // Append known fallbacks that weren't discovered
