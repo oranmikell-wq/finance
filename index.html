@@ -13125,27 +13125,39 @@
                 return (pb || '').localeCompare(pa || '');
             });
 
-            var parsed = _parseGemelRecords([kupahRecords[0]]);
+            // ── Deduplicate by period ──
+            // Gemel funds can have multiple tracks (maslulim) per period — keep one per month
+            var _gemelSeenPeriods = {};
+            var kupahDedup = [];
+            kupahRecords.forEach(function(rec) {
+                var p = String(_extractPeriod(rec) || '').trim();
+                if (p && !_gemelSeenPeriods[p]) { _gemelSeenPeriods[p] = true; kupahDedup.push(rec); }
+            });
+            console.log('[Gemel] deduplicated:', kupahDedup.length, 'unique periods (from', kupahRecords.length, 'records)');
+
+            var parsed = _parseGemelRecords([kupahDedup[0]]);
             if (parsed && parsed.length > 0) {
-                var mf = _findMonthlyReturnField(Object.keys(kupahRecords[0]), kupahRecords[0]);
-                if (mf && kupahRecords.length >= 2) {
-                    // ── Compute trailing 12-month annual return ──
-                    var last12 = kupahRecords.slice(0, 12).reverse();
+                var mf = _findMonthlyReturnField(Object.keys(kupahDedup[0]), kupahDedup[0]);
+                if (mf && kupahDedup.length >= 2) {
+                    // ── Compute trailing 12-month annual return (from deduplicated records) ──
+                    var last12 = kupahDedup.slice(0, 12).reverse();
                     var vals = last12.map(function(r) {
                         return parseFloat(String(r[mf] || '').replace(',', '.'));
                     }).filter(function(v) { return !isNaN(v); });
-                    if (vals.length >= 6) {
+                    if (vals.length >= 12) {
+                        // Full 12 months — exact compound return
                         var compound = vals.reduce(function(acc, m) { return acc * (1 + m / 100); }, 1);
-                        var annual = vals.length < 12
-                            ? (Math.pow(compound, 12 / vals.length) - 1) * 100
-                            : (compound - 1) * 100;
-                        parsed[0].yearlyReturn = Math.round(annual * 100) / 100;
+                        parsed[0].yearlyReturn = Math.round((compound - 1) * 10000) / 100;
+                    } else if (vals.length >= 6) {
+                        // 6–11 months — annualize
+                        var compound = vals.reduce(function(acc, m) { return acc * (1 + m / 100); }, 1);
+                        parsed[0].yearlyReturn = Math.round((Math.pow(compound, 12 / vals.length) - 1) * 10000) / 100;
                     }
+                    // < 6 months: don't show yearly (too unreliable)
 
-                    // ── Compute YTD from monthly returns for current year ──
-                    // (more reliable than relying on YEAR_TO_DATE_YIELD field)
+                    // ── Compute YTD from current-year months (deduplicated) ──
                     var currentYear = new Date().getFullYear().toString();
-                    var ytdRecords = kupahRecords.filter(function(rec) {
+                    var ytdRecords = kupahDedup.filter(function(rec) {
                         var p = String(_extractPeriod(rec) || '');
                         return p.startsWith(currentYear);
                     }).sort(function(a, b) {
@@ -13156,10 +13168,9 @@
                             var v = parseFloat(String(rec[mf] || '').replace(',', '.'));
                             return isNaN(v) ? acc : acc * (1 + v / 100);
                         }, 1);
-                        var computedYtd = Math.round((ytdCompound - 1) * 10000) / 100;
-                        // Override parsed YTD only if we computed at least 1 month
-                        parsed[0].ytdReturn = computedYtd;
-                        console.log('[Gemel] YTD from', ytdRecords.length, 'months (' + currentYear + '):', computedYtd + '%');
+                        parsed[0].ytdReturn = Math.round((ytdCompound - 1) * 10000) / 100;
+                        console.log('[Gemel] YTD from', ytdRecords.length, 'months (' + currentYear + '):', parsed[0].ytdReturn + '%',
+                            ytdRecords.map(function(r){return _extractPeriod(r)+':'+r[mf]+'%';}).join(', '));
                     }
                 }
                 return parsed;
@@ -13259,12 +13270,18 @@
                 ]);
 
                 // ── Management fee ──
+                // DMEI_NIHUL_TZEVIRA = accumulation (מצבירה), DMEI_NIHUL = deposit (מהפקדה)
                 var fee = fldNum([
-                    'AVG_ANNUAL_MANAGEMENT_FEE',
-                    'DMEI_NIHUL_NITZEVET','DMEI_NIHUL','FEE',
+                    'DMEI_NIHUL_TZEVIRA',          // accumulation fee — most specific
+                    'AVG_ANNUAL_MANAGEMENT_FEE',   // data.gov.il standard field
+                    'DMEI_NIHUL_NITZEVET','FEE',
                 ]);
                 if (fee !== null && fee > 10) fee = null;
-                var feeHafkada = fldNum(['DMEI_NIHUL_HAFKADA','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA']);
+                var feeHafkada = fldNum([
+                    'DMEI_NIHUL_HAFKADA',          // deposit fee
+                    'DMEI_NIHUL',                  // often maps to deposit fee
+                    'DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA',
+                ]);
                 if (feeHafkada !== null && feeHafkada > 10) feeHafkada = null;
 
                 // ── Period ──
@@ -13759,10 +13776,21 @@
                 periodDisplay = periodStr.slice(4) + '/' + periodStr.slice(0, 4);
             }
 
+            // ── Deduplicate filtered records by period (one record per month) ──
+            // Some funds have multiple maslulim (tracks), each with its own row per period.
+            // We keep one record per unique period (the first one encountered after sort).
+            var _seenPeriods = {};
+            var filteredDedup = [];
+            filtered.forEach(function(rec) {
+                var p = String(rec.REPORT_PERIOD || rec.TKUFA || '').trim();
+                if (p && !_seenPeriods[p]) { _seenPeriods[p] = true; filteredDedup.push(rec); }
+            });
+            console.log('[Pensia] filteredDedup:', filteredDedup.length, 'unique periods (from', filtered.length, 'raw records)');
+
             // Compute trailing 12-month compounded return from monthly yields
             var trailing12 = null;
             var trailing12Source = null;
-            var monthlyRecords = filtered.slice(0, 12); // up to 12 most recent months
+            var monthlyRecords = filteredDedup.slice(0, 12); // up to 12 most recent unique months
             if (monthlyRecords.length >= 1) {
                 var compound = 1;
                 var validMonths = 0;
@@ -13779,21 +13807,26 @@
                 console.log('[Pensia] Monthly data for trailing calc:', monthDetails.join(', '));
                 console.log('[Pensia] compound factor:', compound, 'validMonths:', validMonths);
                 if (validMonths >= 3) {
-                    // Annualize if less than 12 months
-                    trailing12 = validMonths < 12
-                        ? (Math.pow(compound, 12 / validMonths) - 1) * 100
-                        : (compound - 1) * 100;
-                    trailing12 = Math.round(trailing12 * 100) / 100;
-                    trailing12Source = validMonths + ' חודשים' + (validMonths < 12 ? ' (מנורמל שנתי)' : '');
+                    // Only annualize if we have less than 12 months (and at least 6)
+                    // Don't extrapolate from fewer than 6 months — too noisy
+                    trailing12 = validMonths >= 12
+                        ? (compound - 1) * 100
+                        : validMonths >= 6
+                            ? (Math.pow(compound, 12 / validMonths) - 1) * 100
+                            : null; // too few months to annualize reliably
+                    if (trailing12 !== null) {
+                        trailing12 = Math.round(trailing12 * 100) / 100;
+                        trailing12Source = validMonths + ' חודשים' + (validMonths < 12 ? ' (מנורמל שנתי)' : '');
+                    }
                 }
             }
-            console.log('[Pensia] trailing12:', trailing12, 'source:', trailing12Source, 'records available:', filtered.length);
+            console.log('[Pensia] trailing12:', trailing12, 'source:', trailing12Source, 'records available:', filteredDedup.length);
 
             var monthlyReturn = fldNum(['MONTHLY_YIELD','TSUA_HODSHIT','TSUA_HOD']);
 
-            // Build current-year monthly array (sorted Jan→latest)
+            // Build current-year monthly array (sorted Jan→latest) — deduplicated by period
             var currentYear = new Date().getFullYear().toString(); // e.g. "2026"
-            var currentYearMonthly = filtered.filter(function(rec) {
+            var currentYearMonthly = filteredDedup.filter(function(rec) {
                 var p = String(rec.REPORT_PERIOD || rec.TKUFA || '');
                 return p.startsWith(currentYear);
             }).map(function(rec) {
@@ -13809,6 +13842,7 @@
                 var ytdCompound = 1;
                 currentYearMonthly.forEach(function(m) { ytdCompound *= (1 + m.yield / 100); });
                 ytdReturn = Math.round((ytdCompound - 1) * 10000) / 100;
+                console.log('[Pensia] YTD from', currentYearMonthly.length, 'months (', currentYearMonthly.map(function(m){return m.period+':'+m.yield+'%';}).join(', '), ') =', ytdReturn + '%');
             }
 
             return {
@@ -13819,8 +13853,10 @@
                 ytdReturn:       ytdReturn,
                 yearlyReturnSource: trailing12Source,
                 threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
-                fee:             fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET','DMEI_NIHUL']),
-                feeHafkada:      fldNum(['DMEI_NIHUL_HAFKADA','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA']),
+                // ד.נ. מצבירה: DMEI_NIHUL_TZEVIRA is the accumulation fee
+                fee:             fldNum(['DMEI_NIHUL_TZEVIRA','AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET']),
+                // ד.נ. מהפקדה: DMEI_NIHUL is the deposit fee (per research)
+                feeHafkada:      fldNum(['DMEI_NIHUL_HAFKADA','DMEI_NIHUL','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA']),
                 period:          periodDisplay || null,
                 periodRaw:       periodStr || null,
                 recordsAvailable: filtered.length,
