@@ -13278,9 +13278,8 @@
                 ]);
                 if (fee !== null && fee > 10) fee = null;
                 var feeHafkada = fldNum([
-                    'DMEI_NIHUL_HAFKADA',          // deposit fee
-                    'DMEI_NIHUL',                  // often maps to deposit fee
-                    'DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA',
+                    'AVG_DEPOSIT_FEE',             // actual field name in data.gov.il
+                    'DMEI_NIHUL_HAFKADA','DMEI_NIHUL','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE',
                 ]);
                 if (feeHafkada !== null && feeHafkada > 10) feeHafkada = null;
 
@@ -13854,9 +13853,8 @@
                 yearlyReturnSource: trailing12Source,
                 threeYearReturn: fldNum(['YIELD_TRAILING_3_YRS','TSUA_3']),
                 // ד.נ. מצבירה: DMEI_NIHUL_TZEVIRA is the accumulation fee
-                fee:             fldNum(['DMEI_NIHUL_TZEVIRA','AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET']),
-                // ד.נ. מהפקדה: DMEI_NIHUL is the deposit fee (per research)
-                feeHafkada:      fldNum(['DMEI_NIHUL_HAFKADA','DMEI_NIHUL','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE','DMEI_NIHUL_MEH_HAFKADA']),
+                fee:             fldNum(['AVG_ANNUAL_MANAGEMENT_FEE','DMEI_NIHUL_NITZEVET']),
+                feeHafkada:      fldNum(['AVG_DEPOSIT_FEE','DMEI_NIHUL_HAFKADA','DMEI_NIHUL_HPKADA','DEPOSIT_MANAGEMENT_FEE']),
                 period:          periodDisplay || null,
                 periodRaw:       periodStr || null,
                 recordsAvailable: filtered.length,
