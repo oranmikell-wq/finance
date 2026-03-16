@@ -12875,9 +12875,16 @@
             window.location.reload();
         }
 
-        // Boot: always open app directly — biometric is optional (available in Settings)
+        // Boot: open directly unless user explicitly enabled biometric lock via Settings toggle
         (function _authBoot() {
-            _showApp();
+            if (_hasPasskey() && _webAuthnSupported()) {
+                var overlay = document.getElementById('loginOverlay');
+                if (overlay) overlay.classList.remove('hidden');
+                _updateLoginPasskeyUI();
+                setTimeout(loginWithPasskey, 300);
+            } else {
+                _showApp();
+            }
         })();
         // ── END Google Authentication ──────────────────────────────────────────
 
