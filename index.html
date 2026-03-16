@@ -7490,30 +7490,17 @@
             document.addEventListener('touchmove', function(e) {
                 if (!pulling) return;
                 var dy = e.touches[0].clientY - startY;
-                if (dy <= 0) {
-                    ptrEl.style.transform = '';
-                    document.body.style.transform = '';
-                    document.body.style.transition = '';
-                    return;
-                }
+                if (dy <= 0) { ptrEl.style.transform = ''; return; }
                 // passive:false + preventDefault מונע את ה-bounce הטבעי של iOS
                 if (e.cancelable) e.preventDefault();
                 var progress = Math.min(dy / THRESHOLD, 1);
-                // דמוי spring: התוכן יורד לאט יותר ממה שהאצבע זזה
-                var bodyShift = Math.round(progress * 64);
                 var yPos = -64 + progress * (64 + 20 + safeTop);
                 ptrEl.style.transform = 'translateX(-50%) translateY(' + Math.round(yPos) + 'px)';
-                document.body.style.transition = 'none';
-                document.body.style.transform = 'translateY(' + bodyShift + 'px)';
                 if (arrow) arrow.style.transform = 'rotate(' + Math.round(progress * 180) + 'deg)';
                 triggered = dy >= THRESHOLD;
             }, { passive: false }); // passive:false חובה ב-iOS
 
-            function _resetBody() {
-                document.body.style.transition = 'transform 0.25s ease';
-                document.body.style.transform = '';
-                setTimeout(function() { document.body.style.transition = ''; }, 260);
-            }
+            function _resetBody() { /* no-op — body stays fixed, no gap */ }
 
             document.addEventListener('touchend', function(e) {
                 if (!pulling) return;
