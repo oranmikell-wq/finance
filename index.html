@@ -12888,10 +12888,7 @@
             // Listen for SW_UPDATED from newly-activated service worker → reload immediately
             var _swReloading = false;
             navigator.serviceWorker.addEventListener('message', function(e) {
-                if (e.data && e.data.type === 'SW_UPDATED' && !_swReloading) {
-                    _swReloading = true;
-                    window.location.reload();
-                }
+                // SW_UPDATED — no forced reload, new version loads on next app open
             });
 
             window.addEventListener('load', () => {
