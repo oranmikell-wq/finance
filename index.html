@@ -2289,7 +2289,23 @@
             </div>
             </div><!-- end chart-card -->
 
-            <!-- Account / Sign-Out Section -->
+            <!-- Security Section — always visible -->
+            <div class="chart-card">
+                <div style="font-size:0.7rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.06em;margin-bottom:10px;">🔒 אבטחה</div>
+                <div id="passkeySettingsRow" class="settings-row">
+                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg></div>
+                    <div class="settings-row-info">
+                        <div class="settings-row-title" id="passkeySettingsTitle">נעילה עם <span class="biometric-label">אימות ביומטרי</span></div>
+                        <div class="settings-row-desc">חייב אימות בכל כניסה לאפליקציה</div>
+                    </div>
+                    <div onclick="togglePasskeySetting()" style="position:relative;width:44px;height:26px;flex-shrink:0;cursor:pointer;">
+                        <div id="passkeyToggleTrack" style="position:absolute;inset:0;border-radius:13px;background:rgba(255,255,255,0.15);transition:background 0.25s ease;"></div>
+                        <div id="passkeyToggleThumb" style="position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left 0.25s ease;left:3px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Section — hidden unless Google session active -->
             <div class="chart-card" id="accountSection" style="display:none;">
                 <div id="accountInfoRow" class="settings-row" style="pointer-events:none;cursor:default;">
                     <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);overflow:hidden;padding:0;">
@@ -2301,25 +2317,6 @@
                         <div class="settings-row-desc" id="accountEmail" style="font-size:0.72rem;"></div>
                     </div>
                 </div>
-                <!-- Face ID toggle row -->
-                <div id="passkeySettingsRow" class="settings-row" style="margin-top:8px;">
-                    <div class="settings-row-icon" style="background:rgba(99,102,241,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg></div>
-                    <div class="settings-row-info">
-                        <div class="settings-row-title" id="passkeySettingsTitle">כניסה עם <span class="biometric-label">אימות ביומטרי</span></div>
-                    </div>
-                    <!-- Toggle switch — only interactive element -->
-                    <div onclick="togglePasskeySetting()" style="position:relative;width:44px;height:26px;flex-shrink:0;cursor:pointer;">
-                        <div id="passkeyToggleTrack" style="position:absolute;inset:0;border-radius:13px;background:rgba(255,255,255,0.15);transition:background 0.25s ease;"></div>
-                        <div id="passkeyToggleThumb" style="position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left 0.25s ease;left:3px;"></div>
-                    </div>
-                </div>
-                <button onclick="signOutGoogle()" class="settings-row" style="border-color:rgba(239,68,68,0.15);margin-top:8px;">
-                    <div class="settings-row-icon" style="background:rgba(239,68,68,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg></div>
-                    <div class="settings-row-info">
-                        <div class="settings-row-title" style="color:var(--accent-red);">התנתקות</div>
-                    </div>
-                    <div class="settings-row-arrow">›</div>
-                </button>
             </div>
 
             <!-- About Section -->
@@ -12870,9 +12867,19 @@
             window.location.reload();
         }
 
-        // Boot: always open app directly — login/passkey is optional (available in Settings)
+        // Boot: open app directly unless biometric lock is enabled
         (function _authBoot() {
-            _showApp();
+            if (_hasPasskey() && _webAuthnSupported()) {
+                // Biometric lock is ON — require authentication
+                var overlay = document.getElementById('loginOverlay');
+                if (overlay) overlay.classList.remove('hidden');
+                _updateLoginPasskeyUI();
+                // Auto-trigger Face ID immediately
+                setTimeout(loginWithPasskey, 300);
+            } else {
+                // No lock — open directly
+                _showApp();
+            }
         })();
         // ── END Google Authentication ──────────────────────────────────────────
 
