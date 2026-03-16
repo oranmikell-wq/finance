@@ -12878,8 +12878,66 @@
             '85381d5c-77f7-4071-8f15-33d494722f8c',
         ];
 
-        // Will be populated dynamically from package_show
+        // In-memory cache for dynamically discovered resource IDs (per package)
         var _gemelResourceCache = null;
+        var _govResourceIds = {}; // { 'gemelnet': { ids:[...], ts:0 }, 'pensia-net': { ids:[...], ts:0 } }
+
+        // Discover the latest resource IDs from data.gov.il package_show.
+        // data.gov.il publishes a NEW resource_id each time they release a new month's data,
+        // so hardcoded IDs go stale. This function always fetches the current list.
+        async function _getLatestGovResourceIds(packageId, fallbackIds) {
+            var TTL = 4 * 60 * 60 * 1000; // re-discover every 4 hours
+            var mem = _govResourceIds[packageId];
+            if (mem && (Date.now() - mem.ts) < TTL) return mem.ids;
+
+            // Also try localStorage cache
+            try {
+                var lsKey = 'gov-resource-ids-' + packageId;
+                var lsRaw = localStorage.getItem(lsKey);
+                if (lsRaw) {
+                    var lsParsed = JSON.parse(lsRaw);
+                    if (lsParsed && lsParsed.ids && (Date.now() - lsParsed.ts) < TTL) {
+                        _govResourceIds[packageId] = lsParsed;
+                        return lsParsed.ids;
+                    }
+                }
+            } catch(e) {}
+
+            var BASE = 'https://data.gov.il/api/3/action/package_show?id=' + packageId;
+            var PROXIES = [
+                function(u) { return u; },
+                function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+                function(u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+            ];
+
+            for (var pi = 0; pi < PROXIES.length; pi++) {
+                try {
+                    var resp = await _fetchWithTimeout(PROXIES[pi](BASE), { headers: { 'Accept': 'application/json' } }, 10000);
+                    if (!resp.ok) continue;
+                    var rawJ = await resp.json();
+                    var pkg = (rawJ && rawJ.contents) ? JSON.parse(rawJ.contents) : rawJ;
+                    if (pkg && pkg.success && pkg.result && pkg.result.resources) {
+                        // Keep only datastore-active resources, sorted newest first
+                        var ids = pkg.result.resources
+                            .filter(function(r) { return r.datastore_active; })
+                            .sort(function(a, b) { return (b.created || '').localeCompare(a.created || ''); })
+                            .map(function(r) { return r.id; })
+                            .slice(0, 6); // up to 6 newest
+                        // Append known fallbacks that weren't discovered
+                        fallbackIds.forEach(function(id) { if (ids.indexOf(id) === -1) ids.push(id); });
+                        if (ids.length > 0) {
+                            var entry = { ids: ids, ts: Date.now() };
+                            _govResourceIds[packageId] = entry;
+                            try { localStorage.setItem('gov-resource-ids-' + packageId, JSON.stringify(entry)); } catch(e) {}
+                            console.log('[GovAPI] package_show (' + packageId + ') → ' + ids.length + ' resources:', ids.slice(0,3).join(', ') + '...');
+                            return ids;
+                        }
+                    }
+                } catch(e) { console.warn('[GovAPI] package_show proxy', pi, 'failed for', packageId, ':', e.message); }
+            }
+            console.warn('[GovAPI] package_show failed for', packageId, '— using fallback IDs');
+            return fallbackIds;
+        }
 
         // sug parameter for gemelnet XML fallback
         var GEMEL_TYPE_SUG = { gemel: '4', hashtalamut: '3', kupat: '1' };
@@ -13000,15 +13058,18 @@
             ];
             var json = null;
 
+            // Discover latest resource IDs dynamically — data.gov.il creates new IDs monthly
+            var resourceIds = await _getLatestGovResourceIds('gemelnet', GEMELNET_KNOWN_IDS);
+
             // Use exact FUND_ID filter + sort by REPORT_PERIOD descending
             var filters = JSON.stringify({ 'FUND_ID': parseInt(kupahNum, 10) });
             var sortParam = '&sort=REPORT_PERIOD+desc';
 
-            for (var ri = 0; ri < GEMELNET_KNOWN_IDS.length && !json; ri++) {
-                var baseUrl = BASE + '?resource_id=' + GEMELNET_KNOWN_IDS[ri]
+            for (var ri = 0; ri < resourceIds.length && !json; ri++) {
+                var baseUrl = BASE + '?resource_id=' + resourceIds[ri]
                     + '&filters=' + encodeURIComponent(filters)
-                    + sortParam + '&limit=24';
-                console.log('[Gemel] Trying exact filter for FUND_ID:', kupahNum, 'resource:', GEMELNET_KNOWN_IDS[ri]);
+                    + sortParam + '&limit=36';
+                console.log('[Gemel] Trying exact filter for FUND_ID:', kupahNum, 'resource:', resourceIds[ri]);
 
                 for (var pi = 0; pi < PROXIES.length && !json; pi++) {
                     try {
@@ -13025,8 +13086,8 @@
 
                 // Fallback: free-text search if exact filter returned nothing
                 if (!json) {
-                    var fallbackUrl = BASE + '?resource_id=' + GEMELNET_KNOWN_IDS[ri]
-                        + '&q=' + encodeURIComponent(kupahNum) + '&limit=24';
+                    var fallbackUrl = BASE + '?resource_id=' + resourceIds[ri]
+                        + '&q=' + encodeURIComponent(kupahNum) + '&limit=36';
                     for (var pi2 = 0; pi2 < PROXIES.length && !json; pi2++) {
                         try {
                             var r2 = await _fetchWithTimeout(PROXIES[pi2](fallbackUrl), { headers: { 'Accept': 'application/json' } }, 15000);
@@ -13066,9 +13127,9 @@
 
             var parsed = _parseGemelRecords([kupahRecords[0]]);
             if (parsed && parsed.length > 0) {
-                // Compute annual return from monthly values if we have enough months
                 var mf = _findMonthlyReturnField(Object.keys(kupahRecords[0]), kupahRecords[0]);
-                if (mf && kupahRecords.length >= 6) {
+                if (mf && kupahRecords.length >= 2) {
+                    // ── Compute trailing 12-month annual return ──
                     var last12 = kupahRecords.slice(0, 12).reverse();
                     var vals = last12.map(function(r) {
                         return parseFloat(String(r[mf] || '').replace(',', '.'));
@@ -13079,6 +13140,26 @@
                             ? (Math.pow(compound, 12 / vals.length) - 1) * 100
                             : (compound - 1) * 100;
                         parsed[0].yearlyReturn = Math.round(annual * 100) / 100;
+                    }
+
+                    // ── Compute YTD from monthly returns for current year ──
+                    // (more reliable than relying on YEAR_TO_DATE_YIELD field)
+                    var currentYear = new Date().getFullYear().toString();
+                    var ytdRecords = kupahRecords.filter(function(rec) {
+                        var p = String(_extractPeriod(rec) || '');
+                        return p.startsWith(currentYear);
+                    }).sort(function(a, b) {
+                        return (_extractPeriod(a) || '').localeCompare(_extractPeriod(b) || '');
+                    });
+                    if (ytdRecords.length > 0) {
+                        var ytdCompound = ytdRecords.reduce(function(acc, rec) {
+                            var v = parseFloat(String(rec[mf] || '').replace(',', '.'));
+                            return isNaN(v) ? acc : acc * (1 + v / 100);
+                        }, 1);
+                        var computedYtd = Math.round((ytdCompound - 1) * 10000) / 100;
+                        // Override parsed YTD only if we computed at least 1 month
+                        parsed[0].ytdReturn = computedYtd;
+                        console.log('[Gemel] YTD from', ytdRecords.length, 'months (' + currentYear + '):', computedYtd + '%');
                     }
                 }
                 return parsed;
@@ -13580,9 +13661,12 @@
 
         async function fetchPensiaFromGovAPI(kupahNum) {
             // pensia-net dataset on data.gov.il
-            var PENSIA_RESOURCE_IDS = [
+            // data.gov.il publishes a new resource_id each month — use dynamic discovery
+            var PENSIA_FALLBACK_IDS = [
                 '6d47d6b5-cb08-488b-b333-f1e717b1e1bd',
             ];
+            var PENSIA_RESOURCE_IDS = await _getLatestGovResourceIds('pensia-net', PENSIA_FALLBACK_IDS);
+
             var BASE = 'https://data.gov.il/api/3/action/datastore_search';
             var PROXIES = [
                 function(u) { return u; },
@@ -13597,8 +13681,8 @@
             for (var ri = 0; ri < PENSIA_RESOURCE_IDS.length && !json; ri++) {
                 var exactUrl = BASE + '?resource_id=' + PENSIA_RESOURCE_IDS[ri]
                     + '&filters=' + encodeURIComponent(filters)
-                    + sortParam + '&limit=24';
-                console.log('[Pensia] Trying exact filter for FUND_ID:', kupahNum);
+                    + sortParam + '&limit=36';
+                console.log('[Pensia] Trying exact filter for FUND_ID:', kupahNum, 'resource:', PENSIA_RESOURCE_IDS[ri]);
 
                 for (var pi = 0; pi < PROXIES.length && !json; pi++) {
                     try {
@@ -13608,7 +13692,7 @@
                         var candidate = (rawJ && rawJ.contents) ? JSON.parse(rawJ.contents) : rawJ;
                         if (candidate && candidate.success && candidate.result && candidate.result.records && candidate.result.records.length > 0) {
                             json = candidate;
-                            console.log('[Pensia] ✅ exact filter worked — proxy', pi, 'records:', candidate.result.records.length);
+                            console.log('[Pensia] ✅ exact filter worked — proxy', pi, 'resource', ri, 'records:', candidate.result.records.length);
                         }
                     } catch(e) { console.warn('[Pensia] proxy', pi, 'failed:', e.message); }
                 }
@@ -13616,7 +13700,7 @@
                 // Fallback: free-text search
                 if (!json) {
                     var fbUrl = BASE + '?resource_id=' + PENSIA_RESOURCE_IDS[ri]
-                        + '&q=' + encodeURIComponent(kupahNum) + '&limit=24';
+                        + '&q=' + encodeURIComponent(kupahNum) + '&limit=36';
                     for (var pi2 = 0; pi2 < PROXIES.length && !json; pi2++) {
                         try {
                             var r2 = await _fetchWithTimeout(PROXIES[pi2](fbUrl), { headers: {'Accept':'application/json'} }, 15000);
