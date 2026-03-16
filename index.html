@@ -7506,17 +7506,33 @@
                 if (triggered) {
                     ptrEl.classList.add('ptr-loading');
                     ptrEl.style.transform = 'translateX(-50%) translateY(' + (20 + safeTop) + 'px)';
-                    // Refresh all data
+
+                    function _hidePTR() {
+                        ptrEl.classList.remove('ptr-loading');
+                        ptrEl.style.transform = '';
+                        if (arrow) arrow.style.transform = '';
+                    }
+
+                    // Hard cap — תמיד מסתיר אחרי 8 שניות גם אם fetch נתקע
+                    var _ptrHardTimeout = setTimeout(_hidePTR, 8000);
+
+                    // נקה cache של resource IDs כדי שפנסיה/גמל יביאו נתונים טריים
+                    try {
+                        localStorage.removeItem('gov-resource-ids-gemelnet');
+                        localStorage.removeItem('gov-resource-ids-pensia-net');
+                        if (typeof _govResourceIds !== 'undefined') {
+                            delete _govResourceIds['gemelnet'];
+                            delete _govResourceIds['pensia-net'];
+                        }
+                    } catch(e) {}
+
                     Promise.all([
                         updateAllRates(),
                         updateTradeAssets(),
                         updateGemelAssets()
                     ]).catch(function() {}).finally(function() {
-                        setTimeout(function() {
-                            ptrEl.classList.remove('ptr-loading');
-                            ptrEl.style.transform = '';
-                            if (arrow) arrow.style.transform = '';
-                        }, 600);
+                        clearTimeout(_ptrHardTimeout);
+                        setTimeout(_hidePTR, 400);
                     });
                 } else {
                     ptrEl.style.transform = '';
