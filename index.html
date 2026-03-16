@@ -12886,7 +12886,7 @@
         // data.gov.il publishes a NEW resource_id each time they release a new month's data,
         // so hardcoded IDs go stale. This function always fetches the current list.
         async function _getLatestGovResourceIds(packageId, fallbackIds) {
-            var TTL = 4 * 60 * 60 * 1000; // re-discover every 4 hours
+            var TTL = 30 * 60 * 1000; // re-discover every 30 minutes (new monthly data can appear any time)
             var mem = _govResourceIds[packageId];
             if (mem && (Date.now() - mem.ts) < TTL) return mem.ids;
 
