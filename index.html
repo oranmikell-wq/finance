@@ -3093,8 +3093,12 @@
                         <div id="budgetDonutLegend" style="flex:1;font-size:0.68rem;display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;"></div>
                     </div>
                 </div>
+                <!-- Smart alerts -->
+                <div id="budgetAlertsSection" style="display:none;padding:0 16px 10px;"></div>
                 <!-- Summary pills -->
-                <div id="budgetSummaryRow" style="display:none;gap:6px;padding:0 16px 14px;"></div>
+                <div id="budgetSummaryRow" style="display:none;gap:6px;padding:0 16px 10px;"></div>
+                <!-- Cash flow projection -->
+                <div id="budgetCashFlow" style="display:none;padding:10px 16px 14px;border-top:1px solid var(--border-color);"></div>
                 <!-- Hidden -->
                 <input type="hidden" id="profileExpenses">
             </div>
@@ -6452,6 +6456,8 @@
                     healthSection.style.display = 'block';
                     calcBudgetHealthScore(totalIncome, totalExp, totalSavings, allExp);
                     render5030(totalIncome, allExp, totalSavings);
+                    renderBudgetAlerts(totalIncome, totalExp, totalSavings, allExp);
+                    renderCashFlow(totalIncome, totalExp, totalSavings);
                 } else if (healthSection) {
                     healthSection.style.display = 'none';
                 }
@@ -6527,6 +6533,81 @@
         function updateBudgetIncomeAmount(id, val) {
             var row = budgetAdditionalIncome.find(function(r){ return r.id===id; });
             if (row) { row.amount = parseNum({value:val}); saveProfile(); calcExpenses(); }
+        }
+
+        // ── Feature 1: Cash Flow Projection ──────────────────────────────────────
+        function renderCashFlow(totalIncome, totalExp, totalSavings) {
+            var el = document.getElementById('budgetCashFlow');
+            if (!el) return;
+            if (totalIncome <= 0) { el.style.display = 'none'; return; }
+
+            var now = new Date();
+            var day = now.getDate();
+            var daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            var daysLeft = daysInMonth - day;
+            var pctMonth = Math.round(day / daysInMonth * 100);
+
+            var disposable = totalIncome - totalExp - totalSavings;
+            var dailyAllowance = disposable > 0 ? Math.round(disposable / daysInMonth) : 0;
+            var remainingBudget = Math.round(disposable * (daysLeft / daysInMonth));
+            var isNeg = remainingBudget < 0;
+
+            el.style.display = 'block';
+            el.innerHTML =
+                '<div class="budget-section-label" style="margin-bottom:8px;">📅 תזרים חודשי</div>'+
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'+
+                    '<span style="font-size:0.7rem;color:var(--text-secondary);">יום '+day+' מתוך '+daysInMonth+'</span>'+
+                    '<span style="font-size:0.7rem;color:var(--text-secondary);">נשארו '+daysLeft+' ימים</span>'+
+                '</div>'+
+                '<div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden;margin-bottom:10px;">'+
+                    '<div style="height:100%;width:'+pctMonth+'%;background:var(--accent-gold);border-radius:3px;transition:width 0.4s;"></div>'+
+                '</div>'+
+                '<div style="display:flex;gap:8px;">'+
+                    '<div style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:10px;padding:8px;text-align:center;">'+
+                        '<div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:2px;">קצבה יומית</div>'+
+                        '<div style="font-size:0.82rem;font-weight:700;color:'+(dailyAllowance>0?'var(--accent-green)':'var(--accent-red)')+';">₪'+Math.abs(dailyAllowance).toLocaleString('he-IL')+'</div>'+
+                    '</div>'+
+                    '<div style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:10px;padding:8px;text-align:center;">'+
+                        '<div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:2px;">נשאר לחודש</div>'+
+                        '<div style="font-size:0.82rem;font-weight:700;color:'+(isNeg?'var(--accent-red)':'var(--accent-green)')+';">'+(isNeg?'−':'')+'₪'+Math.abs(remainingBudget).toLocaleString('he-IL')+'</div>'+
+                    '</div>'+
+                    '<div style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:10px;padding:8px;text-align:center;">'+
+                        '<div style="font-size:0.6rem;color:var(--text-secondary);margin-bottom:2px;">חיסכון צפוי</div>'+
+                        '<div style="font-size:0.82rem;font-weight:700;color:var(--accent-green);">₪'+Math.round(totalSavings).toLocaleString('he-IL')+'</div>'+
+                    '</div>'+
+                '</div>';
+        }
+
+        // ── Feature 3: Smart Budget Alerts ───────────────────────────────────────
+        function renderBudgetAlerts(totalIncome, totalExp, totalSavings, allExp) {
+            var el = document.getElementById('budgetAlertsSection');
+            if (!el || totalIncome <= 0) { if (el) el.style.display = 'none'; return; }
+
+            var alerts = [];
+            var savingsRate = totalSavings / totalIncome * 100;
+
+            allExp.forEach(function(e) {
+                if (!e.amount || e.amount <= 0) return;
+                var pct = e.amount / totalIncome * 100;
+                if (e.key === 'expHousing' && pct > 33)
+                    alerts.push({ icon:'🏠', msg:'דיור '+Math.round(pct)+'% מההכנסה — מומלץ עד 33%', color:'#f97316' });
+                else if (e.key === 'expDebt' && pct > 20)
+                    alerts.push({ icon:'💳', msg:'הלוואות '+Math.round(pct)+'% מההכנסה — מומלץ עד 20%', color:'#ef4444' });
+            });
+
+            var expPct = totalExp / totalIncome * 100;
+            if (expPct > 90)
+                alerts.push({ icon:'⚠️', msg:'הוצאות '+Math.round(expPct)+'% מההכנסה — מעט מדי נשאר לחיסכון', color:'#ef4444' });
+            else if (savingsRate < 10 && totalExp > 0)
+                alerts.push({ icon:'💡', msg:'שיעור חיסכון '+Math.round(savingsRate)+'% — מומלץ לפחות 10%', color:'#f59e0b' });
+
+            if (alerts.length === 0) { el.style.display = 'none'; return; }
+
+            el.style.display = 'block';
+            el.innerHTML = alerts.map(function(a) {
+                return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.03);border-right:3px solid '+a.color+';margin-bottom:6px;font-size:0.75rem;color:var(--text-primary);">'+
+                    '<span style="font-size:0.85rem;">'+a.icon+'</span><span>'+a.msg+'</span></div>';
+            }).join('');
         }
 
         function renderBudgetIncomeRows() {
