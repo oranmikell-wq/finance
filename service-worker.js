@@ -1,5 +1,5 @@
 // Service Worker — Cache First for HTML (instant load), Network First for API
-var CACHE_VERSION = 'financier-v66';
+var CACHE_VERSION = 'financier-v67';
 
 var API_DOMAINS = [
     'finnhub.io',

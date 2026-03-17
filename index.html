@@ -3070,7 +3070,14 @@
                         <span style="font-size:0.75rem;font-weight:700;color:var(--accent-blue);" id="autoDepositsDisplay">₪0</span>
                     </div>
                     <div class="budget-row">
-                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(244,196,48,0.12);">💰</span><span>חיסכון נוסף</span></span>
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(99,102,241,0.12);">🏛️</span><span>הפקדה לפנסיה</span></span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span id="pctPensionDeposit" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
+                            <input type="text" inputmode="decimal" id="expPensionDeposit" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
+                        </div>
+                    </div>
+                    <div class="budget-row">
+                        <span class="budget-row-label"><span class="row-emoji" style="background:rgba(244,196,48,0.12);">💰</span><span>הפקדה לחיסכון</span></span>
                         <div style="display:flex;align-items:center;gap:5px;">
                             <span id="pctSavings" style="font-size:0.65rem;min-width:28px;text-align:left;"></span>
                             <input type="text" inputmode="decimal" id="expExtraSavings" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
@@ -6237,6 +6244,8 @@
             });
             var esSavEl = document.getElementById('expExtraSavings');
             if (esSavEl) profile.extraSavings = esSavEl.value.trim();
+            var penDepEl = document.getElementById('expPensionDeposit');
+            if (penDepEl) profile.pensionDeposit = penDepEl.value.trim();
             profile.additionalIncome = budgetAdditionalIncome.slice();
             profile.customCategories = budgetCustomCategories.slice();
             profile.fixedCategories  = budgetFixedCategories.slice();
@@ -6283,6 +6292,8 @@
                     });
                     var esSavEl = document.getElementById('expExtraSavings');
                     if (esSavEl && profile.extraSavings) esSavEl.value = profile.extraSavings;
+                    var penDepEl = document.getElementById('expPensionDeposit');
+                    if (penDepEl && profile.pensionDeposit) penDepEl.value = profile.pensionDeposit;
                     if (profile.additionalIncome && Array.isArray(profile.additionalIncome)) {
                         budgetAdditionalIncome = profile.additionalIncome;
                         budgetIncomeIdCounter = budgetAdditionalIncome.reduce(function(max,r){ return Math.max(max,r.id||0); }, 0);
@@ -6312,8 +6323,15 @@
             var allExp = getBudgetAllExpenses();
             var totalExp = allExp.reduce(function(s,e){ return s+e.amount; }, 0);
             var extraSavings = parseNum(document.getElementById('expExtraSavings'));
+            var pensionDeposit = parseNum(document.getElementById('expPensionDeposit'));
             var autoDeposits = assets.reduce(function(s,a){ return s+(a.monthly?toILS(a.monthly,a.monthlyCurrency||'ILS'):0); }, 0);
             document.getElementById('profileExpenses').value = totalExp > 0 ? totalExp.toLocaleString('he-IL') : '';
+            // pension deposit percentage
+            var penPctEl = document.getElementById('pctPensionDeposit');
+            if (penPctEl) {
+                if (totalIncome > 0 && pensionDeposit > 0) { penPctEl.textContent = Math.round(pensionDeposit/totalIncome*100) + '%'; penPctEl.style.color = 'var(--text-secondary)'; }
+                else penPctEl.textContent = '';
+            }
             var pctMap = { expHousing:'Housing', expDebt:'Debt', expInsurance:'Insurance', expTransport:'Transport', expFood:'Food', expBills:'Bills', expEducation:'Education', expOther:'Other' };
             EXPENSE_DEFS.forEach(function(d) {
                 var el = document.getElementById('pct' + (pctMap[d.key]||''));
@@ -6327,7 +6345,7 @@
             });
             var savEl = document.getElementById('pctSavings');
             if (savEl) {
-                var totSavForPct = extraSavings + autoDeposits;
+                var totSavForPct = extraSavings + pensionDeposit + autoDeposits;
                 if (totalIncome > 0 && totSavForPct > 0) {
                     savEl.textContent = Math.round(totSavForPct/totalIncome*100) + '%';
                     savEl.style.color = 'var(--text-secondary)';
@@ -6348,7 +6366,7 @@
             }
             saveProfile();
             calcBudget();
-            renderExpenseBars(totalExp, totalIncome, allExp, extraSavings, autoDeposits);
+            renderExpenseBars(totalExp, totalIncome, allExp, extraSavings + pensionDeposit, autoDeposits);
         }
 
         function renderExpenseBars(totalExp, totalIncome, allExp, extraSavings, autoDeposits) {
@@ -6419,8 +6437,9 @@
             var allExp = getBudgetAllExpenses();
             var totalExp = allExp.reduce(function(s,e){ return s+e.amount; }, 0);
             var extraSavings = parseNum(document.getElementById('expExtraSavings'));
+            var pensionDeposit = parseNum(document.getElementById('expPensionDeposit'));
             var autoDeposits = assets.reduce(function(s,a){ return s+(a.monthly?toILS(a.monthly,a.monthlyCurrency||'ILS'):0); }, 0);
-            var totalSavings = extraSavings + autoDeposits;
+            var totalSavings = extraSavings + pensionDeposit + autoDeposits;
             var disposable = totalIncome - totalExp - totalSavings;
             var summaryRow = document.getElementById('budgetSummaryRow');
             var healthSection = document.getElementById('budgetHealthSection');
