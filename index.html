@@ -9949,861 +9949,253 @@
             return candles;
         }
 
+        var _apexChart = null;
+
+        function _filterHistory(rangeKey) {
+            var history = [];
+            try { history = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
+            if (rangeKey !== 'all' && history.length > 0) {
+                var now = new Date(), cutoff = new Date();
+                if (rangeKey === 'week')    cutoff.setDate(now.getDate() - 7);
+                else if (rangeKey === 'month')  cutoff.setMonth(now.getMonth() - 1);
+                else if (rangeKey === '3month') cutoff.setMonth(now.getMonth() - 3);
+                else if (rangeKey === 'year')   cutoff.setFullYear(now.getFullYear() - 1);
+                var cutStr = cutoff.toISOString().slice(0, 10);
+                history = history.filter(function(h) { return h.date >= cutStr; });
+            }
+            return history;
+        }
+
+        function _updateChartHeader(history) {
+            var hdrEl = document.getElementById('chartValueHeader');
+            var cvEl  = document.getElementById('chartCurrentValue');
+            var pcEl  = document.getElementById('chartPeriodChange');
+            var hiEl  = document.getElementById('chartHighVal');
+            var loEl  = document.getElementById('chartLowVal');
+            var acEl  = document.getElementById('chartAbsChange');
+            if (!hdrEl) return;
+            var values = history.map(function(h) { return h.value; });
+            var last = values[values.length - 1], first = values[0];
+            var change = last - first, changePct = first > 0 ? change / first * 100 : 0;
+            var maxV = Math.max.apply(null, values), minV = Math.min.apply(null, values);
+            hdrEl.style.display = 'flex';
+            if (cvEl) cvEl.textContent = '₪' + Math.round(last).toLocaleString('he-IL');
+            if (pcEl) {
+                pcEl.textContent = (change >= 0 ? '+' : '') + changePct.toFixed(2) + '%';
+                pcEl.style.color      = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                pcEl.style.background = change >= 0 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)';
+            }
+            if (hiEl) hiEl.textContent = '₪' + Math.round(maxV).toLocaleString('he-IL');
+            if (loEl) loEl.textContent = '₪' + Math.round(minV).toLocaleString('he-IL');
+            if (acEl) {
+                acEl.textContent = (change >= 0 ? '+₪' : '−₪') + Math.abs(Math.round(change)).toLocaleString('he-IL');
+                acEl.style.color = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            }
+        }
+
         function renderHistoryChart() {
-            var canvas = document.getElementById('historyChart');
+            var el = document.getElementById('historyChart');
             var emptyMsg = document.getElementById('historyEmpty');
-            if (!canvas) return;
-            // Skip if trends tab or its chart subpage is not visible — avoids 0-width canvas bugs
+            if (!el) return;
             var trendsTab = document.getElementById('tabTrends');
             var chartSubpage = document.getElementById('subpageTrendsChart');
             var chartVisible = (trendsTab && trendsTab.classList.contains('active')) ||
                                (chartSubpage && chartSubpage.style.display !== 'none');
             if (!chartVisible) return;
-            // Delegate to candle chart if in candle mode
-            if (chartMode === 'candle') {
-                // Hide OHLC from line tooltip on mode switch
-                var ohlcEl = document.getElementById('chartTooltipOHLC');
-                if (ohlcEl) ohlcEl.style.display = 'none';
-                renderCandlestickChart();
-                return;
-            }
 
-            var history = [];
-            try { history = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
+            if (chartMode === 'candle') { renderCandlestickChart(); return; }
 
-            if (chartRange !== 'all' && history.length > 0) {
-                var now = new Date(), cutoff = new Date();
-                if (chartRange === 'week')    cutoff.setDate(now.getDate() - 7);
-                else if (chartRange === 'month')  cutoff.setMonth(now.getMonth() - 1);
-                else if (chartRange === '3month') cutoff.setMonth(now.getMonth() - 3);
-                else if (chartRange === 'year')   cutoff.setFullYear(now.getFullYear() - 1);
-                var cutStr = cutoff.toISOString().slice(0, 10);
-                history = history.filter(function(h) { return h.date >= cutStr; });
-            }
+            var history = _filterHistory(chartRange);
 
             if (history.length < 2) {
-                canvas.style.display = 'none';
+                el.innerHTML = '';
                 if (emptyMsg) emptyMsg.style.display = 'block';
                 var hdr0 = document.getElementById('chartValueHeader');
                 if (hdr0) hdr0.style.display = 'none';
+                if (_apexChart) { _apexChart.destroy(); _apexChart = null; }
                 return;
             }
-            canvas.style.display = 'block';
             if (emptyMsg) emptyMsg.style.display = 'none';
+            _updateChartHeader(history);
 
-            var ctx = canvas.getContext('2d');
-            var dpr = window.devicePixelRatio || 1;
-            var rect = canvas.getBoundingClientRect();
-            canvas.width  = rect.width  * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            var W = rect.width, H = rect.height;
-
-            // Theme-aware canvas colours
             var isLight = document.body.classList.contains('light-mode');
-            var clrGrid  = isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)';
-            var clrLabel = isLight ? 'rgba(0,0,0,0.45)'  : 'rgba(255,255,255,0.28)';
-            var clrDate  = isLight ? 'rgba(0,0,0,0.4)'   : 'rgba(255,255,255,0.3)';
-
-            var values = history.map(function(h) { return h.value; });
-
-            // Compute change early — used for header + line colour
-            var isUp = values[values.length-1] >= values[0];
-            var changePct = values[0] > 0 ? ((values[values.length-1] - values[0]) / values[0] * 100) : 0;
-
-            // Update HTML value header
-            var hdrEl = document.getElementById('chartValueHeader');
-            var cvEl  = document.getElementById('chartCurrentValue');
-            var pcEl  = document.getElementById('chartPeriodChange');
-            if (hdrEl && cvEl && pcEl) {
-                hdrEl.style.display = 'flex';
-                hdrEl.style.flexDirection = 'column';
-                cvEl.textContent = '₪' + Math.round(values[values.length-1]).toLocaleString('he-IL');
-                pcEl.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(changePct).toFixed(1) + '%';
-                pcEl.style.background = isUp ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
-                pcEl.style.color = isUp ? '#26a69a' : '#ef5350';
-            }
-
-            var minV = Math.min.apply(null, values);
-            var maxV = Math.max.apply(null, values);
-            var range = maxV - minV || 1;
-            minV -= range * 0.08;
-            maxV += range * 0.12;
-            range = maxV - minV;
-
-            var padL = 8, padR = 68, padT = 20, padB = 36;
-            var chartW = W - padL - padR;
-            var chartH = H - padT - padB;
-
-            var lineColor   = isUp ? '#26a69a' : '#ef5350';
-
-            ctx.clearRect(0, 0, W, H);
-
-            // Update stats bar
-            var realMin = Math.min.apply(null, values);
-            var realMax = Math.max.apply(null, values);
-            var absChange = values[values.length-1] - values[0];
-            var highEl = document.getElementById('chartHighVal');
-            var lowEl = document.getElementById('chartLowVal');
-            var absEl = document.getElementById('chartAbsChange');
-            if (highEl) highEl.textContent = '₪' + Math.round(realMax).toLocaleString('he-IL');
-            if (lowEl)  lowEl.textContent  = '₪' + Math.round(realMin).toLocaleString('he-IL');
-            if (absEl) {
-                absEl.textContent = (absChange >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(absChange)).toLocaleString('he-IL');
-                absEl.style.color = absChange >= 0 ? '#26a69a' : '#ef5350';
-            }
-
-            // Grid lines + Y-axis labels (RIGHT side, TradingView style)
-            var gridCount = 5;
-            ctx.lineWidth = 1;
-            for (var g = 0; g <= gridCount; g++) {
-                var gy = padT + (chartH / gridCount) * g;
-                ctx.strokeStyle = clrGrid;
-                ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
-                var gv = maxV - (range * g / gridCount);
-                ctx.fillStyle = clrLabel;
-                ctx.font = '10px system-ui,Arial,sans-serif';
-                ctx.textAlign = 'left';
-                var label = gv >= 1000000 ? (gv/1000000).toFixed(2) + 'M' :
-                            gv >= 1000    ? Math.round(gv/1000) + 'K' :
-                            Math.round(gv).toString();
-                ctx.fillText(label, W - padR + 5, gy + 3.5);
-            }
-
-            // Y-axis vertical line (right side)
-            ctx.strokeStyle = clrGrid;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(W - padR, padT);
-            ctx.lineTo(W - padR, padT + chartH);
-            ctx.stroke();
-
-            // Calculate points
-            var pts = [];
-            for (var i = 0; i < values.length; i++) {
-                pts.push({
-                    x: padL + (i / (values.length - 1)) * chartW,
-                    y: padT + (1 - (values[i] - minV) / range) * chartH
-                });
-            }
-
-            // Smooth bezier path
-            function bezierPath(points) {
-                ctx.moveTo(points[0].x, points[0].y);
-                for (var i = 0; i < points.length - 1; i++) {
-                    var cp1x = (points[i].x + points[i+1].x) / 2;
-                    ctx.bezierCurveTo(cp1x, points[i].y, cp1x, points[i+1].y, points[i+1].x, points[i+1].y);
-                }
-            }
-
-            // Reference line (starting value — dashed)
-            var refY = padT + (1 - (values[0] - minV) / range) * chartH;
-            ctx.setLineDash([3, 5]);
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(padL, refY);
-            ctx.lineTo(W - padR, refY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Gradient fill
-            var grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
-            grad.addColorStop(0,   isUp ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)');
-            grad.addColorStop(0.5, isUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)');
-            grad.addColorStop(1,   'rgba(0,0,0,0)');
-
-            ctx.beginPath();
-            bezierPath(pts);
-            ctx.lineTo(pts[pts.length-1].x, padT + chartH);
-            ctx.lineTo(pts[0].x, padT + chartH);
-            ctx.closePath();
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // Line with glow
-            ctx.shadowColor = lineColor;
-            ctx.shadowBlur = 6;
-            ctx.beginPath();
-            bezierPath(pts);
-            ctx.strokeStyle = lineColor;
-            ctx.lineWidth = 2.8;
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            // Moving Average line (MA20 or shorter if fewer points)
-            if (values.length >= 5) {
-                var maPeriod = Math.min(20, Math.max(5, Math.floor(values.length / 4)));
-                var maVals = [];
-                for (var mi = 0; mi < values.length; mi++) {
-                    if (mi < maPeriod - 1) { maVals.push(null); continue; }
-                    var mSum = 0;
-                    for (var mj = mi - maPeriod + 1; mj <= mi; mj++) mSum += values[mj];
-                    maVals.push(mSum / maPeriod);
-                }
-                ctx.beginPath();
-                var maStarted = false;
-                for (var mi2 = 0; mi2 < pts.length; mi2++) {
-                    if (maVals[mi2] === null) continue;
-                    var maY = padT + (1 - (maVals[mi2] - minV) / range) * chartH;
-                    if (!maStarted) { ctx.moveTo(pts[mi2].x, maY); maStarted = true; }
-                    else { ctx.lineTo(pts[mi2].x, maY); }
-                }
-                ctx.strokeStyle = 'rgba(244,196,48,0.55)';
-                ctx.lineWidth = 1.4;
-                ctx.lineJoin = 'round';
-                ctx.setLineDash([]);
-                ctx.stroke();
-            }
-
-            // End dot with glow
-            var last = pts[pts.length - 1];
-            ctx.shadowColor = lineColor;
-            ctx.shadowBlur = 8;
-            ctx.beginPath();
-            ctx.arc(last.x, last.y, 4.5, 0, Math.PI * 2);
-            ctx.fillStyle = lineColor;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Floating current price label on right axis (TradingView style)
-            (function() {
-                var priceTxt = '₪' + Math.round(values[values.length-1]).toLocaleString('he-IL');
-                ctx.font = 'bold 9.5px system-ui,Arial,sans-serif';
-                var txtW = ctx.measureText(priceTxt).width;
-                var lbH = 17, lbW = txtW + 12;
-                var lbX = W - padR + 1;
-                var lbY = last.y - lbH / 2;
-                lbY = Math.max(padT + 1, Math.min(padT + chartH - lbH - 1, lbY));
-                ctx.fillStyle = lineColor;
-                ctx.fillRect(lbX, lbY, lbW, lbH);
-                ctx.fillStyle = '#ffffff';
-                ctx.textAlign = 'left';
-                ctx.fillText(priceTxt, lbX + 6, lbY + lbH / 2 + 3.5);
-            })();
-
-            // Date labels — adaptive count based on range and point count
-            var maxLabels = chartRange === 'week' ? Math.min(7, pts.length) :
-                            chartRange === 'month' ? 5 :
-                            chartRange === '3month' ? 6 : 6;
-            maxLabels = Math.max(2, Math.min(maxLabels, pts.length));
-            var datesToShow = [0];
-            if (maxLabels > 2) {
-                var dStep = (pts.length - 1) / (maxLabels - 1);
-                for (var di = 1; di < maxLabels - 1; di++) datesToShow.push(Math.round(di * dStep));
-            }
-            datesToShow.push(pts.length - 1);
-            // Deduplicate
-            datesToShow = datesToShow.filter(function(v, i, a) { return a.indexOf(v) === i; });
-
-            ctx.fillStyle = clrDate;
-            ctx.font = '10px system-ui,Arial,sans-serif';
-            ctx.textAlign = 'center';
-            var heMonths = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
-            datesToShow.forEach(function(idx) {
-                if (!pts[idx]) return;
-                var d = history[idx].date.split('-');
-                var mon = heMonths[parseInt(d[1],10) - 1];
-                var lbl = (chartRange === 'week' || chartRange === 'month')
-                    ? d[2] + '/' + d[1]
-                    : d[2] + ' ' + mon;
-                ctx.fillText(lbl, pts[idx].x, padT + chartH + 20);
+            var lineColor = history[history.length-1].value >= history[0].value ? '#f4c430' : '#ef5350';
+            var seriesData = history.map(function(h) {
+                return [new Date(h.date).getTime(), Math.round(h.value)];
             });
 
-            // (% change badge removed — shown in HTML header above chart)
+            if (_apexChart) { _apexChart.destroy(); _apexChart = null; }
 
-            // ---- Interactive tooltip via overlay canvas ----
-            var wrapper = canvas.parentElement;
-            var overlay = wrapper.querySelector('canvas.chart-overlay');
-            if (!overlay) {
-                overlay = document.createElement('canvas');
-                overlay.className = 'chart-overlay';
-                overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-                wrapper.appendChild(overlay);
-            }
-            overlay.width  = canvas.width;
-            overlay.height = canvas.height;
-            var octx = overlay.getContext('2d');
-            octx.setTransform(dpr, 0, 0, dpr, 0, 0); // reset + set (never accumulate)
-
-            // Store chart state for tooltip use
-            canvas._chartPts    = pts;
-            canvas._chartHist   = history;
-            canvas._chartVals   = values;
-            canvas._padL = padL; canvas._padR = padR; canvas._padT = padT; canvas._padB = padB;
-            canvas._chartW = chartW; canvas._lineColor = lineColor;
-            canvas._minV = minV; canvas._maxV = maxV; canvas._range = range;
-            canvas._W = W; canvas._H = H;
-            canvas._prevIdx = -1;
-
-            // Remove old listeners by replacing canvas clone trick — use flag instead
-            if (!canvas._tooltipBound) {
-                canvas._tooltipBound = true;
-
-                function _showTip(clientX) {
-                    var r = canvas.getBoundingClientRect();
-                    var mx = clientX - r.left;
-                    var cp = canvas._chartPts, ch = canvas._chartHist, cv = canvas._chartVals;
-                    var pL = canvas._padL, pT = canvas._padT, pB = canvas._padB, cW = canvas._chartW;
-                    var H2 = r.height;
-                    if (!cp || !cp.length) return;
-                    var idx = Math.round((mx - pL) / cW * (cp.length - 1));
-                    idx = Math.max(0, Math.min(cp.length - 1, idx));
-                    if (idx === canvas._prevIdx) return;
-                    canvas._prevIdx = idx;
-
-                    // Update tooltip content
-                    var tip = document.getElementById('chartTooltip');
-                    if (!tip) return;
-                    var d = ch[idx].date.split('-');
-                    document.getElementById('chartTooltipDate').textContent = d[2]+'/'+d[1]+'/'+d[0];
-                    document.getElementById('chartTooltipValue').textContent = '₪' + Math.round(cv[idx]).toLocaleString('he-IL');
-                    var chgFromStart = cv[idx] - cv[0];
-                    var chgPctFromStart = cv[0] > 0 ? chgFromStart / cv[0] * 100 : 0;
-                    var tChg = document.getElementById('chartTooltipChange');
-                    tChg.textContent = (chgFromStart >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(chgFromStart)).toLocaleString('he-IL') + ' (' + (chgPctFromStart >= 0 ? '+' : '') + chgPctFromStart.toFixed(2) + '%)';
-                    tChg.style.color = chgFromStart >= 0 ? '#26a69a' : '#ef5350';
-
-                    // Update main header dynamically (TradingView style)
-                    var cvElL = document.getElementById('chartCurrentValue');
-                    var pcElL = document.getElementById('chartPeriodChange');
-                    if (cvElL) cvElL.textContent = '₪' + Math.round(cv[idx]).toLocaleString('he-IL');
-                    if (pcElL) {
-                        var upL = chgFromStart >= 0;
-                        pcElL.textContent = (upL ? '▲ +' : '▼ ') + Math.abs(chgPctFromStart).toFixed(2) + '%';
-                        pcElL.style.background = upL ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
-                        pcElL.style.color = upL ? '#26a69a' : '#ef5350';
+            _apexChart = new ApexCharts(el, {
+                chart: {
+                    type: 'area',
+                    height: 300,
+                    background: 'transparent',
+                    toolbar: { show: false },
+                    zoom: { enabled: false },
+                    animations: { enabled: true, speed: 350, animateGradually: { enabled: false } },
+                    fontFamily: 'inherit',
+                    sparkline: { enabled: false },
+                    dropShadow: { enabled: false }
+                },
+                series: [{ name: 'שווי תיק', data: seriesData }],
+                xaxis: {
+                    type: 'datetime',
+                    labels: {
+                        style: { colors: isLight ? '#6b7280' : '#6b7280', fontSize: '0.62rem', fontFamily: 'inherit' },
+                        datetimeFormatter: { year: 'yyyy', month: 'MMM יי', day: 'dd/MM', hour: 'HH:mm' },
+                        datetimeUTC: false
+                    },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false },
+                    crosshairs: { show: true, stroke: { color: 'rgba(244,196,48,0.3)', width: 1, dashArray: 3 } }
+                },
+                yaxis: {
+                    opposite: true,
+                    labels: {
+                        style: { colors: '#6b7280', fontSize: '0.62rem', fontFamily: 'inherit' },
+                        formatter: function(v) {
+                            if (v >= 1000000) return '₪' + (v / 1000000).toFixed(1) + 'M';
+                            if (v >= 1000)    return '₪' + (v / 1000).toFixed(0) + 'K';
+                            return '₪' + v;
+                        }
                     }
-
-                    // Position tooltip
-                    var tipW = tip.offsetWidth || 170;
-                    var left = cp[idx].x - tipW/2;
-                    var top  = cp[idx].y - 72;
-                    if (left < 0) left = 0;
-                    if (left + tipW > r.width - 4) left = r.width - tipW - 4;
-                    if (top < 4) top = cp[idx].y + 12;
-                    tip.style.left = left + 'px';
-                    tip.style.top  = top + 'px';
-                    tip.style.display = 'block';
-
-                    // Draw full crosshair on overlay (TradingView style)
-                    var ov = canvas.parentElement.querySelector('canvas.chart-overlay');
-                    if (!ov) return;
-                    var oc = ov.getContext('2d');
-                    var dpr2 = window.devicePixelRatio || 1;
-                    var pR2 = canvas._padR || 68;
-                    var cW2 = r.width;
-                    oc.setTransform(dpr2, 0, 0, dpr2, 0, 0);
-                    oc.clearRect(0, 0, ov.width / dpr2, ov.height / dpr2);
-                    var isLight2 = document.body.classList.contains('light-mode');
-                    oc.strokeStyle = isLight2 ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.25)';
-                    oc.lineWidth = 1;
-                    oc.setLineDash([4, 4]);
-                    // Vertical crosshair
-                    oc.beginPath();
-                    oc.moveTo(cp[idx].x, pT);
-                    oc.lineTo(cp[idx].x, pT + (H2 - pT - pB));
-                    oc.stroke();
-                    // Horizontal crosshair
-                    oc.beginPath();
-                    oc.moveTo(canvas._padL || 8, cp[idx].y);
-                    oc.lineTo(cW2 - pR2, cp[idx].y);
-                    oc.stroke();
-                    oc.setLineDash([]);
-                    // Dot at intersection
-                    oc.beginPath();
-                    oc.arc(cp[idx].x, cp[idx].y, 5, 0, Math.PI*2);
-                    oc.fillStyle = canvas._lineColor;
-                    oc.shadowColor = canvas._lineColor;
-                    oc.shadowBlur = 12;
-                    oc.fill();
-                    oc.shadowBlur = 0;
-                    // Right-axis price label at crosshair Y
-                    var curVal2 = cv[idx];
-                    var axTxt = '₪' + Math.round(curVal2).toLocaleString('he-IL');
-                    oc.font = 'bold 9.5px system-ui,Arial,sans-serif';
-                    var axTxtW = oc.measureText(axTxt).width;
-                    var axLbW = axTxtW + 12, axLbH = 17;
-                    var axLbX = cW2 - pR2 + 1;
-                    var axLbY = cp[idx].y - axLbH / 2;
-                    axLbY = Math.max(0, Math.min(H2 - axLbH, axLbY));
-                    oc.fillStyle = canvas._lineColor;
-                    oc.fillRect(axLbX, axLbY, axLbW, axLbH);
-                    oc.fillStyle = '#ffffff';
-                    oc.textAlign = 'left';
-                    oc.fillText(axTxt, axLbX + 6, axLbY + axLbH / 2 + 3.5);
-                }
-
-                function _hideTip() {
-                    var tip = document.getElementById('chartTooltip');
-                    if (tip) tip.style.display = 'none';
-                    canvas._prevIdx = -1;
-                    var ov = canvas.parentElement.querySelector('canvas.chart-overlay');
-                    if (ov) {
-                        var oc2 = ov.getContext('2d');
-                        oc2.setTransform(1, 0, 0, 1, 0, 0); // reset to identity
-                        oc2.clearRect(0, 0, ov.width, ov.height);
+                },
+                stroke: { curve: 'smooth', width: 2, colors: [lineColor] },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.02,
+                        colorStops: [
+                            { offset: 0, color: lineColor, opacity: 0.3 },
+                            { offset: 100, color: lineColor, opacity: 0 }
+                        ]
                     }
-                }
-
-                canvas.addEventListener('mousemove', function(e) { _showTip(e.clientX); });
-                canvas.addEventListener('mouseleave', _hideTip);
-                canvas.addEventListener('touchstart', function(e) {
-                    if (e.touches[0]) _showTip(e.touches[0].clientX);
-                }, {passive: true});
-                canvas.addEventListener('touchmove', function(e) {
-                    e.preventDefault();
-                    if (e.touches[0]) _showTip(e.touches[0].clientX);
-                }, {passive:false});
-                canvas.addEventListener('touchend', function() { setTimeout(_hideTip, 2500); });
-            }
-
-
+                },
+                tooltip: {
+                    theme: isLight ? 'light' : 'dark',
+                    x: { format: 'dd/MM/yyyy' },
+                    y: { formatter: function(v) { return '₪' + Math.round(v).toLocaleString('he-IL'); } },
+                    style: { fontSize: '0.78rem', fontFamily: 'inherit' }
+                },
+                grid: {
+                    borderColor: isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)',
+                    strokeDashArray: 3,
+                    xaxis: { lines: { show: false } },
+                    padding: { right: 0, left: 0 }
+                },
+                markers: { size: 0 },
+                dataLabels: { enabled: false },
+                legend: { show: false },
+                theme: { mode: isLight ? 'light' : 'dark' }
+            });
+            _apexChart.render();
         }
 
         function renderCandlestickChart() {
-            var canvas = document.getElementById('historyChart');
+            var el = document.getElementById('historyChart');
             var emptyMsg = document.getElementById('historyEmpty');
-            if (!canvas) return;
+            if (!el) return;
 
-            var candles = [];
+            var history = _filterHistory(candleRange);
 
-            if (candleResolution === 'hourly') {
-                // Load intraday data, last 48h
-                var intraday = [];
-                try { intraday = JSON.parse(localStorage.getItem('portfolio-history-intraday') || '[]'); } catch(e) {}
-                var cutoff48 = Date.now() - 48 * 3600 * 1000;
-                intraday = intraday.filter(function(d) { return d.ts >= cutoff48; });
-                candles = buildCandles(intraday, 'hourly');
-            } else {
-                // Daily candles — prefer intraday grouped by day, fall back to daily history
-                var intraday2 = [];
-                try { intraday2 = JSON.parse(localStorage.getItem('portfolio-history-intraday') || '[]'); } catch(e) {}
-
-                if (intraday2.length >= 4) {
-                    // Apply date range filter
-                    var now2 = new Date(), cutoffD = new Date();
-                    if      (candleRange === 'week')  cutoffD.setDate(now2.getDate() - 7);
-                    else if (candleRange === 'month') cutoffD.setMonth(now2.getMonth() - 1);
-                    else if (candleRange === 'year')  cutoffD.setFullYear(now2.getFullYear() - 1);
-                    else cutoffD = new Date(0);
-                    var cutoffTs = cutoffD.getTime();
-                    var filtered = intraday2.filter(function(d) { return d.ts >= cutoffTs; });
-                    candles = buildCandles(filtered, 'daily');
-                } else {
-                    // Fall back to daily history
-                    var history2 = [];
-                    try { history2 = JSON.parse(localStorage.getItem('portfolio-history') || '[]'); } catch(e) {}
-                    if (candleRange !== 'all' && history2.length > 0) {
-                        var now3 = new Date(), cutoffD2 = new Date();
-                        if      (candleRange === 'week')  cutoffD2.setDate(now3.getDate() - 7);
-                        else if (candleRange === 'month') cutoffD2.setMonth(now3.getMonth() - 1);
-                        else if (candleRange === 'year')  cutoffD2.setFullYear(now3.getFullYear() - 1);
-                        var cutStr2 = cutoffD2.toISOString().slice(0, 10);
-                        history2 = history2.filter(function(h) { return h.date >= cutStr2; });
-                    }
-                    candles = buildDailyCandlesFromHistory(history2);
-                }
-            }
-
-            if (candles.length < 2) {
-                canvas.style.display = 'none';
-                if (emptyMsg) {
-                    emptyMsg.style.display = 'block';
-                    emptyMsg.textContent = candleResolution === 'hourly'
-                        ? '⏳ נתוני נרות שעתיים יתחילו להצטבר לאחר מספר ביקורים. חזור מחר!'
-                        : '📊 נתונים היסטוריים יתחילו להצטבר מהיום. חזור מחר!';
-                }
+            if (history.length < 3) {
+                el.innerHTML = '';
+                if (emptyMsg) emptyMsg.style.display = 'block';
                 var hdr0 = document.getElementById('chartValueHeader');
                 if (hdr0) hdr0.style.display = 'none';
+                if (_apexChart) { _apexChart.destroy(); _apexChart = null; }
                 return;
             }
-            canvas.style.display = 'block';
             if (emptyMsg) emptyMsg.style.display = 'none';
+            _updateChartHeader(history);
 
-            var ctx = canvas.getContext('2d');
-            var dpr = window.devicePixelRatio || 1;
-            var rect = canvas.getBoundingClientRect();
-            canvas.width  = rect.width  * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            var W = rect.width, H = rect.height;
-
-            var isLight = document.body.classList.contains('light-mode');
-            var clrGrid  = isLight ? 'rgba(0,0,0,0.07)'  : 'rgba(255,255,255,0.05)';
-            var clrLabel = isLight ? 'rgba(0,0,0,0.45)'  : 'rgba(255,255,255,0.28)';
-            var clrDate  = isLight ? 'rgba(0,0,0,0.4)'   : 'rgba(255,255,255,0.3)';
-            var clrBull  = '#26a69a';
-            var clrBear  = '#ef5350';
-
-            var padL = 8, padR = 68, padT = 20, padB = 36;
-            var chartW = W - padL - padR;
-            var chartH = H - padT - padB;
-
-            // Value range
-            var allHigh = candles.map(function(c) { return c.high; });
-            var allLow  = candles.map(function(c) { return c.low; });
-            var maxV = Math.max.apply(null, allHigh);
-            var minV = Math.min.apply(null, allLow);
-            var range = maxV - minV || 1;
-            minV -= range * 0.08;
-            maxV += range * 0.12;
-            range = maxV - minV;
-
-            function toY(v) { return padT + (1 - (v - minV) / range) * chartH; }
-            function fmtAxisVal(v) {
-                if (v >= 1000000) return (v/1000000).toFixed(1) + 'M';
-                if (v >= 1000)    return Math.round(v/1000) + 'K';
-                return Math.round(v).toString();
-            }
-
-            // Update HTML value header
-            var lastCandle = candles[candles.length - 1];
-            var firstCandle = candles[0];
-            var isUp = lastCandle.close >= firstCandle.open;
-            var changePct = firstCandle.open > 0 ? ((lastCandle.close - firstCandle.open) / firstCandle.open * 100) : 0;
-            var hdrEl = document.getElementById('chartValueHeader');
-            var cvEl  = document.getElementById('chartCurrentValue');
-            var pcEl  = document.getElementById('chartPeriodChange');
-            if (hdrEl && cvEl && pcEl) {
-                hdrEl.style.display = 'flex';
-                hdrEl.style.flexDirection = 'column';
-                cvEl.textContent = '₪' + Math.round(lastCandle.close).toLocaleString('he-IL');
-                pcEl.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(changePct).toFixed(1) + '%';
-                pcEl.style.background = isUp ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
-                pcEl.style.color = isUp ? clrBull : clrBear;
-            }
-            // Stats bar — high/low/change across the displayed candles
-            var realMax = Math.max.apply(null, allHigh);
-            var realMin = Math.min.apply(null, allLow);
-            var absChange = lastCandle.close - firstCandle.open;
-            var highEl = document.getElementById('chartHighVal');
-            var lowEl  = document.getElementById('chartLowVal');
-            var absEl  = document.getElementById('chartAbsChange');
-            if (highEl) highEl.textContent = '₪' + Math.round(realMax).toLocaleString('he-IL');
-            if (lowEl)  lowEl.textContent  = '₪' + Math.round(realMin).toLocaleString('he-IL');
-            if (absEl) {
-                absEl.textContent = (absChange >= 0 ? '+' : '') + Math.round(absChange).toLocaleString('he-IL') + ' ₪';
-                absEl.style.color = absChange >= 0 ? '#26a69a' : '#ef5350';
-            }
-
-            ctx.clearRect(0, 0, W, H);
-
-            // Grid lines + right-side Y-axis labels
-            var gridCount = 5;
-            ctx.lineWidth = 1;
-            for (var g = 0; g <= gridCount; g++) {
-                var gy = padT + (chartH / gridCount) * g;
-                ctx.strokeStyle = clrGrid;
-                ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
-                var gv = maxV - (range * g / gridCount);
-                ctx.fillStyle = clrLabel;
-                ctx.font = '10px system-ui,Arial,sans-serif';
-                ctx.textAlign = 'left';
-                ctx.fillText(fmtAxisVal(gv), W - padR + 5, gy + 3.5);
-            }
-
-            // Right-side Y-axis vertical line
-            ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(W - padR, padT); ctx.lineTo(W - padR, H - padB); ctx.stroke();
-
-            // Draw candles
-            var n = candles.length;
-            // Spread candles evenly across full chart width
-            var candleSlot = chartW / n;
-            var candleStartX = padL;
-            // Cap body width so individual candles don't become too wide
-            var bodyW = Math.max(2, Math.min(18, candleSlot * 0.6));
-            var halfBody = bodyW / 2;
-
-            // Store candle positions for tooltip
-            var candlePositions = [];
-
-            for (var i = 0; i < n; i++) {
-                var c = candles[i];
-                var cx = candleStartX + (i + 0.5) * candleSlot;
-                var bullish = c.close >= c.open;
-                var clr = bullish ? clrBull : clrBear;
-
-                var yOpen  = toY(c.open);
-                var yClose = toY(c.close);
-                var yHigh  = toY(c.high);
-                var yLow   = toY(c.low);
-                var yBodyTop    = Math.min(yOpen, yClose);
-                var yBodyBottom = Math.max(yOpen, yClose);
-                var bodyHeight  = Math.max(1, yBodyBottom - yBodyTop);
-
-                // Wick (high-low line)
-                ctx.strokeStyle = clr;
-                ctx.lineWidth = Math.max(1, candleSlot * 0.08);
-                ctx.beginPath();
-                ctx.moveTo(cx, yHigh);
-                ctx.lineTo(cx, yLow);
-                ctx.stroke();
-
-                // Body — hollow for bullish (TradingView style), solid for bearish
-                if (bullish) {
-                    // Hollow: transparent fill, colored border
-                    ctx.strokeStyle = clr;
-                    ctx.lineWidth = Math.max(1, Math.min(2, candleSlot * 0.12));
-                    ctx.strokeRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
-                } else {
-                    // Solid bearish candle
-                    ctx.fillStyle = clr;
-                    ctx.fillRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
-                    // Thin border to sharpen edges
-                    ctx.strokeStyle = clr;
-                    ctx.lineWidth = 0.5;
-                    ctx.strokeRect(cx - halfBody, yBodyTop, bodyW, bodyHeight);
-                }
-
-                candlePositions.push({ cx: cx, c: c, yBodyTop: yBodyTop, yBodyBottom: yBodyBottom, yHigh: yHigh, yLow: yLow });
-            }
-
-            // Reference dashed line at period open (TradingView style baseline)
-            var yRef = toY(firstCandle.open);
-            ctx.save();
-            ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([4, 4]);
-            ctx.beginPath();
-            ctx.moveTo(candleStartX, yRef);
-            ctx.lineTo(W - padR, yRef);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            ctx.restore();
-
-            // Date/time labels — auto-spaced to avoid overlap
-            var heMonthsC = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
-            ctx.font = 'bold 11px system-ui,Arial,sans-serif';
-            ctx.textAlign = 'center';
-            var sampleLbl = candleResolution === 'hourly' ? '14:00' : '13 מרץ';
-            var lblPixW = ctx.measureText(sampleLbl).width + 18;
-            var maxLabels = Math.max(2, Math.min(6, Math.floor(chartW / lblPixW)));
-            var labelIdxs = [];
-            if (maxLabels >= 2) {
-                var step = (n - 1) / (maxLabels - 1);
-                for (var li = 0; li < maxLabels; li++) labelIdxs.push(Math.round(li * step));
-            }
-            labelIdxs = labelIdxs.filter(function(v, idx, arr) { return arr.indexOf(v) === idx; });
-            labelIdxs.forEach(function(idx) {
-                var cd2 = candles[idx];
-                var lbl2 = cd2.label;
-                var isHourly = candleResolution === 'hourly';
-                if (isHourly) {
-                    var dtH = new Date(cd2.ts);
-                    if (dtH.getHours() === 0 || idx === 0) {
-                        lbl2 = dtH.getDate() + '/' + ('0'+(dtH.getMonth()+1)).slice(-2);
-                    } else {
-                        lbl2 = ('0'+dtH.getHours()).slice(-2) + ':00';
-                    }
-                } else if (/^\d{2}\/\d{2}$/.test(cd2.label)) {
-                    var parts = cd2.label.split('/');
-                    lbl2 = parts[0] + ' ' + (heMonthsC[parseInt(parts[1],10)-1] || parts[1]);
-                } else if (cd2.ts) {
-                    var dtC = new Date(cd2.ts);
-                    lbl2 = dtC.getDate() + ' ' + heMonthsC[dtC.getMonth()];
-                }
-                var xLbl = candleStartX + (idx + 0.5) * candleSlot;
-                var lblW3 = ctx.measureText(lbl2).width + 10;
-                // Background pill
-                ctx.fillStyle = isLight ? 'rgba(240,240,245,0.85)' : 'rgba(18,18,28,0.8)';
-                ctx.beginPath();
-                if (ctx.roundRect) ctx.roundRect(xLbl - lblW3/2, H - padB + 5, lblW3, 17, 4);
-                else ctx.rect(xLbl - lblW3/2, H - padB + 5, lblW3, 17);
-                ctx.fill();
-                // White (dark mode) / dark (light mode) text
-                ctx.fillStyle = isLight ? '#222' : '#ffffff';
-                ctx.fillText(lbl2, xLbl, H - padB + 16);
+            // Group into weekly candles
+            var weeks = {}, weekOrder = [];
+            history.forEach(function(h) {
+                var d = new Date(h.date);
+                var sunday = new Date(d);
+                sunday.setDate(d.getDate() - d.getDay());
+                var key = sunday.toISOString().slice(0, 10);
+                if (!weeks[key]) { weeks[key] = { ts: sunday.getTime(), values: [] }; weekOrder.push(key); }
+                weeks[key].values.push(h.value);
             });
 
-            // Floating current-price label on right axis
-            var lastClose = lastCandle.close;
-            var yLastClose = toY(lastClose);
-            var floatBg = isUp ? '#26a69a' : '#ef5350';
-            var floatLbl = '₪' + Math.round(lastClose).toLocaleString('he-IL');
-            ctx.font = 'bold 10px system-ui,Arial,sans-serif';
-            var fLblW = ctx.measureText(floatLbl).width + 8;
-            var fLblH = 16;
-            var fX = W - padR + 2;
-            var fY = Math.max(padT + fLblH/2, Math.min(H - padB - fLblH/2, yLastClose));
-            ctx.fillStyle = floatBg;
-            ctx.beginPath();
-            ctx.roundRect ? ctx.roundRect(fX, fY - fLblH/2, fLblW, fLblH, 3) : ctx.rect(fX, fY - fLblH/2, fLblW, fLblH);
-            ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.textAlign = 'left';
-            ctx.fillText(floatLbl, fX + 4, fY + 3.5);
+            var candles = weekOrder.map(function(k) {
+                var w = weeks[k], v = w.values;
+                return { x: w.ts, y: [v[0], Math.max.apply(null,v), Math.min.apply(null,v), v[v.length-1]] };
+            });
 
-            // ---- Interactive tooltip ----
-            canvas._candlePositions = candlePositions;
-            canvas._candleData = candles;
-            canvas._padL = padL; canvas._padR = padR; canvas._padT = padT; canvas._padB = padB;
-            canvas._chartW = chartW; canvas._candleSlot = candleSlot; canvas._candleStartX = candleStartX;
-            canvas._minV = minV; canvas._maxV = maxV; canvas._range = range;
-            canvas._firstOpen = firstCandle.open;
-            canvas._candleResolution = candleResolution;
-            canvas._prevIdx = -1;
+            var isLight = document.body.classList.contains('light-mode');
+            if (_apexChart) { _apexChart.destroy(); _apexChart = null; }
 
-            var wrapper = canvas.parentElement;
-            var overlay = wrapper.querySelector('canvas.chart-overlay');
-            if (!overlay) {
-                overlay = document.createElement('canvas');
-                overlay.className = 'chart-overlay';
-                overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-                wrapper.appendChild(overlay);
-            }
-            overlay.width  = canvas.width;
-            overlay.height = canvas.height;
-
-            if (!canvas._candleTooltipBound) {
-                canvas._candleTooltipBound = true;
-
-                function _showCandleTip(clientX, clientY) {
-                    var r = canvas.getBoundingClientRect();
-                    var mx = clientX - r.left;
-                    var my = clientY !== undefined ? clientY - r.top : null;
-                    var cps = canvas._candlePositions;
-                    if (!cps || !cps.length) return;
-                    var slot = canvas._candleSlot;
-                    var pL = canvas._padL;
-                    var pR = canvas._padR || 68;
-                    var pT = canvas._padT || 20;
-                    var pB = canvas._padB || 36;
-                    var cH = r.height - pT - pB;
-                    var cMinV = canvas._minV;
-                    var cMaxV = canvas._maxV;
-                    var cRange = canvas._range || (cMaxV - cMinV) || 1;
-                    var startX = canvas._candleStartX !== undefined ? canvas._candleStartX : pL;
-                    var idx = Math.floor((mx - startX) / slot);
-                    idx = Math.max(0, Math.min(cps.length - 1, idx));
-                    if (idx === canvas._prevIdx && my === null) return;
-                    canvas._prevIdx = idx;
-
-                    var tip = document.getElementById('chartTooltip');
-                    if (!tip) return;
-                    var cd = cps[idx].c;
-                    var firstOpen = canvas._firstOpen || cps[0].c.open;
-                    // Change from period start (like TradingView)
-                    var chgAbs = cd.close - firstOpen;
-                    var chgPct = firstOpen > 0 ? chgAbs / firstOpen * 100 : 0;
-                    var bullish = chgAbs >= 0;
-
-                    document.getElementById('chartTooltipDate').textContent = cd.label;
-                    document.getElementById('chartTooltipValue').style.color = bullish ? clrBull : clrBear;
-                    document.getElementById('chartTooltipValue').textContent = '₪' + Math.round(cd.close).toLocaleString('he-IL');
-                    var tChg = document.getElementById('chartTooltipChange');
-                    tChg.textContent = (chgAbs >= 0 ? '+' : '') + '₪' + Math.round(Math.abs(chgAbs)).toLocaleString('he-IL') + ' (' + (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%)';
-                    tChg.style.color = bullish ? clrBull : clrBear;
-
-                    // Update main header dynamically (TradingView style)
-                    var cvEl2 = document.getElementById('chartCurrentValue');
-                    var pcEl2 = document.getElementById('chartPeriodChange');
-                    if (cvEl2) cvEl2.textContent = '₪' + Math.round(cd.close).toLocaleString('he-IL');
-                    if (pcEl2) {
-                        pcEl2.textContent = (bullish ? '▲ +' : '▼ ') + Math.abs(chgPct).toFixed(2) + '%';
-                        pcEl2.style.background = bullish ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
-                        pcEl2.style.color = bullish ? clrBull : clrBear;
-                    }
-
-                    var ohlcEl = document.getElementById('chartTooltipOHLC');
-                    if (ohlcEl) {
-                        ohlcEl.style.display = 'block';
-                        ohlcEl.innerHTML =
-                            'פתיחה: ₪' + Math.round(cd.open).toLocaleString('he-IL') + '<br>' +
-                            'גבוה: ₪'   + Math.round(cd.high).toLocaleString('he-IL') + '<br>' +
-                            'נמוך: ₪'   + Math.round(cd.low).toLocaleString('he-IL');
-                    }
-
-                    var tipW = tip.offsetWidth || 180;
-                    var left = cps[idx].cx - tipW / 2;
-                    if (left < 0) left = 0;
-                    if (left + tipW > r.width - 4) left = r.width - tipW - 4;
-                    var top = cps[idx].yBodyTop - 80;
-                    if (top < 4) top = cps[idx].yBodyBottom + 8;
-                    tip.style.left = left + 'px';
-                    tip.style.top  = top + 'px';
-                    tip.style.display = 'block';
-
-                    // Full crosshair overlay (vertical + horizontal + right-axis label)
-                    var ov2 = canvas.parentElement.querySelector('canvas.chart-overlay');
-                    if (!ov2) return;
-                    var dpr2 = window.devicePixelRatio || 1;
-                    var oc2 = ov2.getContext('2d');
-                    oc2.setTransform(dpr2, 0, 0, dpr2, 0, 0);
-                    var OW = ov2.width / dpr2, OH = ov2.height / dpr2;
-                    oc2.clearRect(0, 0, OW, OH);
-                    var isLt = document.body.classList.contains('light-mode');
-                    oc2.strokeStyle = isLt ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.18)';
-                    oc2.lineWidth = 1;
-                    oc2.setLineDash([3, 3]);
-                    // Vertical line
-                    oc2.beginPath();
-                    oc2.moveTo(cps[idx].cx, pT);
-                    oc2.lineTo(cps[idx].cx, OH - pB);
-                    oc2.stroke();
-                    // Horizontal line at cursor Y (or candle close Y)
-                    var crossY = my !== null ? my : cps[idx].yBodyTop;
-                    if (crossY > pT && crossY < OH - pB) {
-                        oc2.beginPath();
-                        oc2.moveTo(pL, crossY);
-                        oc2.lineTo(OW - pR, crossY);
-                        oc2.stroke();
-                        // Right-axis price label at crosshair Y
-                        if (cRange && cMinV !== undefined) {
-                            var crossVal = cMaxV - (crossY - pT) / cH * cRange;
-                            var crossLbl = '₪' + Math.round(crossVal).toLocaleString('he-IL');
-                            var lblH2 = 16, lblW2 = oc2.measureText(crossLbl).width + 8;
-                            oc2.setLineDash([]);
-                            oc2.fillStyle = isLt ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.15)';
-                            oc2.beginPath();
-                            oc2.roundRect ? oc2.roundRect(OW - pR + 2, crossY - lblH2/2, lblW2, lblH2, 3) : oc2.rect(OW - pR + 2, crossY - lblH2/2, lblW2, lblH2);
-                            oc2.fill();
-                            oc2.fillStyle = isLt ? '#fff' : 'rgba(255,255,255,0.9)';
-                            oc2.font = '10px system-ui,Arial,sans-serif';
-                            oc2.textAlign = 'left';
-                            oc2.fillText(crossLbl, OW - pR + 6, crossY + 3.5);
+            _apexChart = new ApexCharts(el, {
+                chart: {
+                    type: 'candlestick',
+                    height: 300,
+                    background: 'transparent',
+                    toolbar: { show: false },
+                    zoom: { enabled: false },
+                    animations: { enabled: true, speed: 350 },
+                    fontFamily: 'inherit'
+                },
+                series: [{ name: 'שווי', data: candles }],
+                xaxis: {
+                    type: 'datetime',
+                    labels: {
+                        style: { colors: '#6b7280', fontSize: '0.62rem', fontFamily: 'inherit' },
+                        datetimeUTC: false
+                    },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    opposite: true,
+                    labels: {
+                        style: { colors: '#6b7280', fontSize: '0.62rem', fontFamily: 'inherit' },
+                        formatter: function(v) {
+                            if (v >= 1000000) return '₪' + (v/1000000).toFixed(1)+'M';
+                            return '₪' + (v/1000).toFixed(0)+'K';
                         }
                     }
-                    oc2.setLineDash([]);
-                }
-
-                function _hideCandleTip() {
-                    var tip = document.getElementById('chartTooltip');
-                    if (tip) tip.style.display = 'none';
-                    var ohlcEl = document.getElementById('chartTooltipOHLC');
-                    if (ohlcEl) ohlcEl.style.display = 'none';
-                    canvas._prevIdx = -1;
-                    // Restore header to last candle values
-                    var cpsR = canvas._candlePositions;
-                    if (cpsR && cpsR.length) {
-                        var lastC = cpsR[cpsR.length - 1].c;
-                        var f0 = canvas._firstOpen || cpsR[0].c.open;
-                        var chgR = lastC.close - f0;
-                        var chgPctR = f0 > 0 ? chgR / f0 * 100 : 0;
-                        var cvR = document.getElementById('chartCurrentValue');
-                        var pcR = document.getElementById('chartPeriodChange');
-                        if (cvR) cvR.textContent = '₪' + Math.round(lastC.close).toLocaleString('he-IL');
-                        if (pcR) {
-                            var upR = chgR >= 0;
-                            pcR.textContent = (upR ? '▲ +' : '▼ ') + Math.abs(chgPctR).toFixed(2) + '%';
-                            pcR.style.background = upR ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
-                            pcR.style.color = upR ? '#26a69a' : '#ef5350';
-                        }
+                },
+                plotOptions: {
+                    candlestick: {
+                        colors: { upward: '#26a69a', downward: '#ef5350' },
+                        wick: { useFillColor: true }
                     }
-                    var ov3 = canvas.parentElement.querySelector('canvas.chart-overlay');
-                    if (ov3) { var oc3 = ov3.getContext('2d'); oc3.setTransform(1,0,0,1,0,0); oc3.clearRect(0,0,ov3.width,ov3.height); }
-                }
-
-                canvas.addEventListener('mousemove',  function(e) { _showCandleTip(e.clientX, e.clientY); });
-                canvas.addEventListener('mouseleave', _hideCandleTip);
-                canvas.addEventListener('touchstart', function(e) { if (e.touches[0]) _showCandleTip(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
-                canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); if (e.touches[0]) _showCandleTip(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
-                canvas.addEventListener('touchend',   function() { setTimeout(_hideCandleTip, 2500); });
-            }
+                },
+                tooltip: {
+                    theme: isLight ? 'light' : 'dark',
+                    x: { format: 'dd/MM/yyyy' },
+                    style: { fontSize: '0.78rem', fontFamily: 'inherit' },
+                    custom: function(opts) {
+                        var o = opts.seriesData[0][opts.dataPointIndex];
+                        if (!o) return '';
+                        var vals = o.y;
+                        var isUp = vals[3] >= vals[0];
+                        var color = isUp ? '#26a69a' : '#ef5350';
+                        return '<div style="padding:8px 12px;font-size:0.75rem;direction:rtl;font-family:inherit;">' +
+                            '<div style="color:'+color+';font-weight:700;margin-bottom:4px;">' + (isUp ? '▲' : '▼') + ' ' +
+                            '₪' + Math.round(vals[3]).toLocaleString('he-IL') + '</div>' +
+                            '<div style="color:rgba(255,255,255,0.6);font-size:0.68rem;line-height:1.7;">' +
+                            'פתיחה: ₪' + Math.round(vals[0]).toLocaleString('he-IL') + '<br>' +
+                            'גבוה: ₪' + Math.round(vals[1]).toLocaleString('he-IL') + '<br>' +
+                            'נמוך: ₪' + Math.round(vals[2]).toLocaleString('he-IL') + '<br>' +
+                            'סגירה: ₪' + Math.round(vals[3]).toLocaleString('he-IL') +
+                            '</div></div>';
+                    }
+                },
+                grid: {
+                    borderColor: isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)',
+                    strokeDashArray: 3,
+                    padding: { right: 0, left: 0 }
+                },
+                dataLabels: { enabled: false },
+                legend: { show: false },
+                theme: { mode: isLight ? 'light' : 'dark' }
+            });
+            _apexChart.render();
         }
 
         // ============ GEMEL / PENSION RANKINGS ============
