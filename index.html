@@ -6451,11 +6451,19 @@
                         '<div class="budget-pill-value" style="color:var(--accent-red);">₪'+Math.round(totalExp).toLocaleString('he-IL',{maximumFractionDigits:0})+'</div>'+
                         (totalExp>0?'<div style="font-size:0.58rem;color:var(--text-secondary);">'+Math.round(totalExp/totalIncome*100)+'% מההכנסה</div>':'')+
                     '</div>';
-                    if (totalSavings > 0) {
+                    if (pensionDeposit > 0) {
+                        pillHtml += '<div class="budget-pill" style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.12);">'+
+                            '<div class="budget-pill-label">פנסיה</div>'+
+                            '<div class="budget-pill-value" style="color:#818cf8;">₪'+Math.round(pensionDeposit).toLocaleString('he-IL')+'</div>'+
+                            '<div style="font-size:0.58rem;color:var(--text-secondary);">'+Math.round(pensionDeposit/totalIncome*100)+'% מההכנסה</div>'+
+                        '</div>';
+                    }
+                    var savOnly = extraSavings + autoDeposits;
+                    if (savOnly > 0) {
                         pillHtml += '<div class="budget-pill" style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);">'+
                             '<div class="budget-pill-label">חיסכון</div>'+
-                            '<div class="budget-pill-value" style="color:var(--accent-green);">₪'+Math.round(totalSavings).toLocaleString('he-IL')+'</div>'+
-                            '<div style="font-size:0.58rem;color:var(--text-secondary);">'+Math.round(totalSavings/totalIncome*100)+'% מההכנסה</div>'+
+                            '<div class="budget-pill-value" style="color:var(--accent-green);">₪'+Math.round(savOnly).toLocaleString('he-IL')+'</div>'+
+                            '<div style="font-size:0.58rem;color:var(--text-secondary);">'+Math.round(savOnly/totalIncome*100)+'% מההכנסה</div>'+
                         '</div>';
                     }
                     var isPos = disposable >= 0;
