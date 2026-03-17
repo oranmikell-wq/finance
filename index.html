@@ -3018,6 +3018,8 @@
                             <input type="text" inputmode="decimal" id="expInsurance" placeholder="₪ 0" class="budget-row-input" oninput="formatNumberInput(this); calcExpenses()">
                         </div>
                     </div>
+                    <div id="customFixedCategoryRows"></div>
+                    <button onclick="addCustomFixedCategory()" class="budget-add-btn" style="margin-top:6px;">+ הוסף קטגוריה</button>
                 </div>
                 <!-- Flexible Expenses -->
                 <div style="padding:6px 16px 4px;border-top:1px solid var(--border-color);">
@@ -4416,6 +4418,7 @@
         var portfolioHoldings = []; // staging area while editing a portfolio in the modal
         var budgetAdditionalIncome = [];
         var budgetCustomCategories = [];
+        var budgetFixedCategories = [];
         var budgetIncomeIdCounter = 0;
         var budgetCatIdCounter = 0;
         var editingHoldingIdx = -1;  // index of holding currently being inline-edited (-1 = none)
@@ -6205,6 +6208,9 @@
                 var val = parseNum(document.getElementById(d.key));
                 result.push({ key:d.key, emoji:d.emoji, label:d.label, color:d.color, needs:!!d.needs, wants:!!d.wants, amount:val });
             });
+            budgetFixedCategories.forEach(function(c) {
+                result.push({ key:'customFixed_'+c.id, emoji:c.emoji||'🔒', label:c.label||'קטגוריה', color:c.color||'#3b82f6', needs:true, wants:false, amount:c.amount||0 });
+            });
             budgetCustomCategories.forEach(function(c) {
                 result.push({ key:'custom_'+c.id, emoji:c.emoji||'📦', label:c.label||'קטגוריה', color:c.color||'#64748b', needs:false, wants:true, amount:c.amount||0 });
             });
@@ -6233,6 +6239,7 @@
             if (esSavEl) profile.extraSavings = esSavEl.value.trim();
             profile.additionalIncome = budgetAdditionalIncome.slice();
             profile.customCategories = budgetCustomCategories.slice();
+            profile.fixedCategories  = budgetFixedCategories.slice();
             try { localStorage.setItem('user-profile', JSON.stringify(profile)); } catch(e){}
             var msg = document.getElementById('profileSavedMsg');
             if (msg) { msg.style.opacity = '1'; setTimeout(function(){ msg.style.opacity = '0'; }, 1500); }
@@ -6284,7 +6291,10 @@
                     if (profile.customCategories && Array.isArray(profile.customCategories)) {
                         budgetCustomCategories = profile.customCategories;
                         budgetCatIdCounter = budgetCustomCategories.reduce(function(max,c){ return Math.max(max,c.id||0); }, 0);
-                        renderCustomCategoryRows();
+                    }
+                    if (profile.fixedCategories && Array.isArray(profile.fixedCategories)) {
+                        budgetFixedCategories = profile.fixedCategories;
+                        renderCustomFixedCategoryRows();
                     }
                     if (profile.expenses && !profile.expHousing) {
                         document.getElementById('expOther').value = profile.expenses;
@@ -6542,6 +6552,47 @@
             budgetCustomCategories.push({ id:id, label:'קטגוריה חדשה', emoji:emoji, color:color, amount:0 });
             renderCustomCategoryRows();
             saveProfile();
+        }
+
+        function addCustomFixedCategory() {
+            var id = ++budgetCatIdCounter;
+            var emoji = budgetCatEmojis[budgetFixedCategories.length % budgetCatEmojis.length];
+            budgetFixedCategories.push({ id:id, label:'קטגוריה חדשה', emoji:emoji, color:'#3b82f6', amount:0 });
+            renderCustomFixedCategoryRows();
+            saveProfile();
+        }
+
+        function removeCustomFixedCategory(id) {
+            budgetFixedCategories = budgetFixedCategories.filter(function(c){ return c.id !== id; });
+            renderCustomFixedCategoryRows();
+            saveProfile();
+            calcExpenses();
+        }
+
+        function updateCustomFixedCatAmount(id, val) {
+            var cat = budgetFixedCategories.find(function(c){ return c.id===id; });
+            if (cat) { cat.amount = parseNum({value:val}); saveProfile(); calcExpenses(); }
+        }
+
+        function updateCustomFixedCatLabel(id, val) {
+            var cat = budgetFixedCategories.find(function(c){ return c.id===id; });
+            if (cat) { cat.label = val; saveProfile(); }
+        }
+
+        function renderCustomFixedCategoryRows() {
+            var container = document.getElementById('customFixedCategoryRows');
+            if (!container) return;
+            var html = '';
+            budgetFixedCategories.forEach(function(c) {
+                html += '<div class="budget-row">'+
+                    '<span class="budget-row-label"><span class="row-emoji" style="background:rgba(59,130,246,0.12);">'+c.emoji+'</span>'+
+                    '<input type="text" value="'+escHtml(c.label||'')+'" style="border:none;background:none;color:var(--text-primary);font-family:inherit;font-size:0.78rem;width:90px;" oninput="updateCustomFixedCatLabel('+c.id+',this.value)"></span>'+
+                    '<div style="display:flex;align-items:center;gap:5px;">'+
+                    '<button onclick="removeCustomFixedCategory('+c.id+')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.1);border-radius:7px;color:var(--accent-red);cursor:pointer;padding:4px 6px;font-size:0.75rem;line-height:1;">✕</button>'+
+                    '<input type="text" inputmode="decimal" placeholder="₪ 0" value="'+(c.amount&&c.amount>0?c.amount.toLocaleString('he-IL'):'')+'" class="budget-row-input" oninput="formatNumberInput(this); updateCustomFixedCatAmount('+c.id+',this.value)">'+
+                    '</div></div>';
+            });
+            container.innerHTML = html;
         }
 
         function removeCustomBudgetCategory(id) {
