@@ -6834,7 +6834,7 @@
         }
 
         // ============ Chart ============
-        var _apexChartRange = 'ytd';
+        var _apexChartRange = localStorage.getItem('chart-range') || 'ytd';
 
         function _getHistory(rangeKey) {
             var history = [];
@@ -6858,6 +6858,7 @@
 
         function setChartRange(range, btn) {
             _apexChartRange = range;
+            localStorage.setItem('chart-range', range);
             document.querySelectorAll('#chartRangeBtns .range-btn').forEach(function(b){ b.classList.remove('active'); });
             if (btn) btn.classList.add('active');
             renderHistoryChart();
@@ -9347,7 +9348,15 @@
             document.body.classList.remove('subpage-active');
             document.getElementById('tabTrends').classList.add('active');
         }
-        function openTrendsChart()    { _openTrendsSubpage('subpageTrendsChart',    function() { renderHistoryChart(); }); }
+        function openTrendsChart() {
+            _openTrendsSubpage('subpageTrendsChart', function() {
+                // Restore saved range button state
+                document.querySelectorAll('#chartRangeBtns .range-btn').forEach(function(b) {
+                    b.classList.toggle('active', b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'" + _apexChartRange + "'") >= 0);
+                });
+                renderHistoryChart();
+            });
+        }
         function closeTrendsChart()   { _closeTrendsSubpage('subpageTrendsChart'); }
         function openTrendsIndices()  { _openTrendsSubpage('subpageTrendsIndices',  function() { updateTrendsTab(); }); }
         function closeTrendsIndices() {
@@ -9975,6 +9984,8 @@
                 },
                 xaxis: {
                     type: 'datetime',
+                    min: dates[0],
+                    max: dates[dates.length - 1],
                     labels: {
                         style: { colors: '#6b7280', fontSize: '0.62rem', fontFamily: 'inherit' },
                         datetimeFormatter: { day: 'dd/MM', month: 'MMM', year: 'yyyy' },
@@ -10014,7 +10025,7 @@
                     borderColor: isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)',
                     strokeDashArray: 3,
                     xaxis: { lines: { show: false } },
-                    padding: { right: 0, left: 0 }
+                    padding: { right: 10, left: 10 }
                 },
                 dataLabels: { enabled: false },
                 markers: { size: 0 },
@@ -12940,7 +12951,6 @@
                         gemelDataCache[a.gemelKupahNum] = data;
                         _saveGemelCache(a.gemelKupahNum, data);
                         assets.filter(function(x) { return x.gemelKupahNum === a.gemelKupahNum; }).forEach(function(x) {
-                            var _savedValue = x.value; // NEVER touch value — user sets it manually
                             if (data[0].yearlyReturn    != null) { x.return = data[0].yearlyReturn;  x.gemelYearlyReturn   = data[0].yearlyReturn; }
                             if (data[0].ytdReturn       != null) { x.gemelYtdReturn = data[0].ytdReturn; }
                             if (data[0].monthlyReturn   != null) { x.gemelMonthlyReturn  = data[0].monthlyReturn; }
@@ -12948,7 +12958,18 @@
                             if (data[0].feeHafkada      != null) { x.feeHafkada = data[0].feeHafkada; }
                             if (data[0].fundName)                { x.gemelFundName = data[0].fundName; }
                             if (data[0].company)                 { x.gemelCompany  = data[0].company; }
-                            x.value = _savedValue; // restore — gemel value is manual-only
+                            // Auto-apply monthly return for new period (same logic as pension legacy)
+                            var newPeriod = data[0].period;
+                            var lastPeriod = x.gemelLastAppliedPeriod || null;
+                            if (newPeriod && data[0].monthlyReturn != null && x.value > 0) {
+                                if (!lastPeriod || newPeriod > lastPeriod) {
+                                    var oldVal = x.value;
+                                    x.value = Math.round(x.value * (1 + data[0].monthlyReturn / 100));
+                                    x.gemelLastAppliedPeriod = newPeriod;
+                                    console.log('[Gemel] 💰 Auto-applied monthly ' + data[0].monthlyReturn + '% for period ' + newPeriod
+                                        + ': ₪' + oldVal.toLocaleString('he-IL') + ' → ₪' + x.value.toLocaleString('he-IL'));
+                                }
+                            }
                         });
                         await saveAssets();
                         console.log('[Gemel] ✅ Updated kupah', a.gemelKupahNum, '→', data[0].fundName, 'monthly:', data[0].monthlyReturn, 'ytd:', data[0].ytdReturn, 'raw keys:', Object.keys(data[0].raw || {}).join(','));
