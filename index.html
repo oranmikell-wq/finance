@@ -8934,8 +8934,7 @@
                         asset.gemelFee             = gd[0].fee;
                         if (gd[0].yearlyReturn != null) asset.return = gd[0].yearlyReturn;
                         if (gd[0].fee != null) asset.fee = gd[0].fee;
-                        // Mark current period as already applied — prevents double-counting on refresh
-                        if (gd[0].period) asset.gemelLastAppliedPeriod = gd[0].period;
+                        // Do NOT set gemelLastAppliedPeriod here — let updateGemelAssets apply it
                     }
                     asset.currency = 'ILS';
                 }
@@ -12954,7 +12953,7 @@
                             if (data[0].yearlyReturn    != null) { x.return = data[0].yearlyReturn;  x.gemelYearlyReturn   = data[0].yearlyReturn; }
                             if (data[0].ytdReturn       != null) { x.gemelYtdReturn = data[0].ytdReturn; }
                             if (data[0].monthlyReturn   != null) { x.gemelMonthlyReturn  = data[0].monthlyReturn; }
-                            if (data[0].fee             != null) { x.fee    = data[0].fee;            x.gemelFee            = data[0].fee; }
+                            if (data[0].fee             != null) { x.gemelFee = data[0].fee; if (!x.gemelFeeOverride) { x.fee = data[0].fee; } }
                             if (data[0].feeHafkada      != null) { x.feeHafkada = data[0].feeHafkada; }
                             if (data[0].fundName)                { x.gemelFundName = data[0].fundName; }
                             if (data[0].company)                 { x.gemelCompany  = data[0].company; }
@@ -12964,9 +12963,12 @@
                             if (newPeriod && data[0].monthlyReturn != null && x.value > 0) {
                                 if (!lastPeriod || newPeriod > lastPeriod) {
                                     var oldVal = x.value;
-                                    x.value = Math.round(x.value * (1 + data[0].monthlyReturn / 100));
+                                    var afterReturn = oldVal * (1 + data[0].monthlyReturn / 100);
+                                    var feeRate = (x.fee || 0) / 100 / 12; // annual fee% → monthly fraction
+                                    var afterFee = afterReturn * (1 - feeRate);
+                                    x.value = Math.round(afterFee);
                                     x.gemelLastAppliedPeriod = newPeriod;
-                                    console.log('[Gemel] 💰 Auto-applied monthly ' + data[0].monthlyReturn + '% for period ' + newPeriod
+                                    console.log('[Gemel] 💰 Auto-applied monthly ' + data[0].monthlyReturn + '% − fee ' + (x.fee||0).toFixed(2) + '%/yr for period ' + newPeriod
                                         + ': ₪' + oldVal.toLocaleString('he-IL') + ' → ₪' + x.value.toLocaleString('he-IL'));
                                 }
                             }
