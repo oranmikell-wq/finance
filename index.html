@@ -7958,12 +7958,15 @@
         async function updateAllRates() {
             // Fetch silently — no confirm/alert
             await fetchExchangeRate();
-            
+
             var hasSpyAssets = assets.some(function(a) { return a.isSpyPension; });
             if (hasSpyAssets) await fetchSpyPrice();
 
             await updateFundAssets();
-            await updatePensiaAssets();
+            var hasGemelAssets = assets.some(function(a) { return a.gemelKupahNum; });
+            var hasPensiaAssets = assets.some(function(a) { return a.pensiaKupahNum; });
+            if (hasGemelAssets) await updateGemelAssets();
+            if (hasPensiaAssets) await updatePensiaAssets();
             applyPensiaMonthlyDeposits();
             updateUI();
         }
